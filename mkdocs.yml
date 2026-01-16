@@ -1,0 +1,118 @@
+# MkDocs Configuration for CT.gov Search Strategies
+# Documentation: https://www.mkdocs.org/
+
+site_name: CT.gov Search Strategies
+site_description: A comprehensive Python toolkit for ClinicalTrials.gov search strategy development and validation
+site_author: MAFI Project Team
+site_url: https://ctgov-search-strategies.github.io/
+
+# Repository
+repo_name: ctgov-search-strategies
+repo_url: https://github.com/ctgov-search-strategies/ctgov-search
+
+# Theme configuration
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+  icon:
+    repo: fontawesome/brands/github
+
+# Navigation structure
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Installation: index.md#installation
+    - Quick Start: index.md#quick-start
+  - Search Strategies: strategies.md
+  - API Reference:
+    - Overview: api/index.md
+    - CTGovSearcher: api/ctgov_search.md
+    - Utility Functions: api/ctgov_utils.md
+    - Precision Metrics: api/precision_metrics.md
+  - Validation: validation.md
+
+# Plugins
+plugins:
+  - search:
+      separator: '[\s\-,:!=\[\]()"/]+|(?!\b)(?=[A-Z][a-z])|\.(?!\d)|&[lg]t;'
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_source: true
+            show_root_heading: true
+
+# Markdown extensions
+markdown_extensions:
+  - abbr
+  - admonition
+  - attr_list
+  - def_list
+  - footnotes
+  - meta
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.betterem:
+      smart_enable: all
+  - pymdownx.caret
+  - pymdownx.details
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.keys
+  - pymdownx.magiclink:
+      repo_url_shorthand: true
+      user: ctgov-search-strategies
+      repo: ctgov-search
+  - pymdownx.mark
+  - pymdownx.smartsymbols
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.tasklist:
+      custom_checkbox: true
+  - pymdownx.tilde
+
+# Extra configuration
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/ctgov-search-strategies
+  version:
+    provider: mike
+
+# Copyright
+copyright: Copyright &copy; 2024-2025 MAFI Project - MIT License
