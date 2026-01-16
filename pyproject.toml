@@ -114,6 +114,10 @@ testpaths = ["tests"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "requires_aact: mark test as requiring AACT database credentials",
+    "slow: mark test as slow running",
+]
 
 [tool.mypy]
 python_version = "3.8"
