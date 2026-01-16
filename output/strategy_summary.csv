@@ -1,0 +1,6 @@
+strategy,mean_results,median_results,min_results,max_results,mean_duration
+full_text_rct,0,0,0,0,0.19
+condition_only,0,0,0,0,0.15
+condition_completed,0,0,0,0,0.16
+full_text,0,0,0,0,0.22
+broad_or,0,0,0,0,0.17

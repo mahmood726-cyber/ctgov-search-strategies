@@ -1,0 +1,58 @@
+======================================================================
+COMPREHENSIVE TRIAL REGISTRY SEARCH REPORT
+Condition: diabetes
+Generated: 2026-01-12 13:29:53
+======================================================================
+
+SEARCH RESULTS BY REGISTRY
+--------------------------------------------------
+  ClinicalTrials.gov: 14,167 trials found
+  ISRCTN: ERROR - HTTP 400
+  EUCTR: Search URL available
+  ICTRP: Search URL available
+
+ESTIMATED TOTAL: 14,167 trials
+
+DIRECT SEARCH URLS
+--------------------------------------------------
+  ClinicalTrials.gov:
+    https://clinicaltrials.gov/search?cond=diabetes
+
+  ISRCTN:
+    https://www.isrctn.com/search?q=diabetes
+
+  EUCTR:
+    https://www.clinicaltrialsregister.eu/ctr-search/search?query=diabetes
+
+  WHO ICTRP:
+    https://trialsearch.who.int/Default.aspx?SearchAll=diabetes
+
+  ANZCTR:
+    https://www.anzctr.org.au/TrialSearch.aspx#&&searchTxt=diabetes
+
+  ChiCTR:
+    https://www.chictr.org.cn/searchproj.html?title=diabetes
+
+  DRKS:
+    https://drks.de/search/de?query=diabetes
+
+  CTRI:
+    https://ctri.nic.in/Clinicaltrials/advancesearchmain.php?search_form=1&freetxt=diabetes
+
+REGISTRY COVERAGE NOTES
+--------------------------------------------------
+  - ClinicalTrials.gov: US and international trials
+  - ISRCTN: International Standard Randomised Controlled Trial Number
+  - EUCTR: European Union trials (required for EU authorization)
+  - WHO ICTRP: Aggregates 17 primary registries
+  - ANZCTR: Australia/New Zealand trials
+  - ChiCTR: Chinese clinical trials
+  - CTRI: Clinical Trials Registry - India
+
+RECOMMENDATIONS FOR SYSTEMATIC REVIEWS
+--------------------------------------------------
+  1. Search ClinicalTrials.gov (mandatory)
+  2. Search WHO ICTRP (covers multiple registries)
+  3. Search ISRCTN (additional European trials)
+  4. Search region-specific registries for targeted reviews
+  5. Consider searching EUCTR for European drug trials

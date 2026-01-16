@@ -1,0 +1,6 @@
+strategy,searches,mean_results,median_results,min_results,max_results,avg_time_sec
+condition_only,8,0,0,0,0,0.23
+condition_completed,8,0,0,0,0,0.26
+full_text,8,0,0,0,0,0.23
+full_text_randomized,8,0,0,0,0,0.23
+condition_phase3,8,0,0,0,0,0.22

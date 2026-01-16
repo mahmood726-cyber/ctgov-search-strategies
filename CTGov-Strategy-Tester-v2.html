@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT.gov Search Strategy Tester v2</title>
+    <style>
+        :root {
+            --primary: #1a73e8;
+            --success: #34a853;
+            --warning: #fbbc04;
+            --danger: #ea4335;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #202124;
+            --border: #dadce0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 {
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 1.8rem;
+        }
+        .subtitle {
+            color: #5f6368;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .card h2 {
+            color: var(--text);
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border);
+        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+        }
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-size: 1rem;
+        }
+        .input-group input:focus, .input-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.2);
+        }
+
+        .strategy-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .strategy-btn {
+            padding: 12px 15px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s;
+        }
+        .strategy-btn:hover {
+            border-color: var(--primary);
+            background: #f0f7ff;
+        }
+        .strategy-btn.active {
+            border-color: var(--primary);
+            background: #e8f0fe;
+        }
+        .strategy-btn .code {
+            font-weight: bold;
+            color: var(--primary);
+            font-size: 0.85rem;
+        }
+        .strategy-btn .name {
+            font-size: 0.9rem;
+            margin: 3px 0;
+        }
+        .strategy-btn .desc {
+            font-size: 0.75rem;
+            color: #5f6368;
+        }
+        .strategy-btn .retention {
+            font-size: 0.75rem;
+            color: var(--success);
+            font-weight: 500;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        .btn-primary:hover { background: #1557b0; }
+        .btn-primary:disabled {
+            background: #dadce0;
+            cursor: not-allowed;
+        }
+        .btn-secondary {
+            background: white;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .results-table th, .results-table td {
+            padding: 10px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        .results-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+        }
+        .results-table tr:hover { background: #f8f9fa; }
+        .count { font-weight: bold; color: var(--primary); }
+        .pct { color: #5f6368; font-size: 0.85rem; }
+
+        .query-display {
+            background: #f1f3f4;
+            padding: 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+        .tag-high { background: #e6f4ea; color: #137333; }
+        .tag-medium { background: #fef7e0; color: #b45309; }
+        .tag-low { background: #fce8e6; color: #c5221f; }
+
+        .info-box {
+            background: #e8f0fe;
+            border-left: 4px solid var(--primary);
+            padding: 12px 15px;
+            border-radius: 0 4px 4px 0;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        #status { padding: 10px 0; font-size: 0.9rem; }
+        #export-section { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CT.gov Search Strategy Tester v2</h1>
+        <p class="subtitle">Evidence-based search strategies for ClinicalTrials.gov API v2 | Based on Cochrane Guidance</p>
+
+        <div class="grid">
+            <div class="card">
+                <h2>1. Enter Search Term</h2>
+                <div class="input-group">
+                    <label for="condition">Condition/Disease:</label>
+                    <input type="text" id="condition" placeholder="e.g., diabetes, breast cancer, depression" value="diabetes">
+                </div>
+                <div class="input-group">
+                    <label for="intervention">Intervention (optional):</label>
+                    <input type="text" id="intervention" placeholder="e.g., metformin, surgery">
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Quick Reference</h2>
+                <div class="info-box">
+                    <strong>Cochrane Recommendation:</strong> Use simple condition searches without filters for maximum recall. Search BOTH ClinicalTrials.gov AND WHO ICTRP.
+                </div>
+                <p style="font-size:0.85rem; color:#5f6368;">
+                    <strong>Key Findings:</strong><br>
+                    - Condition-only search has highest sensitivity<br>
+                    - Randomized filter reduces to ~54% of baseline<br>
+                    - Completed filter reduces to ~55% of baseline<br>
+                    - Combined filters reduce to ~8-50% of baseline
+                </p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>2. Select Search Strategy</h2>
+            <div class="strategy-grid" id="strategies">
+                <!-- Strategies will be populated by JavaScript -->
+            </div>
+
+            <div class="btn-group">
+                <button class="btn btn-primary" onclick="runSearch()" id="searchBtn">Run Selected Strategy</button>
+                <button class="btn btn-secondary" onclick="runAllStrategies()">Compare All Strategies</button>
+            </div>
+
+            <div class="query-display" id="queryDisplay" style="display:none;">
+                <strong>API Query:</strong> <span id="queryUrl"></span>
+            </div>
+
+            <div id="status"></div>
+        </div>
+
+        <div class="card" id="resultsCard" style="display:none;">
+            <h2>3. Results</h2>
+            <table class="results-table" id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Strategy</th>
+                        <th>Description</th>
+                        <th>Results</th>
+                        <th>% of Baseline</th>
+                        <th>Sensitivity</th>
+                    </tr>
+                </thead>
+                <tbody id="resultsBody"></tbody>
+            </table>
+
+            <div id="export-section">
+                <button class="btn btn-secondary" onclick="exportResults()">Export to CSV</button>
+                <button class="btn btn-secondary" onclick="copyQueryUrls()">Copy All Query URLs</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Strategy Guide</h2>
+            <table class="results-table">
+                <thead>
+                    <tr>
+                        <th>Use Case</th>
+                        <th>Recommended Strategy</th>
+                        <th>API Pattern</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Systematic Review</strong> (max sensitivity)</td>
+                        <td>S1: Condition Only</td>
+                        <td><code>query.cond=&lt;condition&gt;</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>RCTs Only</strong> (true randomized)</td>
+                        <td>S3: Randomized Allocation</td>
+                        <td><code>query.term=AREA[DesignAllocation]RANDOMIZED</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>Published Trials</strong> (completed)</td>
+                        <td>S7: Interventional + Completed</td>
+                        <td><code>filter.overallStatus=COMPLETED</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>High Quality</strong> (Phase 3/4 RCTs)</td>
+                        <td>S8: RCT + Phase 3/4 + Completed</td>
+                        <td><code>AREA[Phase](PHASE3 OR PHASE4)</code></td>
+                    </tr>
+                    <tr>
+                        <td><strong>With Results</strong> (data available)</td>
+                        <td>S5: Has Posted Results</td>
+                        <td><code>AREA[ResultsFirstPostDate]RANGE[MIN,MAX]</code></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const STRATEGIES = [
+            {
+                id: 'S1', name: 'Condition Only (Maximum Recall)',
+                desc: 'Cochrane recommended - no filters',
+                retention: '100%', sensitivity: 'high',
+                buildQuery: (cond, intr) => `query.cond=${encodeURIComponent(cond)}`
+            },
+            {
+                id: 'S2', name: 'Interventional Studies',
+                desc: 'All interventional study types',
+                retention: '~77%', sensitivity: 'high',
+                buildQuery: (cond, intr) => `query.cond=${encodeURIComponent(cond)}&query.term=${encodeURIComponent('AREA[StudyType]INTERVENTIONAL')}`
+            },
+            {
+                id: 'S3', name: 'Randomized Allocation Only',
+                desc: 'True RCTs (excludes single-arm)',
+                retention: '~54%', sensitivity: 'medium',
+                buildQuery: (cond, intr) => `query.cond=${encodeURIComponent(cond)}&query.term=${encodeURIComponent('AREA[DesignAllocation]RANDOMIZED')}`
+            },
+            {
+                id: 'S4', name: 'Phase 3/4 Studies',
+                desc: 'Later phase trials only',
+                retention: '~16%', sensitivity: 'low',
+                buildQuery: (cond, intr) => `query.cond=${encodeURIComponent(cond)}&query.term=${encodeURIComponent('AREA[Phase](PHASE3 OR PHASE4)')}`
+            },
+            {
+                id: 'S5', name: 'Has Posted Results',
+                desc: 'Studies with results on CT.gov',
+                retention: '~14%', sensitivity: 'low',
+                buildQuery: (cond, intr) => `query.cond=${encodeURIComponent(cond)}&query.term=${encodeURIComponent('AREA[ResultsFirstPostDate]RANGE[MIN,MAX]')}`
+            },
+            {
+                id: 'S6', name: 'Completed Status',
+                desc: 'Completed trials only',
+                retention: '~55%', sensitivity: 'medium',
+                buildQuery: (cond, intr) => `query.cond=${encodeURIComponent(cond)}&filter.overallStatus=COMPLETED`
+            },
+            {
+                id: 'S7', name: 'Interventional + Completed',
+                desc: 'Completed interventional studies',
+                retention: '~43%', sensitivity: 'medium',
+                buildQuery: (cond, intr) => `query.cond=${encodeURIComponent(cond)}&query.term=${encodeURIComponent('AREA[StudyType]INTERVENTIONAL')}&filter.overallStatus=COMPLETED`
+            },
+            {
+                id: 'S8', name: 'RCT + Phase 3/4 + Completed',
+                desc: 'Highest quality subset',
+                retention: '~8%', sensitivity: 'low',
+                buildQuery: (cond, intr) => `query.cond=${encodeURIComponent(cond)}&query.term=${encodeURIComponent('AREA[DesignAllocation]RANDOMIZED AND AREA[Phase](PHASE3 OR PHASE4)')}&filter.overallStatus=COMPLETED`
+            },
+            {
+                id: 'S9', name: 'Full-Text RCT Keywords',
+                desc: 'Text search: condition AND randomized AND controlled',
+                retention: '~72%', sensitivity: 'medium',
+                buildQuery: (cond, intr) => `query.term=${encodeURIComponent(cond + ' AND randomized AND controlled')}`
+            },
+            {
+                id: 'S10', name: 'Treatment RCTs Only',
+                desc: 'Randomized + Treatment purpose',
+                retention: '~36%', sensitivity: 'medium',
+                buildQuery: (cond, intr) => `query.cond=${encodeURIComponent(cond)}&query.term=${encodeURIComponent('AREA[DesignAllocation]RANDOMIZED AND AREA[DesignPrimaryPurpose]TREATMENT')}`
+            }
+        ];
+
+        let selectedStrategy = 'S1';
+        let results = [];
+        let baselineCount = 0;
+
+        function initStrategies() {
+            const container = document.getElementById('strategies');
+            container.innerHTML = STRATEGIES.map(s => `
+                <div class="strategy-btn ${s.id === selectedStrategy ? 'active' : ''}" onclick="selectStrategy('${s.id}')">
+                    <div class="code">${s.id}</div>
+                    <div class="name">${s.name}</div>
+                    <div class="desc">${s.desc}</div>
+                    <div class="retention">Retention: ${s.retention}</div>
+                </div>
+            `).join('');
+        }
+
+        function selectStrategy(id) {
+            selectedStrategy = id;
+            document.querySelectorAll('.strategy-btn').forEach(el => el.classList.remove('active'));
+            document.querySelector(`[onclick="selectStrategy('${id}')"]`).classList.add('active');
+            updateQueryDisplay();
+        }
+
+        function updateQueryDisplay() {
+            const cond = document.getElementById('condition').value;
+            const intr = document.getElementById('intervention').value;
+            const strategy = STRATEGIES.find(s => s.id === selectedStrategy);
+            if (strategy && cond) {
+                const query = strategy.buildQuery(cond, intr);
+                const url = `https://clinicaltrials.gov/api/v2/studies?${query}&countTotal=true&pageSize=10`;
+                document.getElementById('queryUrl').textContent = url;
+                document.getElementById('queryDisplay').style.display = 'block';
+            }
+        }
+
+        async function searchCTGov(query) {
+            const url = `https://clinicaltrials.gov/api/v2/studies?${query}&countTotal=true&pageSize=1`;
+            try {
+                const response = await fetch(url);
+                const data = await response.json();
+                return { count: data.totalCount || 0, url };
+            } catch (error) {
+                console.error('Search error:', error);
+                return { count: 'ERROR', url };
+            }
+        }
+
+        async function runSearch() {
+            const cond = document.getElementById('condition').value;
+            if (!cond) { alert('Please enter a condition'); return; }
+
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span>Searching...';
+
+            const strategy = STRATEGIES.find(s => s.id === selectedStrategy);
+            const query = strategy.buildQuery(cond);
+            const result = await searchCTGov(query);
+
+            results = [{ ...strategy, count: result.count, url: result.url }];
+            baselineCount = selectedStrategy === 'S1' ? result.count : 0;
+
+            displayResults();
+            btn.disabled = false;
+            btn.textContent = 'Run Selected Strategy';
+        }
+
+        async function runAllStrategies() {
+            const cond = document.getElementById('condition').value;
+            if (!cond) { alert('Please enter a condition'); return; }
+
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            document.getElementById('status').innerHTML = '<span class="loading"></span>Running all strategies...';
+
+            results = [];
+            for (const strategy of STRATEGIES) {
+                document.getElementById('status').innerHTML = `<span class="loading"></span>Testing ${strategy.id}: ${strategy.name}...`;
+                const query = strategy.buildQuery(cond);
+                const result = await searchCTGov(query);
+                results.push({ ...strategy, count: result.count, url: result.url });
+
+                if (strategy.id === 'S1') baselineCount = result.count;
+
+                // Small delay to avoid rate limiting
+                await new Promise(r => setTimeout(r, 300));
+            }
+
+            displayResults();
+            document.getElementById('status').innerHTML = '';
+            btn.disabled = false;
+        }
+
+        function displayResults() {
+            document.getElementById('resultsCard').style.display = 'block';
+            const tbody = document.getElementById('resultsBody');
+
+            tbody.innerHTML = results.map(r => {
+                const pct = baselineCount > 0 && typeof r.count === 'number'
+                    ? ((r.count / baselineCount) * 100).toFixed(1) + '%'
+                    : '-';
+                const sensClass = r.sensitivity === 'high' ? 'tag-high' :
+                                  r.sensitivity === 'medium' ? 'tag-medium' : 'tag-low';
+                return `
+                    <tr>
+                        <td><strong>${r.id}</strong></td>
+                        <td>${r.name}</td>
+                        <td class="count">${typeof r.count === 'number' ? r.count.toLocaleString() : r.count}</td>
+                        <td class="pct">${pct}</td>
+                        <td><span class="tag ${sensClass}">${r.sensitivity}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function exportResults() {
+            const cond = document.getElementById('condition').value;
+            let csv = 'Strategy,Name,Count,Percentage,Sensitivity,URL\n';
+            results.forEach(r => {
+                const pct = baselineCount > 0 && typeof r.count === 'number'
+                    ? ((r.count / baselineCount) * 100).toFixed(1) : '';
+                csv += `${r.id},"${r.name}",${r.count},${pct}%,${r.sensitivity},"${r.url}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `ctgov_strategies_${cond.replace(/\s+/g, '_')}.csv`;
+            a.click();
+        }
+
+        function copyQueryUrls() {
+            const urls = results.map(r => `${r.id}: ${r.url}`).join('\n\n');
+            navigator.clipboard.writeText(urls).then(() => {
+                alert('Query URLs copied to clipboard!');
+            });
+        }
+
+        // Initialize
+        document.getElementById('condition').addEventListener('input', updateQueryDisplay);
+        initStrategies();
+        updateQueryDisplay();
+    </script>
+</body>
+</html>

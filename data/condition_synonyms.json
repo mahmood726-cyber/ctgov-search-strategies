@@ -1,0 +1,88 @@
+{
+  "diabetes": [
+    "diabetes mellitus",
+    "diabetic",
+    "type 2 diabetes",
+    "type 1 diabetes",
+    "t2dm",
+    "t1dm"
+  ],
+  "hypertension": [
+    "high blood pressure",
+    "elevated blood pressure",
+    "htn"
+  ],
+  "depression": [
+    "major depressive disorder",
+    "mdd",
+    "depressive disorder",
+    "clinical depression"
+  ],
+  "heart failure": [
+    "cardiac failure",
+    "chf",
+    "congestive heart failure",
+    "hf"
+  ],
+  "stroke": [
+    "cerebrovascular accident",
+    "cva",
+    "brain infarction",
+    "ischemic stroke"
+  ],
+  "breast cancer": [
+    "breast neoplasm",
+    "breast carcinoma",
+    "mammary cancer"
+  ],
+  "asthma": [
+    "bronchial asthma",
+    "asthmatic",
+    "reactive airway disease"
+  ],
+  "copd": [
+    "chronic obstructive pulmonary disease",
+    "emphysema",
+    "chronic bronchitis"
+  ],
+  "alzheimer": [
+    "alzheimer disease",
+    "alzheimer's disease",
+    "ad",
+    "dementia"
+  ],
+  "parkinson": [
+    "parkinson disease",
+    "parkinson's disease",
+    "pd",
+    "parkinsonian"
+  ],
+  "autism": [
+    "autism spectrum disorder",
+    "asd",
+    "autistic disorder"
+  ],
+  "covid-19": [
+    "covid",
+    "coronavirus",
+    "sars-cov-2"
+  ],
+  "cystic fibrosis": [
+    "cf",
+    "mucoviscidosis"
+  ],
+  "autism": [
+    "autism spectrum disorder",
+    "asd",
+    "autistic disorder"
+  ],
+  "psoriasis": [
+    "plaque psoriasis"
+  ],
+  "eczema": [
+    "atopic dermatitis"
+  ],
+  "postoperative pain": [
+    "post-operative pain"
+  ]
+}

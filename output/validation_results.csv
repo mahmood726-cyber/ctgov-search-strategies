@@ -1,0 +1,41 @@
+condition,strategy,total_results,returned,duration_sec,success
+hypertension,condition_only,,,,FALSE
+hypertension,condition_completed,,,,FALSE
+hypertension,full_text,,,,FALSE
+hypertension,full_text_rct,0,108,0.24,TRUE
+hypertension,broad_or,,,,FALSE
+diabetes,condition_only,,,,FALSE
+diabetes,condition_completed,,,,FALSE
+diabetes,full_text,,,,FALSE
+diabetes,full_text_rct,0,111,0.14,TRUE
+diabetes,broad_or,,,,FALSE
+cancer,condition_only,,,,FALSE
+cancer,condition_completed,,,,FALSE
+cancer,full_text,,,,FALSE
+cancer,full_text_rct,0,101,0.16,TRUE
+cancer,broad_or,,,,FALSE
+infection,condition_only,,,,FALSE
+infection,condition_completed,,,,FALSE
+infection,full_text,,,,FALSE
+infection,full_text_rct,0,110,0.17,TRUE
+infection,broad_or,,,,FALSE
+mental health,condition_only,0,107,0.15,TRUE
+mental health,condition_completed,0,107,0.16,TRUE
+mental health,full_text,0,108,0.22,TRUE
+mental health,full_text_rct,0,114,0.17,TRUE
+mental health,broad_or,0,108,0.17,TRUE
+cardiovascular,condition_only,,,,FALSE
+cardiovascular,condition_completed,,,,FALSE
+cardiovascular,full_text,,,,FALSE
+cardiovascular,full_text_rct,0,109,0.27,TRUE
+cardiovascular,broad_or,,,,FALSE
+pain,condition_only,,,,FALSE
+pain,condition_completed,,,,FALSE
+pain,full_text,,,,FALSE
+pain,full_text_rct,0,104,0.21,TRUE
+pain,broad_or,,,,FALSE
+respiratory,condition_only,,,,FALSE
+respiratory,condition_completed,,,,FALSE
+respiratory,full_text,,,,FALSE
+respiratory,full_text_rct,0,105,0.18,TRUE
+respiratory,broad_or,,,,FALSE

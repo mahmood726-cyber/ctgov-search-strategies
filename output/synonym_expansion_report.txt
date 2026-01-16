@@ -1,0 +1,99 @@
+======================================================================
+SYNONYM EXPANSION SUMMARY REPORT
+======================================================================
+
+TERM: DIABETES
+----------------------------------------
+Total synonyms: 12
+Synonyms: IDDM, NIDDM, T1DM, T2DM, diabetes, diabetes mellitus, diabetic, diabetic patient, glucose intolerance, hyperglycemia, type 1 diabetes, type 2 diabetes
+
+CT.gov Condition Query:
+  "IDDM" OR "NIDDM" OR "T1DM" OR "T2DM" OR "diabetes" OR "diabetes mellitus" OR "diabetic" OR "diabetic patient" OR "glucose intolerance" OR "hyperglycemia"
+
+PubMed Format:
+  "diabetes"[Title/Abstract]
+
+
+TERM: BREAST CANCER
+----------------------------------------
+Total synonyms: 6
+Synonyms: breast cancer, breast carcinoma, breast malignancy, breast neoplasm, breast tumor, mammary cancer
+
+CT.gov Condition Query:
+  "breast cancer" OR "breast carcinoma" OR "breast malignancy" OR "breast neoplasm" OR "breast tumor" OR "mammary cancer"
+
+PubMed Format:
+  "breast cancer"[Title/Abstract]
+
+
+TERM: CYSTIC FIBROSIS
+----------------------------------------
+Total synonyms: 4
+Synonyms: CF, cystic fibrosis, fibrocystic disease of pancreas, mucoviscidosis
+
+CT.gov Condition Query:
+  "CF" OR "cystic fibrosis" OR "fibrocystic disease of pancreas" OR "mucoviscidosis"
+
+PubMed Format:
+  "cystic fibrosis"[Title/Abstract]
+
+
+TERM: AUTISM
+----------------------------------------
+Total synonyms: 9
+Synonyms: ASD, Asperger, Asperger's syndrome, PDD, autism, autism spectrum disorder, autistic, autistic disorder, pervasive developmental disorder
+
+CT.gov Condition Query:
+  "ASD" OR "Asperger" OR "Asperger's syndrome" OR "PDD" OR "autism" OR "autism spectrum disorder" OR "autistic" OR "autistic disorder" OR "pervasive developmental disorder"
+
+PubMed Format:
+  "autism"[Title/Abstract]
+
+
+TERM: DEPRESSION
+----------------------------------------
+Total synonyms: 7
+Synonyms: MDD, clinical depression, depression, depressive disorder, major depression, major depressive disorder, unipolar depression
+
+CT.gov Condition Query:
+  "MDD" OR "clinical depression" OR "depression" OR "depressive disorder" OR "major depression" OR "major depressive disorder" OR "unipolar depression"
+
+PubMed Format:
+  "depression"[Title/Abstract]
+
+
+TERM: COVID-19
+----------------------------------------
+Total synonyms: 7
+Synonyms: COVID, COVID19, SARS-CoV-2, corona virus, coronavirus, coronavirus disease 2019, covid-19
+
+CT.gov Condition Query:
+  "COVID" OR "COVID19" OR "SARS-CoV-2" OR "corona virus" OR "coronavirus" OR "coronavirus disease 2019" OR "covid-19"
+
+PubMed Format:
+  "covid-19"[Title/Abstract]
+
+
+TERM: HYPERTENSION
+----------------------------------------
+Total synonyms: 8
+Synonyms: HTN, antihypertensive, blood pressure, elevated blood pressure, essential hypertension, high blood pressure, hypertension, primary hypertension
+
+CT.gov Condition Query:
+  "HTN" OR "antihypertensive" OR "blood pressure" OR "elevated blood pressure" OR "essential hypertension" OR "high blood pressure" OR "hypertension" OR "primary hypertension"
+
+PubMed Format:
+  "hypertension"[Title/Abstract]
+
+
+TERM: STROKE
+----------------------------------------
+Total synonyms: 9
+Synonyms: CVA, TIA, brain infarction, cerebral infarction, cerebrovascular accident, hemorrhagic stroke, ischemic stroke, stroke, transient ischemic attack
+
+CT.gov Condition Query:
+  "CVA" OR "TIA" OR "brain infarction" OR "cerebral infarction" OR "cerebrovascular accident" OR "hemorrhagic stroke" OR "ischemic stroke" OR "stroke" OR "transient ischemic attack"
+
+PubMed Format:
+  "stroke"[Title/Abstract]
+

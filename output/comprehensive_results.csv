@@ -1,0 +1,61 @@
+condition,strategy,strategy_name,total_count,query_url
+depression,S1,Condition only (max recall),11974,https://clinicaltrials.gov/api/v2/studies?query.cond=depression&countTotal=true&pageSize=1
+depression,S2,Interventional studies,10046,https://clinicaltrials.gov/api/v2/studies?query.cond=depression&query.term=AREA%5BStudyType%5DINTERVENTIONAL&countTotal=true&pageSize=1
+depression,S3,Randomized allocation only,7753,https://clinicaltrials.gov/api/v2/studies?query.cond=depression&query.term=AREA%5BDesignAllocation%5DRANDOMIZED&countTotal=true&pageSize=1
+depression,S4,Phase 3/4 studies,1659,https://clinicaltrials.gov/api/v2/studies?query.cond=depression&query.term=AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&countTotal=true&pageSize=1
+depression,S5,Has posted results,1768,https://clinicaltrials.gov/api/v2/studies?query.cond=depression&query.term=AREA%5BResultsFirstPostDate%5DRANGE%5BMIN,MAX%5D&countTotal=true&pageSize=1
+depression,S6,Completed status,6914,https://clinicaltrials.gov/api/v2/studies?query.cond=depression&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+depression,S7,Interventional + Completed,5900,https://clinicaltrials.gov/api/v2/studies?query.cond=depression&query.term=AREA%5BStudyType%5DINTERVENTIONAL&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+depression,S8,RCT + Phase3/4 + Completed,871,https://clinicaltrials.gov/api/v2/studies?query.cond=depression&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+depression,S9,Full-text RCT keywords,20753,https://clinicaltrials.gov/api/v2/studies?query.term=depression%20AND%20randomized%20AND%20controlled&countTotal=true&pageSize=1
+depression,S10,Treatment RCTs only,5211,https://clinicaltrials.gov/api/v2/studies?query.cond=depression&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BDesignPrimaryPurpose%5DTREATMENT&countTotal=true&pageSize=1
+hypertension,S1,Condition only (max recall),11761,https://clinicaltrials.gov/api/v2/studies?query.cond=hypertension&countTotal=true&pageSize=1
+hypertension,S2,Interventional studies,8567,https://clinicaltrials.gov/api/v2/studies?query.cond=hypertension&query.term=AREA%5BStudyType%5DINTERVENTIONAL&countTotal=true&pageSize=1
+hypertension,S3,Randomized allocation only,6285,https://clinicaltrials.gov/api/v2/studies?query.cond=hypertension&query.term=AREA%5BDesignAllocation%5DRANDOMIZED&countTotal=true&pageSize=1
+hypertension,S4,Phase 3/4 studies,2651,https://clinicaltrials.gov/api/v2/studies?query.cond=hypertension&query.term=AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&countTotal=true&pageSize=1
+hypertension,S5,Has posted results,1679,https://clinicaltrials.gov/api/v2/studies?query.cond=hypertension&query.term=AREA%5BResultsFirstPostDate%5DRANGE%5BMIN,MAX%5D&countTotal=true&pageSize=1
+hypertension,S6,Completed status,6755,https://clinicaltrials.gov/api/v2/studies?query.cond=hypertension&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+hypertension,S7,Interventional + Completed,5081,https://clinicaltrials.gov/api/v2/studies?query.cond=hypertension&query.term=AREA%5BStudyType%5DINTERVENTIONAL&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+hypertension,S8,RCT + Phase3/4 + Completed,1370,https://clinicaltrials.gov/api/v2/studies?query.cond=hypertension&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+hypertension,S9,Full-text RCT keywords,6405,https://clinicaltrials.gov/api/v2/studies?query.term=hypertension%20AND%20randomized%20AND%20controlled&countTotal=true&pageSize=1
+hypertension,S10,Treatment RCTs only,4226,https://clinicaltrials.gov/api/v2/studies?query.cond=hypertension&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BDesignPrimaryPurpose%5DTREATMENT&countTotal=true&pageSize=1
+heart_failure,S1,Condition only (max recall),7360,https://clinicaltrials.gov/api/v2/studies?query.cond=heart%20failure&countTotal=true&pageSize=1
+heart_failure,S2,Interventional studies,4948,https://clinicaltrials.gov/api/v2/studies?query.cond=heart%20failure&query.term=AREA%5BStudyType%5DINTERVENTIONAL&countTotal=true&pageSize=1
+heart_failure,S3,Randomized allocation only,3646,https://clinicaltrials.gov/api/v2/studies?query.cond=heart%20failure&query.term=AREA%5BDesignAllocation%5DRANDOMIZED&countTotal=true&pageSize=1
+heart_failure,S4,Phase 3/4 studies,1219,https://clinicaltrials.gov/api/v2/studies?query.cond=heart%20failure&query.term=AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&countTotal=true&pageSize=1
+heart_failure,S5,Has posted results,915,https://clinicaltrials.gov/api/v2/studies?query.cond=heart%20failure&query.term=AREA%5BResultsFirstPostDate%5DRANGE%5BMIN,MAX%5D&countTotal=true&pageSize=1
+heart_failure,S6,Completed status,3597,https://clinicaltrials.gov/api/v2/studies?query.cond=heart%20failure&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+heart_failure,S7,Interventional + Completed,2474,https://clinicaltrials.gov/api/v2/studies?query.cond=heart%20failure&query.term=AREA%5BStudyType%5DINTERVENTIONAL&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+heart_failure,S8,RCT + Phase3/4 + Completed,519,https://clinicaltrials.gov/api/v2/studies?query.cond=heart%20failure&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+heart_failure,S9,Full-text RCT keywords,5518,https://clinicaltrials.gov/api/v2/studies?query.term=heart%20failure%20AND%20randomized%20AND%20controlled&countTotal=true&pageSize=1
+heart_failure,S10,Treatment RCTs only,2450,https://clinicaltrials.gov/api/v2/studies?query.cond=heart%20failure&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BDesignPrimaryPurpose%5DTREATMENT&countTotal=true&pageSize=1
+breast_cancer,S1,Condition only (max recall),15856,https://clinicaltrials.gov/api/v2/studies?query.cond=breast%20cancer&countTotal=true&pageSize=1
+breast_cancer,S2,Interventional studies,12372,https://clinicaltrials.gov/api/v2/studies?query.cond=breast%20cancer&query.term=AREA%5BStudyType%5DINTERVENTIONAL&countTotal=true&pageSize=1
+breast_cancer,S3,Randomized allocation only,5854,https://clinicaltrials.gov/api/v2/studies?query.cond=breast%20cancer&query.term=AREA%5BDesignAllocation%5DRANDOMIZED&countTotal=true&pageSize=1
+breast_cancer,S4,Phase 3/4 studies,1812,https://clinicaltrials.gov/api/v2/studies?query.cond=breast%20cancer&query.term=AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&countTotal=true&pageSize=1
+breast_cancer,S5,Has posted results,2316,https://clinicaltrials.gov/api/v2/studies?query.cond=breast%20cancer&query.term=AREA%5BResultsFirstPostDate%5DRANGE%5BMIN,MAX%5D&countTotal=true&pageSize=1
+breast_cancer,S6,Completed status,7287,https://clinicaltrials.gov/api/v2/studies?query.cond=breast%20cancer&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+breast_cancer,S7,Interventional + Completed,5734,https://clinicaltrials.gov/api/v2/studies?query.cond=breast%20cancer&query.term=AREA%5BStudyType%5DINTERVENTIONAL&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+breast_cancer,S8,RCT + Phase3/4 + Completed,726,https://clinicaltrials.gov/api/v2/studies?query.cond=breast%20cancer&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+breast_cancer,S9,Full-text RCT keywords,3743,https://clinicaltrials.gov/api/v2/studies?query.term=breast%20cancer%20AND%20randomized%20AND%20controlled&countTotal=true&pageSize=1
+breast_cancer,S10,Treatment RCTs only,3447,https://clinicaltrials.gov/api/v2/studies?query.cond=breast%20cancer&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BDesignPrimaryPurpose%5DTREATMENT&countTotal=true&pageSize=1
+diabetes,S1,Condition only (max recall),23155,https://clinicaltrials.gov/api/v2/studies?query.cond=diabetes&countTotal=true&pageSize=1
+diabetes,S2,Interventional studies,18300,https://clinicaltrials.gov/api/v2/studies?query.cond=diabetes&query.term=AREA%5BStudyType%5DINTERVENTIONAL&countTotal=true&pageSize=1
+diabetes,S3,Randomized allocation only,14167,https://clinicaltrials.gov/api/v2/studies?query.cond=diabetes&query.term=AREA%5BDesignAllocation%5DRANDOMIZED&countTotal=true&pageSize=1
+diabetes,S4,Phase 3/4 studies,4583,https://clinicaltrials.gov/api/v2/studies?query.cond=diabetes&query.term=AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&countTotal=true&pageSize=1
+diabetes,S5,Has posted results,3655,https://clinicaltrials.gov/api/v2/studies?query.cond=diabetes&query.term=AREA%5BResultsFirstPostDate%5DRANGE%5BMIN,MAX%5D&countTotal=true&pageSize=1
+diabetes,S6,Completed status,14481,https://clinicaltrials.gov/api/v2/studies?query.cond=diabetes&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+diabetes,S7,Interventional + Completed,11761,https://clinicaltrials.gov/api/v2/studies?query.cond=diabetes&query.term=AREA%5BStudyType%5DINTERVENTIONAL&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+diabetes,S8,RCT + Phase3/4 + Completed,2704,https://clinicaltrials.gov/api/v2/studies?query.cond=diabetes&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+diabetes,S9,Full-text RCT keywords,13452,https://clinicaltrials.gov/api/v2/studies?query.term=diabetes%20AND%20randomized%20AND%20controlled&countTotal=true&pageSize=1
+diabetes,S10,Treatment RCTs only,9075,https://clinicaltrials.gov/api/v2/studies?query.cond=diabetes&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BDesignPrimaryPurpose%5DTREATMENT&countTotal=true&pageSize=1
+stroke,S1,Condition only (max recall),10312,https://clinicaltrials.gov/api/v2/studies?query.cond=stroke&countTotal=true&pageSize=1
+stroke,S2,Interventional studies,7512,https://clinicaltrials.gov/api/v2/studies?query.cond=stroke&query.term=AREA%5BStudyType%5DINTERVENTIONAL&countTotal=true&pageSize=1
+stroke,S3,Randomized allocation only,5721,https://clinicaltrials.gov/api/v2/studies?query.cond=stroke&query.term=AREA%5BDesignAllocation%5DRANDOMIZED&countTotal=true&pageSize=1
+stroke,S4,Phase 3/4 studies,1093,https://clinicaltrials.gov/api/v2/studies?query.cond=stroke&query.term=AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&countTotal=true&pageSize=1
+stroke,S5,Has posted results,858,https://clinicaltrials.gov/api/v2/studies?query.cond=stroke&query.term=AREA%5BResultsFirstPostDate%5DRANGE%5BMIN,MAX%5D&countTotal=true&pageSize=1
+stroke,S6,Completed status,5008,https://clinicaltrials.gov/api/v2/studies?query.cond=stroke&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+stroke,S7,Interventional + Completed,3658,https://clinicaltrials.gov/api/v2/studies?query.cond=stroke&query.term=AREA%5BStudyType%5DINTERVENTIONAL&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+stroke,S8,RCT + Phase3/4 + Completed,453,https://clinicaltrials.gov/api/v2/studies?query.cond=stroke&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BPhase%5D%28PHASE3%20OR%20PHASE4%29&filter.overallStatus=COMPLETED&countTotal=true&pageSize=1
+stroke,S9,Full-text RCT keywords,7966,https://clinicaltrials.gov/api/v2/studies?query.term=stroke%20AND%20randomized%20AND%20controlled&countTotal=true&pageSize=1
+stroke,S10,Treatment RCTs only,4360,https://clinicaltrials.gov/api/v2/studies?query.cond=stroke&query.term=AREA%5BDesignAllocation%5DRANDOMIZED%20AND%20AREA%5BDesignPrimaryPurpose%5DTREATMENT&countTotal=true&pageSize=1

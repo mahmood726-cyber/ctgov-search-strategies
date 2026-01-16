@@ -1,0 +1,58 @@
+======================================================================
+COMPREHENSIVE TRIAL REGISTRY SEARCH REPORT
+Condition: cystic fibrosis
+Generated: 2026-01-12 13:30:00
+======================================================================
+
+SEARCH RESULTS BY REGISTRY
+--------------------------------------------------
+  ClinicalTrials.gov: 719 trials found
+  ISRCTN: ERROR - HTTP 400
+  EUCTR: Search URL available
+  ICTRP: Search URL available
+
+ESTIMATED TOTAL: 719 trials
+
+DIRECT SEARCH URLS
+--------------------------------------------------
+  ClinicalTrials.gov:
+    https://clinicaltrials.gov/search?cond=cystic%20fibrosis
+
+  ISRCTN:
+    https://www.isrctn.com/search?q=cystic%20fibrosis
+
+  EUCTR:
+    https://www.clinicaltrialsregister.eu/ctr-search/search?query=cystic%20fibrosis
+
+  WHO ICTRP:
+    https://trialsearch.who.int/Default.aspx?SearchAll=cystic%20fibrosis
+
+  ANZCTR:
+    https://www.anzctr.org.au/TrialSearch.aspx#&&searchTxt=cystic%20fibrosis
+
+  ChiCTR:
+    https://www.chictr.org.cn/searchproj.html?title=cystic%20fibrosis
+
+  DRKS:
+    https://drks.de/search/de?query=cystic%20fibrosis
+
+  CTRI:
+    https://ctri.nic.in/Clinicaltrials/advancesearchmain.php?search_form=1&freetxt=cystic%20fibrosis
+
+REGISTRY COVERAGE NOTES
+--------------------------------------------------
+  - ClinicalTrials.gov: US and international trials
+  - ISRCTN: International Standard Randomised Controlled Trial Number
+  - EUCTR: European Union trials (required for EU authorization)
+  - WHO ICTRP: Aggregates 17 primary registries
+  - ANZCTR: Australia/New Zealand trials
+  - ChiCTR: Chinese clinical trials
+  - CTRI: Clinical Trials Registry - India
+
+RECOMMENDATIONS FOR SYSTEMATIC REVIEWS
+--------------------------------------------------
+  1. Search ClinicalTrials.gov (mandatory)
+  2. Search WHO ICTRP (covers multiple registries)
+  3. Search ISRCTN (additional European trials)
+  4. Search region-specific registries for targeted reviews
+  5. Consider searching EUCTR for European drug trials

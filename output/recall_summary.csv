@@ -1,0 +1,121 @@
+strategy_id,strategy_name,condition,total_results,known_relevant,retrieved,missed,recall_percent
+S1,Condition Only (Maximum Recall),autism,2118,16,16,0,100.0
+S2,Interventional Studies,autism,1706,16,16,0,100.0
+S3,Randomized Allocation Only,autism,1164,16,16,0,100.0
+S4,Phase 3/4 Studies,autism,131,16,11,5,68.8
+S5,Has Posted Results,autism,260,16,14,2,87.5
+S6,Completed Status,autism,1106,16,15,1,93.8
+S7,Interventional + Completed,autism,925,16,15,1,93.8
+S8,RCT + Phase 3/4 + Completed,autism,62,16,11,5,68.8
+S9,Full-Text RCT Keywords,autism,962,16,12,4,75.0
+S10,Treatment RCTs Only,autism,884,16,15,1,93.8
+S1,Condition Only (Maximum Recall),cystic fibrosis,1720,10,10,0,100.0
+S2,Interventional Studies,cystic fibrosis,1180,10,10,0,100.0
+S3,Randomized Allocation Only,cystic fibrosis,719,10,10,0,100.0
+S4,Phase 3/4 Studies,cystic fibrosis,301,10,3,7,30.0
+S5,Has Posted Results,cystic fibrosis,338,10,8,2,80.0
+S6,Completed Status,cystic fibrosis,1100,10,10,0,100.0
+S7,Interventional + Completed,cystic fibrosis,814,10,10,0,100.0
+S8,RCT + Phase 3/4 + Completed,cystic fibrosis,138,10,3,7,30.0
+S9,Full-Text RCT Keywords,cystic fibrosis,526,10,7,3,70.0
+S10,Treatment RCTs Only,cystic fibrosis,567,10,10,0,100.0
+S1,Condition Only (Maximum Recall),psoriasis,2426,10,10,0,100.0
+S2,Interventional Studies,psoriasis,1838,10,10,0,100.0
+S3,Randomized Allocation Only,psoriasis,1307,10,10,0,100.0
+S4,Phase 3/4 Studies,psoriasis,792,10,9,1,90.0
+S5,Has Posted Results,psoriasis,724,10,10,0,100.0
+S6,Completed Status,psoriasis,1593,10,9,1,90.0
+S7,Interventional + Completed,psoriasis,1264,10,9,1,90.0
+S8,RCT + Phase 3/4 + Completed,psoriasis,412,10,8,2,80.0
+S9,Full-Text RCT Keywords,psoriasis,1024,10,9,1,90.0
+S10,Treatment RCTs Only,psoriasis,1160,10,10,0,100.0
+S1,Condition Only (Maximum Recall),stroke,10334,7,7,0,100.0
+S2,Interventional Studies,stroke,7532,7,7,0,100.0
+S3,Randomized Allocation Only,stroke,5738,7,7,0,100.0
+S4,Phase 3/4 Studies,stroke,1094,7,0,7,0.0
+S5,Has Posted Results,stroke,859,7,2,5,28.6
+S6,Completed Status,stroke,5013,7,6,1,85.7
+S7,Interventional + Completed,stroke,3663,7,6,1,85.7
+S8,RCT + Phase 3/4 + Completed,stroke,453,7,0,7,0.0
+S9,Full-Text RCT Keywords,stroke,7985,7,7,0,100.0
+S10,Treatment RCTs Only,stroke,4375,7,7,0,100.0
+S1,Condition Only (Maximum Recall),cancer,116549,7,6,1,85.7
+S2,Interventional Studies,cancer,92026,7,6,1,85.7
+S3,Randomized Allocation Only,cancer,35064,7,6,1,85.7
+S4,Phase 3/4 Studies,cancer,13034,7,5,2,71.4
+S5,Has Posted Results,cancer,17374,7,4,3,57.1
+S6,Completed Status,cancer,50494,7,4,3,57.1
+S7,Interventional + Completed,cancer,40168,7,4,3,57.1
+S8,RCT + Phase 3/4 + Completed,cancer,4674,7,4,3,57.1
+S9,Full-Text RCT Keywords,cancer,26263,7,7,0,100.0
+S10,Treatment RCTs Only,cancer,23634,7,6,1,85.7
+S1,Condition Only (Maximum Recall),covid-19,10120,6,6,0,100.0
+S2,Interventional Studies,covid-19,5847,6,6,0,100.0
+S3,Randomized Allocation Only,covid-19,4317,6,6,0,100.0
+S4,Phase 3/4 Studies,covid-19,1384,6,4,2,66.7
+S5,Has Posted Results,covid-19,999,6,1,5,16.7
+S6,Completed Status,covid-19,5397,6,6,0,100.0
+S7,Interventional + Completed,covid-19,3003,6,6,0,100.0
+S8,RCT + Phase 3/4 + Completed,covid-19,530,6,4,2,66.7
+S9,Full-Text RCT Keywords,covid-19,3898,6,4,2,66.7
+S10,Treatment RCTs Only,covid-19,2670,6,6,0,100.0
+S1,Condition Only (Maximum Recall),dermatomyositis,177,5,5,0,100.0
+S2,Interventional Studies,dermatomyositis,132,5,5,0,100.0
+S3,Randomized Allocation Only,dermatomyositis,69,5,5,0,100.0
+S4,Phase 3/4 Studies,dermatomyositis,38,5,0,5,0.0
+S5,Has Posted Results,dermatomyositis,30,5,4,1,80.0
+S6,Completed Status,dermatomyositis,68,5,4,1,80.0
+S7,Interventional + Completed,dermatomyositis,51,5,4,1,80.0
+S8,RCT + Phase 3/4 + Completed,dermatomyositis,9,5,0,5,0.0
+S9,Full-Text RCT Keywords,dermatomyositis,58,5,3,2,60.0
+S10,Treatment RCTs Only,dermatomyositis,62,5,5,0,100.0
+S1,Condition Only (Maximum Recall),polymyositis,177,4,4,0,100.0
+S2,Interventional Studies,polymyositis,132,4,4,0,100.0
+S3,Randomized Allocation Only,polymyositis,71,4,4,0,100.0
+S4,Phase 3/4 Studies,polymyositis,39,4,2,2,50.0
+S5,Has Posted Results,polymyositis,31,4,3,1,75.0
+S6,Completed Status,polymyositis,72,4,2,2,50.0
+S7,Interventional + Completed,polymyositis,53,4,2,2,50.0
+S8,RCT + Phase 3/4 + Completed,polymyositis,11,4,2,2,50.0
+S9,Full-Text RCT Keywords,polymyositis,55,4,3,1,75.0
+S10,Treatment RCTs Only,polymyositis,63,4,4,0,100.0
+S1,Condition Only (Maximum Recall),eczema,1633,3,3,0,100.0
+S2,Interventional Studies,eczema,1331,3,3,0,100.0
+S3,Randomized Allocation Only,eczema,995,3,3,0,100.0
+S4,Phase 3/4 Studies,eczema,391,3,0,3,0.0
+S5,Has Posted Results,eczema,346,3,0,3,0.0
+S6,Completed Status,eczema,967,3,3,0,100.0
+S7,Interventional + Completed,eczema,835,3,3,0,100.0
+S8,RCT + Phase 3/4 + Completed,eczema,185,3,0,3,0.0
+S9,Full-Text RCT Keywords,eczema,898,3,2,1,66.7
+S10,Treatment RCTs Only,eczema,838,3,0,3,0.0
+S1,Condition Only (Maximum Recall),obesity,13942,3,3,0,100.0
+S2,Interventional Studies,obesity,11093,3,3,0,100.0
+S3,Randomized Allocation Only,obesity,8639,3,3,0,100.0
+S4,Phase 3/4 Studies,obesity,1319,3,0,3,0.0
+S5,Has Posted Results,obesity,1440,3,3,0,100.0
+S6,Completed Status,obesity,8612,3,3,0,100.0
+S7,Interventional + Completed,obesity,7001,3,3,0,100.0
+S8,RCT + Phase 3/4 + Completed,obesity,654,3,0,3,0.0
+S9,Full-Text RCT Keywords,obesity,7584,3,2,1,66.7
+S10,Treatment RCTs Only,obesity,4730,3,1,2,33.3
+S1,Condition Only (Maximum Recall),postoperative pain,7103,3,3,0,100.0
+S2,Interventional Studies,postoperative pain,6240,3,3,0,100.0
+S3,Randomized Allocation Only,postoperative pain,5826,3,3,0,100.0
+S4,Phase 3/4 Studies,postoperative pain,2000,3,0,3,0.0
+S5,Has Posted Results,postoperative pain,832,3,0,3,0.0
+S6,Completed Status,postoperative pain,4055,3,3,0,100.0
+S7,Interventional + Completed,postoperative pain,3561,3,3,0,100.0
+S8,RCT + Phase 3/4 + Completed,postoperative pain,1108,3,0,3,0.0
+S9,Full-Text RCT Keywords,postoperative pain,11137,3,3,0,100.0
+S10,Treatment RCTs Only,postoperative pain,3894,3,2,1,66.7
+S1,Condition Only (Maximum Recall),pilonidal sinus,103,3,3,0,100.0
+S2,Interventional Studies,pilonidal sinus,69,3,3,0,100.0
+S3,Randomized Allocation Only,pilonidal sinus,55,3,3,0,100.0
+S4,Phase 3/4 Studies,pilonidal sinus,6,3,1,2,33.3
+S5,Has Posted Results,pilonidal sinus,3,3,0,3,0.0
+S6,Completed Status,pilonidal sinus,56,3,2,1,66.7
+S7,Interventional + Completed,pilonidal sinus,38,3,2,1,66.7
+S8,RCT + Phase 3/4 + Completed,pilonidal sinus,5,3,1,2,33.3
+S9,Full-Text RCT Keywords,pilonidal sinus,32,3,2,1,66.7
+S10,Treatment RCTs Only,pilonidal sinus,50,3,3,0,100.0
