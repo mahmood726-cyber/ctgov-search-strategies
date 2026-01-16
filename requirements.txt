@@ -1,0 +1,9 @@
+# CT.gov Search Strategies - Python Dependencies
+# Install with: pip install -r requirements.txt
+
+# HTTP client for API requests (CT.gov, PubMed, Europe PMC, WHO ICTRP)
+requests>=2.28.0
+
+# PostgreSQL adapter for AACT database connections
+# Using -binary for easier installation (no compilation required)
+psycopg2-binary>=2.9.0

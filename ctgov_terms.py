@@ -4,9 +4,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Dict, Iterable, List, Optional
+from typing import Any, Dict, Final, List, Optional, Union
 
-DEFAULT_SYNONYMS: Dict[str, List[str]] = {
+# Type alias for synonym dictionary structure
+SynonymDict = Dict[str, List[str]]
+
+DEFAULT_SYNONYMS: Final[SynonymDict] = {
     "diabetes": [
         "diabetes mellitus",
         "diabetic",
@@ -57,32 +60,45 @@ DEFAULT_SYNONYMS: Dict[str, List[str]] = {
     "cystic fibrosis": ["cf", "mucoviscidosis"],
 }
 
-DEFAULT_SYNONYM_PATH = Path(__file__).resolve().parent / "data" / "condition_synonyms.json"
+DEFAULT_SYNONYM_PATH: Final[Path] = (
+    Path(__file__).resolve().parent / "data" / "condition_synonyms.json"
+)
 
 
-def load_synonyms(path: Optional[Path | str] = None) -> Dict[str, List[str]]:
-    """Load condition synonyms from JSON with defaults as fallback."""
-    source = Path(path) if path else DEFAULT_SYNONYM_PATH
-    synonyms: Dict[str, List[str]] = {}
+def load_synonyms(path: Optional[Union[Path, str]] = None) -> SynonymDict:
+    """
+    Load condition synonyms from JSON with defaults as fallback.
+
+    Args:
+        path: Optional path to a JSON file containing synonym mappings.
+              If None, uses the default path. Falls back to DEFAULT_SYNONYMS
+              if file not found or invalid.
+
+    Returns:
+        Dictionary mapping condition names (lowercase) to lists of synonyms.
+    """
+    source: Path = Path(path) if path else DEFAULT_SYNONYM_PATH
+    synonyms: SynonymDict = {}
 
     try:
-        payload = json.loads(source.read_text(encoding="utf-8"))
+        payload: Any = json.loads(source.read_text(encoding="utf-8"))
     except FileNotFoundError:
         payload = {}
     except Exception:
         payload = {}
 
-    for key, values in payload.items():
-        if not isinstance(key, str) or not isinstance(values, list):
-            continue
-        cleaned_key = key.strip().lower()
-        cleaned_values = [
-            value.strip()
-            for value in values
-            if isinstance(value, str) and value.strip()
-        ]
-        if cleaned_key and cleaned_values:
-            synonyms[cleaned_key] = cleaned_values
+    if isinstance(payload, dict):
+        for key, values in payload.items():
+            if not isinstance(key, str) or not isinstance(values, list):
+                continue
+            cleaned_key: str = key.strip().lower()
+            cleaned_values: List[str] = [
+                value.strip()
+                for value in values
+                if isinstance(value, str) and value.strip()
+            ]
+            if cleaned_key and cleaned_values:
+                synonyms[cleaned_key] = cleaned_values
 
     for key, values in DEFAULT_SYNONYMS.items():
         synonyms.setdefault(key, list(values))
@@ -91,10 +107,19 @@ def load_synonyms(path: Optional[Path | str] = None) -> Dict[str, List[str]]:
 
 
 def normalize_condition(raw: str) -> str:
-    """Normalize a raw condition string into a canonical label."""
+    """
+    Normalize a raw condition string into a canonical label.
+
+    Args:
+        raw: Raw condition string to normalize.
+
+    Returns:
+        Normalized canonical condition label (lowercase), or empty string
+        if input is empty/None.
+    """
     if not raw:
         return ""
-    primary = raw.strip().lower()
+    primary: str = raw.strip().lower()
 
     if any(token in primary for token in ("diabetes", "diabetic", "t1dm", "t2dm")):
         return "diabetes"
