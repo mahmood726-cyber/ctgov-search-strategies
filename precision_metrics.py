@@ -21,6 +21,8 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, Union
 
+from scipy import stats
+
 
 class ScreeningBurdenDict(TypedDict, total=False):
     """TypedDict for screening burden comparison results."""
@@ -57,6 +59,318 @@ class ROCDataDict(TypedDict):
     """TypedDict for ROC data return value."""
     points: List[ROCPointDict]
     auc_estimates: Dict[str, float]
+
+
+class RecallCIDict(TypedDict, total=False):
+    """TypedDict for recall with confidence interval."""
+    strategy_id: str
+    strategy_name: str
+    recall: float
+    recall_ci_lower: float
+    recall_ci_upper: float
+    successes: int
+    total: int
+    confidence: float
+
+
+def wilson_ci(successes: int, total: int, confidence: float = 0.95) -> Tuple[float, float]:
+    """
+    Calculate Wilson score confidence interval for a proportion.
+
+    The Wilson score interval is preferred over the normal approximation (Wald interval)
+    because it has better coverage properties, especially for proportions near 0 or 1,
+    and for small sample sizes. It is also never produces impossible values outside [0, 1].
+
+    Args:
+        successes: Number of successes (e.g., NCT IDs found)
+        total: Total number of trials (e.g., total known NCT IDs)
+        confidence: Confidence level (default 0.95 for 95% CI)
+
+    Returns:
+        Tuple of (lower_bound, upper_bound) as proportions
+
+    Example:
+        >>> lower, upper = wilson_ci(45, 50, 0.95)
+        >>> print(f"95% CI: ({lower:.3f}, {upper:.3f})")
+        95% CI: (0.777, 0.963)
+
+    References:
+        Wilson, E. B. (1927). Probable inference, the law of succession, and
+        statistical inference. Journal of the American Statistical Association,
+        22(158), 209-212.
+    """
+    if total == 0:
+        return (0.0, 0.0)
+
+    if successes < 0 or total < 0:
+        raise ValueError("Counts cannot be negative")
+
+    if successes > total:
+        raise ValueError("successes cannot exceed total")
+
+    if not (0 < confidence < 1):
+        raise ValueError("confidence must be between 0 and 1")
+
+    p = successes / total
+    z = stats.norm.ppf(1 - (1 - confidence) / 2)
+
+    denominator = 1 + z**2 / total
+    center = (p + z**2 / (2 * total)) / denominator
+    margin = z * math.sqrt((p * (1 - p) + z**2 / (4 * total)) / total) / denominator
+
+    return (max(0, center - margin), min(1, center + margin))
+
+
+def calculate_recall_with_ci(
+    found_ncts: Set[str],
+    known_ncts: Set[str],
+    confidence: float = 0.95
+) -> Dict[str, float]:
+    """
+    Calculate recall with Wilson score confidence interval.
+
+    Args:
+        found_ncts: Set of NCT IDs retrieved by the search
+        known_ncts: Set of NCT IDs known to be relevant (gold standard)
+        confidence: Confidence level (default 0.95 for 95% CI)
+
+    Returns:
+        Dictionary containing:
+        - recall: Point estimate of recall
+        - recall_ci_lower: Lower bound of confidence interval
+        - recall_ci_upper: Upper bound of confidence interval
+        - successes: Number of relevant NCT IDs found
+        - total: Total number of known relevant NCT IDs
+
+    Example:
+        >>> found = {"NCT00000001", "NCT00000002", "NCT00000003"}
+        >>> known = {"NCT00000001", "NCT00000002", "NCT00000004", "NCT00000005"}
+        >>> result = calculate_recall_with_ci(found, known)
+        >>> print(f"Recall: {result['recall']:.2%} (95% CI: {result['recall_ci_lower']:.2%}-{result['recall_ci_upper']:.2%})")
+    """
+    # Normalize NCT IDs
+    found_set = {nct.upper().strip() for nct in found_ncts if nct}
+    known_set = {nct.upper().strip() for nct in known_ncts if nct}
+
+    successes = len(found_set & known_set)
+    total = len(known_set)
+
+    if total == 0:
+        return {
+            'recall': 0.0,
+            'recall_ci_lower': 0.0,
+            'recall_ci_upper': 0.0,
+            'successes': 0,
+            'total': 0
+        }
+
+    recall = successes / total
+    ci_lower, ci_upper = wilson_ci(successes, total, confidence)
+
+    return {
+        'recall': recall,
+        'recall_ci_lower': ci_lower,
+        'recall_ci_upper': ci_upper,
+        'successes': successes,
+        'total': total
+    }
+
+
+def calculate_all_strategies_recall_ci(
+    strategies_results: List['StrategyResult'],
+    known_ncts: Set[str],
+    confidence: float = 0.95
+) -> List[RecallCIDict]:
+    """
+    Calculate recall with Wilson score confidence intervals for all strategies.
+
+    Args:
+        strategies_results: List of StrategyResult objects to analyze
+        known_ncts: Set of NCT IDs known to be relevant (gold standard)
+        confidence: Confidence level (default 0.95 for 95% CI)
+
+    Returns:
+        List of RecallCIDict containing recall and CI bounds for each strategy,
+        sorted by recall (highest first)
+
+    Example:
+        >>> results = [
+        ...     StrategyResult("S1", "Condition Only", 1000, 48, nct_ids_found={...}),
+        ...     StrategyResult("S3", "RCT Filter", 300, 45, nct_ids_found={...})
+        ... ]
+        >>> known = {"NCT00000001", "NCT00000002", ...}  # 50 NCTs
+        >>> ci_results = calculate_all_strategies_recall_ci(results, known)
+        >>> for r in ci_results:
+        ...     print(f"{r['strategy_id']}: {r['recall']:.1%} ({r['recall_ci_lower']:.1%}-{r['recall_ci_upper']:.1%})")
+    """
+    # Normalize known NCT IDs
+    known_set = {nct.upper().strip() for nct in known_ncts if nct}
+    total_known = len(known_set)
+
+    results: List[RecallCIDict] = []
+
+    for strategy in strategies_results:
+        if strategy.nct_ids_found:
+            found_set = {nct.upper().strip() for nct in strategy.nct_ids_found if nct}
+            successes = len(found_set & known_set)
+        else:
+            # Fall back to relevant_found if nct_ids_found not available
+            successes = strategy.relevant_found
+
+        if total_known > 0:
+            recall = successes / total_known
+            ci_lower, ci_upper = wilson_ci(successes, total_known, confidence)
+        else:
+            recall = 0.0
+            ci_lower, ci_upper = 0.0, 0.0
+
+        results.append({
+            'strategy_id': strategy.strategy_id,
+            'strategy_name': strategy.strategy_name,
+            'recall': recall,
+            'recall_ci_lower': ci_lower,
+            'recall_ci_upper': ci_upper,
+            'successes': successes,
+            'total': total_known,
+            'confidence': confidence
+        })
+
+    # Sort by recall (highest first)
+    results.sort(key=lambda x: x['recall'], reverse=True)
+
+    return results
+
+
+@dataclass
+class RecallMetrics:
+    """
+    Container for recall metrics with confidence intervals.
+
+    Provides a structured representation of recall estimates including
+    Wilson score confidence intervals for systematic review validation.
+
+    Attributes:
+        strategy_id: Unique identifier for the search strategy
+        strategy_name: Human-readable name for the strategy
+        successes: Number of relevant NCT IDs found
+        total: Total number of known relevant NCT IDs
+        recall: Point estimate of recall (successes / total)
+        ci_lower: Lower bound of Wilson score confidence interval
+        ci_upper: Upper bound of Wilson score confidence interval
+        confidence: Confidence level used (default 0.95)
+
+    Example:
+        >>> metrics = RecallMetrics.from_counts("S3", "RCT Filter", successes=45, total=50)
+        >>> print(f"Recall: {metrics.recall:.1%} (95% CI: {metrics.ci_lower:.1%}-{metrics.ci_upper:.1%})")
+        Recall: 90.0% (95% CI: 78.6%-95.7%)
+    """
+    strategy_id: str
+    strategy_name: str
+    successes: int
+    total: int
+    recall: float
+    ci_lower: float
+    ci_upper: float
+    confidence: float = 0.95
+
+    @classmethod
+    def from_counts(
+        cls,
+        strategy_id: str,
+        strategy_name: str,
+        successes: int,
+        total: int,
+        confidence: float = 0.95
+    ) -> 'RecallMetrics':
+        """
+        Create RecallMetrics from raw counts.
+
+        Args:
+            strategy_id: Unique identifier for the search strategy
+            strategy_name: Human-readable name for the strategy
+            successes: Number of relevant NCT IDs found
+            total: Total number of known relevant NCT IDs
+            confidence: Confidence level (default 0.95)
+
+        Returns:
+            RecallMetrics instance with computed recall and CI bounds
+        """
+        if total == 0:
+            recall = 0.0
+            ci_lower, ci_upper = 0.0, 0.0
+        else:
+            recall = successes / total
+            ci_lower, ci_upper = wilson_ci(successes, total, confidence)
+
+        return cls(
+            strategy_id=strategy_id,
+            strategy_name=strategy_name,
+            successes=successes,
+            total=total,
+            recall=recall,
+            ci_lower=ci_lower,
+            ci_upper=ci_upper,
+            confidence=confidence
+        )
+
+    @classmethod
+    def from_nct_sets(
+        cls,
+        strategy_id: str,
+        strategy_name: str,
+        found_ncts: Set[str],
+        known_ncts: Set[str],
+        confidence: float = 0.95
+    ) -> 'RecallMetrics':
+        """
+        Create RecallMetrics from NCT ID sets.
+
+        Args:
+            strategy_id: Unique identifier for the search strategy
+            strategy_name: Human-readable name for the strategy
+            found_ncts: Set of NCT IDs retrieved by the search
+            known_ncts: Set of NCT IDs known to be relevant
+            confidence: Confidence level (default 0.95)
+
+        Returns:
+            RecallMetrics instance with computed recall and CI bounds
+        """
+        # Normalize NCT IDs
+        found_set = {nct.upper().strip() for nct in found_ncts if nct}
+        known_set = {nct.upper().strip() for nct in known_ncts if nct}
+
+        successes = len(found_set & known_set)
+        total = len(known_set)
+
+        return cls.from_counts(
+            strategy_id=strategy_id,
+            strategy_name=strategy_name,
+            successes=successes,
+            total=total,
+            confidence=confidence
+        )
+
+    def ci_width(self) -> float:
+        """Return the width of the confidence interval."""
+        return self.ci_upper - self.ci_lower
+
+    def ci_str(self, decimal_places: int = 1) -> str:
+        """
+        Return formatted string representation of recall with CI.
+
+        Args:
+            decimal_places: Number of decimal places for percentages
+
+        Returns:
+            Formatted string like "90.0% (95% CI: 78.6%-95.7%)"
+        """
+        fmt = f"{{:.{decimal_places}%}}"
+        return (f"{fmt.format(self.recall)} "
+                f"({int(self.confidence * 100)}% CI: "
+                f"{fmt.format(self.ci_lower)}-{fmt.format(self.ci_upper)})")
+
+    def __str__(self) -> str:
+        return f"{self.strategy_id}: {self.ci_str()}"
 
 
 @dataclass
@@ -1024,6 +1338,45 @@ if __name__ == "__main__":
     print("\n  AUC Estimates:")
     for strat_id, auc in roc_data['auc_estimates'].items():
         print(f"    {strat_id}: {auc:.3f}")
+
+    # 6. Wilson Score Confidence Intervals for Recall
+    print("\n" + "-" * 70)
+    print("6. WILSON SCORE CONFIDENCE INTERVALS FOR RECALL")
+    print("-" * 40)
+
+    print("\n  Basic wilson_ci() examples:")
+    print("    wilson_ci(45, 50) = ", wilson_ci(45, 50))
+    print("    wilson_ci(9, 10)  = ", wilson_ci(9, 10))
+    print("    wilson_ci(1, 10)  = ", wilson_ci(1, 10))
+    print("    wilson_ci(0, 10)  = ", wilson_ci(0, 10))
+
+    print("\n  Recall with 95% CI for all strategies:")
+    ci_results = calculate_all_strategies_recall_ci(strategies, known_relevant)
+    print(f"\n  {'Strategy':<25} {'Recall':>8} {'95% CI':>20} {'Found/Total':>12}")
+    print(f"  {'-' * 67}")
+    for r in ci_results:
+        ci_str = f"({r['recall_ci_lower']:.1%}-{r['recall_ci_upper']:.1%})"
+        found_total = f"{r['successes']}/{r['total']}"
+        print(f"  {r['strategy_name']:<25} {r['recall']:>8.1%} {ci_str:>20} {found_total:>12}")
+
+    print("\n  Using RecallMetrics dataclass:")
+    for strat in strategies:
+        metrics = RecallMetrics.from_nct_sets(
+            strategy_id=strat.strategy_id,
+            strategy_name=strat.strategy_name,
+            found_ncts=strat.nct_ids_found,
+            known_ncts=known_relevant
+        )
+        print(f"    {metrics}")
+        print(f"      CI width: {metrics.ci_width():.3f}")
+
+    print("\n  Edge case - perfect recall:")
+    perfect = RecallMetrics.from_counts("Perfect", "Perfect Strategy", 50, 50)
+    print(f"    {perfect}")
+
+    print("\n  Edge case - very low recall:")
+    low = RecallMetrics.from_counts("Low", "Low Recall Strategy", 2, 50)
+    print(f"    {low}")
 
     print("\n" + "=" * 70)
     print("  Demo complete!")

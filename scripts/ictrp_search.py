@@ -23,6 +23,7 @@ import sys
 import re
 import json
 import logging
+import threading
 from typing import List, Dict, Optional, Tuple, Any, Union
 from urllib.parse import quote, urlencode, parse_qs, urlparse
 from datetime import datetime
@@ -31,6 +32,7 @@ from dataclasses import dataclass, asdict
 from enum import Enum
 from functools import wraps
 import random
+import argparse
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -200,22 +202,26 @@ def rate_limit(min_interval: float = ICTRP_RATE_LIMIT):
     """
     Decorator to enforce rate limiting between function calls.
 
+    Thread-safe implementation using a lock to prevent race conditions
+    when multiple threads call the decorated function concurrently.
+
     Args:
         min_interval: Minimum seconds between calls
     """
     last_call = [0.0]  # Use list for mutable closure
+    lock = threading.Lock()
 
     def decorator(func):
         @wraps(func)
         def wrapper(*args, **kwargs):
-            elapsed = time.time() - last_call[0]
-            if elapsed < min_interval:
-                sleep_time = min_interval - elapsed + random.uniform(0.1, 0.3)
-                logger.debug(f"Rate limiting: sleeping {sleep_time:.2f}s")
-                time.sleep(sleep_time)
-            result = func(*args, **kwargs)
-            last_call[0] = time.time()
-            return result
+            with lock:
+                elapsed = time.time() - last_call[0]
+                if elapsed < min_interval:
+                    sleep_time = min_interval - elapsed + random.uniform(0.1, 0.3)
+                    logger.debug(f"Rate limiting: sleeping {sleep_time:.2f}s")
+                    time.sleep(sleep_time)
+                last_call[0] = time.time()
+            return func(*args, **kwargs)
         return wrapper
     return decorator
 
@@ -1470,8 +1476,30 @@ def create_comprehensive_search_report(
 def main():
     """Main function demonstrating the ICTRP search capabilities."""
 
-    # Setup output directory
-    output_dir = Path("C:/Users/user/Downloads/ctgov-search-strategies/output")
+    # Parse command-line arguments
+    parser = argparse.ArgumentParser(
+        description="WHO ICTRP Search Integration - Search multiple trial registries"
+    )
+    parser.add_argument(
+        "-o", "--output",
+        type=str,
+        default=None,
+        help="Output directory for search results (default: ./output relative to script)"
+    )
+    parser.add_argument(
+        "-c", "--condition",
+        type=str,
+        nargs="+",
+        default=["type 2 diabetes", "breast cancer"],
+        help="Condition(s) to search for (default: 'type 2 diabetes' 'breast cancer')"
+    )
+    args = parser.parse_args()
+
+    # Setup output directory - use provided path, or default to ./output relative to script
+    if args.output:
+        output_dir = Path(args.output)
+    else:
+        output_dir = Path(__file__).resolve().parent.parent / "output"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     print("\n" + "=" * 70)
@@ -1483,7 +1511,7 @@ def main():
 
     # Demo 1: Search by condition
     print("\n--- Demo 1: Search by condition ---")
-    conditions = ["type 2 diabetes", "breast cancer"]
+    conditions = args.condition
 
     for condition in conditions:
         create_comprehensive_search_report(condition, output_dir, searcher)

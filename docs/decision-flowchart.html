@@ -4,21 +4,32 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CT.gov Search Strategy Decision Flowchart</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
             --primary: #2563eb;
             --primary-dark: #1d4ed8;
-            --success: #059669;
-            --warning: #d97706;
-            --danger: #dc2626;
-            --gray-50: #f9fafb;
-            --gray-100: #f3f4f6;
-            --gray-200: #e5e7eb;
-            --gray-300: #d1d5db;
-            --gray-600: #4b5563;
-            --gray-700: #374151;
-            --gray-800: #1f2937;
-            --gray-900: #111827;
+            --primary-light: #dbeafe;
+            --secondary: #64748b;
+            --success: #10b981;
+            --success-dark: #059669;
+            --success-light: #d1fae5;
+            --warning: #f59e0b;
+            --warning-dark: #d97706;
+            --warning-light: #fef3c7;
+            --danger: #ef4444;
+            --danger-light: #fee2e2;
+            --info: #06b6d4;
+            --purple: #8b5cf6;
+            --purple-dark: #7c3aed;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
         }
 
         * {
@@ -30,6 +41,8 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: var(--text);
+            line-height: 1.6;
             min-height: 100vh;
             padding: 20px;
         }
@@ -41,25 +54,30 @@
 
         header {
             text-align: center;
-            color: white;
             margin-bottom: 30px;
+            color: white;
         }
 
-        header h1 {
+        h1 {
             font-size: 2.5rem;
             font-weight: 700;
             margin-bottom: 10px;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
         }
 
-        header p {
+        h1 i {
+            margin-right: 15px;
+        }
+
+        .subtitle {
             font-size: 1.1rem;
             opacity: 0.9;
         }
 
+        /* Main Layout */
         .main-content {
             display: grid;
-            grid-template-columns: 1fr 350px;
+            grid-template-columns: 1fr 380px;
             gap: 30px;
         }
 
@@ -69,20 +87,55 @@
             }
         }
 
+        /* Flowchart Container */
         .flowchart-container {
-            background: white;
+            background: var(--card-bg);
             border-radius: 20px;
             padding: 30px;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+            box-shadow: var(--shadow-xl);
         }
 
+        /* Legend */
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 25px;
+            justify-content: center;
+            padding-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .legend-dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 5px;
+        }
+
+        .legend-dot.start { background: linear-gradient(135deg, var(--success), var(--success-dark)); }
+        .legend-dot.question { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
+        .legend-dot.high-recall { background: linear-gradient(135deg, var(--success), var(--success-dark)); }
+        .legend-dot.medium-recall { background: linear-gradient(135deg, var(--warning), var(--warning-dark)); }
+        .legend-dot.low-recall { background: linear-gradient(135deg, var(--purple), var(--purple-dark)); }
+
+        /* Flowchart */
         .flowchart {
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 15px;
+            gap: 0;
+            min-height: 600px;
         }
 
+        /* Nodes */
         .node {
             position: relative;
             cursor: pointer;
@@ -93,121 +146,108 @@
             transform: translateY(-3px);
         }
 
-        .decision-node {
+        .node.selected {
+            z-index: 10;
+        }
+
+        .start-node {
+            background: linear-gradient(135deg, var(--success), var(--success-dark));
+            color: white;
+            padding: 25px 50px;
+            border-radius: 50px;
+            font-weight: 700;
+            font-size: 1.2rem;
+            box-shadow: 0 10px 30px rgba(16, 185, 129, 0.4);
+            text-align: center;
+        }
+
+        .start-node i {
+            margin-right: 10px;
+        }
+
+        .question-node {
             background: linear-gradient(135deg, var(--primary), var(--primary-dark));
             color: white;
             padding: 20px 30px;
             border-radius: 15px;
             text-align: center;
-            max-width: 350px;
-            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.3);
+            max-width: 320px;
+            box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
         }
 
-        .decision-node h3 {
+        .question-node h3 {
             font-size: 1rem;
             font-weight: 600;
             margin-bottom: 5px;
         }
 
-        .decision-node p {
+        .question-node h3 i {
+            margin-right: 8px;
+        }
+
+        .question-node p {
             font-size: 0.85rem;
             opacity: 0.9;
         }
 
-        .start-node {
-            background: linear-gradient(135deg, #10b981, #059669);
-            color: white;
-            padding: 25px 40px;
-            border-radius: 50px;
-            font-weight: 700;
-            font-size: 1.2rem;
-            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
-        }
-
-        .recommendation-node {
-            background: linear-gradient(135deg, #f59e0b, #d97706);
-            color: white;
-            padding: 15px 25px;
+        .strategy-node {
+            padding: 18px 25px;
             border-radius: 12px;
             text-align: center;
-            max-width: 280px;
-            box-shadow: 0 10px 25px rgba(245, 158, 11, 0.3);
+            max-width: 260px;
+            color: white;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
         }
 
-        .recommendation-node.high-recall {
-            background: linear-gradient(135deg, #10b981, #059669);
+        .strategy-node.high-recall {
+            background: linear-gradient(135deg, var(--success), var(--success-dark));
         }
 
-        .recommendation-node.high-precision {
-            background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        .strategy-node.medium-recall {
+            background: linear-gradient(135deg, var(--warning), var(--warning-dark));
         }
 
-        .recommendation-node h4 {
-            font-size: 0.9rem;
+        .strategy-node.low-recall {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+        }
+
+        .strategy-node h4 {
+            font-size: 0.95rem;
             font-weight: 700;
             margin-bottom: 5px;
         }
 
-        .recommendation-node p {
+        .strategy-node h4 i {
+            margin-right: 6px;
+        }
+
+        .strategy-node p {
             font-size: 0.8rem;
             opacity: 0.95;
+            margin-bottom: 8px;
         }
 
-        .recommendation-node .recall-badge {
+        .recall-badge {
             display: inline-block;
             background: rgba(255,255,255,0.25);
-            padding: 3px 10px;
+            padding: 4px 12px;
             border-radius: 20px;
             font-size: 0.75rem;
-            margin-top: 8px;
-        }
-
-        .branch-container {
-            display: flex;
-            gap: 30px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .branch {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .branch-label {
-            background: var(--gray-100);
-            color: var(--gray-700);
-            padding: 8px 20px;
-            border-radius: 20px;
             font-weight: 600;
-            font-size: 0.85rem;
-            border: 2px solid var(--gray-300);
         }
 
-        .branch-label.yes {
-            background: #dcfce7;
-            border-color: #86efac;
-            color: #166534;
+        .node.selected .start-node,
+        .node.selected .question-node,
+        .node.selected .strategy-node {
+            box-shadow: 0 0 0 4px white, 0 0 0 8px var(--primary);
         }
 
-        .branch-label.no {
-            background: #fee2e2;
-            border-color: #fca5a5;
-            color: #991b1b;
-        }
-
+        /* Connectors */
         .connector {
             width: 3px;
             height: 25px;
-            background: var(--gray-300);
-        }
-
-        .connector-horizontal {
-            height: 3px;
-            width: 50px;
-            background: var(--gray-300);
+            background: var(--border);
+            margin: 0 auto;
         }
 
         .arrow-down {
@@ -215,7 +255,65 @@
             height: 0;
             border-left: 8px solid transparent;
             border-right: 8px solid transparent;
-            border-top: 12px solid var(--gray-300);
+            border-top: 10px solid var(--border);
+            margin: 0 auto;
+        }
+
+        /* Branch containers */
+        .branch-container {
+            display: flex;
+            gap: 40px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .branch {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .branch-label {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+
+        .branch-label.yes {
+            background: var(--success-light);
+            border: 2px solid var(--success);
+            color: #065f46;
+        }
+
+        .branch-label.no {
+            background: var(--danger-light);
+            border: 2px solid var(--danger);
+            color: #991b1b;
+        }
+
+        /* Reset button */
+        .reset-btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 25px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .reset-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
         }
 
         /* Side Panel */
@@ -226,14 +324,14 @@
         }
 
         .info-card {
-            background: white;
+            background: var(--card-bg);
             border-radius: 16px;
             padding: 25px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            box-shadow: var(--shadow-lg);
         }
 
         .info-card h3 {
-            color: var(--gray-800);
+            color: var(--text);
             font-size: 1.1rem;
             margin-bottom: 15px;
             display: flex;
@@ -241,9 +339,9 @@
             gap: 10px;
         }
 
-        .info-card h3 .icon {
-            width: 28px;
-            height: 28px;
+        .info-card h3 .icon-box {
+            width: 32px;
+            height: 32px;
             background: var(--primary);
             border-radius: 8px;
             display: flex;
@@ -253,6 +351,7 @@
             font-size: 14px;
         }
 
+        /* Strategy Table */
         .strategy-table {
             width: 100%;
             border-collapse: collapse;
@@ -260,59 +359,59 @@
         }
 
         .strategy-table th {
-            background: var(--gray-100);
-            padding: 10px 8px;
+            background: var(--bg);
+            padding: 12px 10px;
             text-align: left;
             font-weight: 600;
-            color: var(--gray-700);
-            border-bottom: 2px solid var(--gray-200);
+            color: var(--text);
+            border-bottom: 2px solid var(--border);
         }
 
         .strategy-table td {
-            padding: 10px 8px;
-            border-bottom: 1px solid var(--gray-100);
-            color: var(--gray-600);
+            padding: 12px 10px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+
+        .strategy-table tr {
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
         .strategy-table tr:hover {
-            background: var(--gray-50);
+            background: var(--primary-light);
         }
 
-        .recall-bar {
+        .strategy-table tr.active {
+            background: var(--primary-light);
+        }
+
+        .strategy-id {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .retention-bar {
             height: 8px;
-            background: var(--gray-200);
+            background: var(--border);
             border-radius: 4px;
             overflow: hidden;
-            min-width: 60px;
+            min-width: 80px;
         }
 
-        .recall-fill {
+        .retention-fill {
             height: 100%;
             border-radius: 4px;
             transition: width 0.5s ease;
         }
 
-        .recall-fill.high {
-            background: linear-gradient(90deg, #10b981, #059669);
-        }
-
-        .recall-fill.medium {
-            background: linear-gradient(90deg, #f59e0b, #d97706);
-        }
-
-        .recall-fill.low {
-            background: linear-gradient(90deg, #ef4444, #dc2626);
-        }
-
-        /* Selected state */
-        .node.selected .decision-node,
-        .node.selected .recommendation-node {
-            box-shadow: 0 0 0 4px white, 0 0 0 8px var(--primary);
-        }
+        .retention-fill.high { background: linear-gradient(90deg, var(--success), var(--success-dark)); }
+        .retention-fill.medium { background: linear-gradient(90deg, var(--warning), var(--warning-dark)); }
+        .retention-fill.low { background: linear-gradient(90deg, var(--danger), #b91c1c); }
 
         /* Detail Panel */
         .detail-panel {
-            background: linear-gradient(135deg, var(--gray-800), var(--gray-900));
+            background: linear-gradient(135deg, #1e293b, #0f172a);
             color: white;
             border-radius: 16px;
             padding: 25px;
@@ -321,52 +420,62 @@
 
         .detail-panel.active {
             display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .detail-panel h3 {
-            font-size: 1.2rem;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             margin-bottom: 15px;
             color: #93c5fd;
         }
 
         .detail-panel .strategy-name {
-            font-size: 1.1rem;
+            font-size: 1.15rem;
             font-weight: 700;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
+            color: white;
         }
 
         .detail-panel .description {
             font-size: 0.9rem;
-            line-height: 1.6;
+            line-height: 1.7;
             opacity: 0.9;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
         }
 
         .detail-panel .api-query {
-            background: rgba(0,0,0,0.3);
-            padding: 12px;
-            border-radius: 8px;
-            font-family: 'Monaco', 'Consolas', monospace;
+            background: rgba(0,0,0,0.4);
+            padding: 14px;
+            border-radius: 10px;
+            font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
             font-size: 0.8rem;
             word-break: break-all;
-            margin-bottom: 15px;
+            margin-bottom: 18px;
+            border-left: 4px solid var(--info);
         }
 
         .detail-panel .metrics {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
         }
 
         .detail-panel .metric {
             background: rgba(255,255,255,0.1);
-            padding: 12px;
-            border-radius: 8px;
+            padding: 14px;
+            border-radius: 10px;
             text-align: center;
         }
 
         .detail-panel .metric-value {
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 700;
             color: #93c5fd;
         }
@@ -375,6 +484,125 @@
             font-size: 0.75rem;
             opacity: 0.7;
             text-transform: uppercase;
+            margin-top: 4px;
+        }
+
+        /* Use Cases Card */
+        .use-cases-list {
+            list-style: none;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .use-cases-list li {
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .use-cases-list li:last-child {
+            border-bottom: none;
+        }
+
+        .use-cases-list li i {
+            color: var(--success);
+            margin-top: 3px;
+        }
+
+        .use-cases-list li.warning i {
+            color: var(--warning);
+        }
+
+        /* Strategy Guide Table Section */
+        .table-section {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow-xl);
+            margin-top: 30px;
+        }
+
+        .table-section h2 {
+            color: var(--text);
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .table-section h2 i {
+            color: var(--primary);
+        }
+
+        .full-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .full-table th {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 600;
+        }
+
+        .full-table th:first-child {
+            border-radius: 10px 0 0 0;
+        }
+
+        .full-table th:last-child {
+            border-radius: 0 10px 0 0;
+        }
+
+        .full-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .full-table tr:hover {
+            background: var(--bg);
+        }
+
+        .full-table tr:last-child td:first-child {
+            border-radius: 0 0 0 10px;
+        }
+
+        .full-table tr:last-child td:last-child {
+            border-radius: 0 0 10px 0;
+        }
+
+        .sensitivity-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .sensitivity-badge.high {
+            background: var(--success-light);
+            color: #065f46;
+        }
+
+        .sensitivity-badge.medium {
+            background: var(--warning-light);
+            color: #92400e;
+        }
+
+        .sensitivity-badge.low {
+            background: var(--danger-light);
+            color: #991b1b;
+        }
+
+        .best-for {
+            font-size: 0.85rem;
+            color: var(--text-muted);
         }
 
         /* Footer */
@@ -382,12 +610,16 @@
             text-align: center;
             margin-top: 30px;
             color: white;
-            opacity: 0.8;
+            opacity: 0.9;
+        }
+
+        footer p {
+            margin-bottom: 8px;
         }
 
         footer a {
             color: white;
-            text-decoration: underline;
+            text-decoration: none;
         }
 
         .back-link {
@@ -395,7 +627,7 @@
             align-items: center;
             gap: 8px;
             background: rgba(255,255,255,0.2);
-            padding: 10px 20px;
+            padding: 10px 25px;
             border-radius: 30px;
             color: white;
             text-decoration: none;
@@ -408,69 +640,45 @@
             background: rgba(255,255,255,0.3);
         }
 
-        /* Legend */
-        .legend {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-            justify-content: center;
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 1.75rem;
+            }
+
+            .flowchart-container {
+                padding: 20px;
+            }
+
+            .branch-container {
+                gap: 20px;
+            }
+
+            .strategy-node {
+                max-width: 200px;
+                padding: 14px 18px;
+            }
+
+            .detail-panel .metrics {
+                grid-template-columns: 1fr;
+            }
         }
 
-        .legend-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.85rem;
-            color: var(--gray-600);
-        }
-
-        .legend-dot {
-            width: 16px;
-            height: 16px;
-            border-radius: 4px;
-        }
-
-        .legend-dot.start { background: linear-gradient(135deg, #10b981, #059669); }
-        .legend-dot.decision { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); }
-        .legend-dot.high-recall { background: linear-gradient(135deg, #10b981, #059669); }
-        .legend-dot.high-precision { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-        .legend-dot.moderate { background: linear-gradient(135deg, #f59e0b, #d97706); }
-
-        /* Reset button */
-        .reset-btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: background 0.3s;
-            margin-top: 15px;
-        }
-
-        .reset-btn:hover {
-            background: var(--primary-dark);
-        }
-
+        /* Hidden utility */
         .hidden {
             display: none !important;
-        }
-
-        .visible {
-            display: flex !important;
         }
     </style>
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>CT.gov Search Strategy Selector</h1>
-            <p>Interactive decision flowchart to help you choose the optimal search strategy for ClinicalTrials.gov</p>
+            <h1><i class="fas fa-sitemap"></i>CT.gov Search Strategy Selector</h1>
+            <p class="subtitle">Interactive decision flowchart to help systematic reviewers choose the optimal search strategy</p>
         </header>
 
         <div class="main-content">
+            <!-- Flowchart Section -->
             <div class="flowchart-container">
                 <div class="legend">
                     <div class="legend-item">
@@ -478,281 +686,174 @@
                         <span>Start</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-dot decision"></div>
-                        <span>Decision</span>
+                        <div class="legend-dot question"></div>
+                        <span>Decision Point</span>
                     </div>
                     <div class="legend-item">
                         <div class="legend-dot high-recall"></div>
-                        <span>High Recall (>95%)</span>
+                        <span>High Recall (>60%)</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-dot moderate"></div>
-                        <span>Moderate (50-95%)</span>
+                        <div class="legend-dot medium-recall"></div>
+                        <span>Medium Recall (50-60%)</span>
                     </div>
                     <div class="legend-item">
-                        <div class="legend-dot high-precision"></div>
-                        <span>High Precision</span>
+                        <div class="legend-dot low-recall"></div>
+                        <span>High Precision/Low Recall</span>
                     </div>
                 </div>
 
                 <div class="flowchart" id="flowchart">
-                    <!-- Start Node -->
-                    <div class="node" id="start" onclick="handleClick('start')">
-                        <div class="start-node">Start: What is your search goal?</div>
+                    <!-- START NODE -->
+                    <div class="node" id="start" onclick="handleNodeClick('start')">
+                        <div class="start-node">
+                            <i class="fas fa-play-circle"></i>What is your primary goal?
+                        </div>
                     </div>
 
                     <div class="connector"></div>
                     <div class="arrow-down"></div>
 
-                    <!-- Q1: Maximum Recall -->
-                    <div class="node" id="q1" onclick="handleClick('q1')">
-                        <div class="decision-node">
-                            <h3>Is maximum recall required?</h3>
-                            <p>Systematic reviews, Cochrane searches, safety reviews</p>
-                        </div>
-                    </div>
-
-                    <div class="branch-container" id="q1-branches">
-                        <!-- YES Branch -->
-                        <div class="branch" id="q1-yes-branch">
-                            <div class="branch-label yes">YES</div>
+                    <!-- MAIN BRANCHES -->
+                    <div class="branch-container" id="main-branches">
+                        <!-- Branch 1: Maximum Sensitivity -->
+                        <div class="branch">
+                            <div class="branch-label yes">Maximum Sensitivity</div>
                             <div class="connector"></div>
                             <div class="arrow-down"></div>
-                            <div class="node" id="rec-s1" onclick="handleClick('rec-s1')">
-                                <div class="recommendation-node high-recall">
-                                    <h4>Strategy S1: Condition Only</h4>
-                                    <p>Maximum sensitivity search using condition field only</p>
-                                    <span class="recall-badge">98.7% Recall</span>
-                                </div>
-                            </div>
-                            <div class="connector"></div>
-                            <div class="node" id="rec-aact" onclick="handleClick('rec-aact')">
-                                <div class="recommendation-node high-recall">
-                                    <h4>+ AACT Database</h4>
-                                    <p>Also search AACT for complete coverage</p>
-                                    <span class="recall-badge">Recommended</span>
+                            <div class="node" id="s1-node" onclick="handleNodeClick('S1')">
+                                <div class="strategy-node high-recall">
+                                    <h4><i class="fas fa-search-plus"></i>S1: Condition Only</h4>
+                                    <p>Find ALL trials - Cochrane recommended</p>
+                                    <span class="recall-badge">100% Retention | 48.2% Recall</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- NO Branch -->
-                        <div class="branch" id="q1-no-branch">
-                            <div class="branch-label no">NO</div>
+                        <!-- Branch 2: RCTs Only -->
+                        <div class="branch">
+                            <div class="branch-label yes">RCTs Only</div>
                             <div class="connector"></div>
                             <div class="arrow-down"></div>
-
-                            <!-- Q2: Completed Studies -->
-                            <div class="node" id="q2" onclick="handleClick('q2')">
-                                <div class="decision-node">
-                                    <h3>Need only completed studies?</h3>
-                                    <p>Published trials, post-hoc analyses</p>
+                            <div class="node" id="s3-node" onclick="handleNodeClick('S3')">
+                                <div class="strategy-node high-recall">
+                                    <h4><i class="fas fa-random"></i>S3: Randomized</h4>
+                                    <p>True RCTs with randomized allocation</p>
+                                    <span class="recall-badge">54% Retention | 63.2% Recall</span>
                                 </div>
                             </div>
+                        </div>
 
-                            <div class="branch-container" id="q2-branches">
-                                <!-- YES -->
-                                <div class="branch" id="q2-yes-branch">
-                                    <div class="branch-label yes">YES</div>
-                                    <div class="connector"></div>
-                                    <div class="arrow-down"></div>
-                                    <div class="node" id="rec-s6" onclick="handleClick('rec-s6')">
-                                        <div class="recommendation-node">
-                                            <h4>Strategy S6/S7: Completed</h4>
-                                            <p>Filter by completion status</p>
-                                            <span class="recall-badge">87.0% Recall</span>
-                                        </div>
-                                    </div>
+                        <!-- Branch 3: Completed Trials -->
+                        <div class="branch">
+                            <div class="branch-label yes">Completed Trials</div>
+                            <div class="connector"></div>
+                            <div class="arrow-down"></div>
+                            <div class="node" id="s6-node" onclick="handleNodeClick('S6')">
+                                <div class="strategy-node medium-recall">
+                                    <h4><i class="fas fa-check-circle"></i>S6: Completed</h4>
+                                    <p>Finished trials with final data</p>
+                                    <span class="recall-badge">55% Retention | 51.7% Recall</span>
                                 </div>
+                            </div>
+                        </div>
 
-                                <!-- NO -->
-                                <div class="branch" id="q2-no-branch">
-                                    <div class="branch-label no">NO</div>
-                                    <div class="connector"></div>
-                                    <div class="arrow-down"></div>
+                        <!-- Branch 4: Results Posted -->
+                        <div class="branch">
+                            <div class="branch-label yes">Trials with Results</div>
+                            <div class="connector"></div>
+                            <div class="arrow-down"></div>
+                            <div class="node" id="s5-node" onclick="handleNodeClick('S5')">
+                                <div class="strategy-node medium-recall">
+                                    <h4><i class="fas fa-chart-bar"></i>S5: Has Results</h4>
+                                    <p>Studies with posted outcome data</p>
+                                    <span class="recall-badge">14% Retention | 55.5% Recall</span>
+                                </div>
+                            </div>
+                        </div>
 
-                                    <!-- Q3: RCTs Only -->
-                                    <div class="node" id="q3" onclick="handleClick('q3')">
-                                        <div class="decision-node">
-                                            <h3>Need randomized trials only?</h3>
-                                            <p>Efficacy studies, treatment comparisons</p>
-                                        </div>
-                                    </div>
-
-                                    <div class="branch-container" id="q3-branches">
-                                        <!-- YES -->
-                                        <div class="branch" id="q3-yes-branch">
-                                            <div class="branch-label yes">YES</div>
-                                            <div class="connector"></div>
-                                            <div class="arrow-down"></div>
-                                            <div class="node" id="rec-s3" onclick="handleClick('rec-s3')">
-                                                <div class="recommendation-node high-recall">
-                                                    <h4>Strategy S3: Randomized</h4>
-                                                    <p>AREA[DesignAllocation]RANDOMIZED</p>
-                                                    <span class="recall-badge">98.7% Recall</span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- NO -->
-                                        <div class="branch" id="q3-no-branch">
-                                            <div class="branch-label no">NO</div>
-                                            <div class="connector"></div>
-                                            <div class="arrow-down"></div>
-
-                                            <!-- Q4: Results Posted -->
-                                            <div class="node" id="q4" onclick="handleClick('q4')">
-                                                <div class="decision-node">
-                                                    <h3>Need results posted?</h3>
-                                                    <p>Studies with outcome data available</p>
-                                                </div>
-                                            </div>
-
-                                            <div class="branch-container" id="q4-branches">
-                                                <!-- YES -->
-                                                <div class="branch" id="q4-yes-branch">
-                                                    <div class="branch-label yes">YES</div>
-                                                    <div class="connector"></div>
-                                                    <div class="arrow-down"></div>
-                                                    <div class="node" id="rec-s5" onclick="handleClick('rec-s5')">
-                                                        <div class="recommendation-node">
-                                                            <h4>Strategy S5: Has Results</h4>
-                                                            <p>Only studies with posted results</p>
-                                                            <span class="recall-badge">63.6% Recall</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <!-- NO -->
-                                                <div class="branch" id="q4-no-branch">
-                                                    <div class="branch-label no">NO</div>
-                                                    <div class="connector"></div>
-                                                    <div class="arrow-down"></div>
-
-                                                    <!-- Q5: High Precision -->
-                                                    <div class="node" id="q5" onclick="handleClick('q5')">
-                                                        <div class="decision-node">
-                                                            <h3>Need high precision?</h3>
-                                                            <p>Fewer results to screen, focused search</p>
-                                                        </div>
-                                                    </div>
-
-                                                    <div class="branch-container" id="q5-branches">
-                                                        <!-- YES -->
-                                                        <div class="branch" id="q5-yes-branch">
-                                                            <div class="branch-label yes">YES</div>
-                                                            <div class="connector"></div>
-                                                            <div class="arrow-down"></div>
-                                                            <div class="node" id="rec-s8" onclick="handleClick('rec-s8')">
-                                                                <div class="recommendation-node high-precision">
-                                                                    <h4>Strategy S8/S10: Focused</h4>
-                                                                    <p>RCT + Phase 3/4 + Completed</p>
-                                                                    <span class="recall-badge">42.9% Recall</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-
-                                                        <!-- NO -->
-                                                        <div class="branch" id="q5-no-branch">
-                                                            <div class="branch-label no">NO</div>
-                                                            <div class="connector"></div>
-                                                            <div class="arrow-down"></div>
-                                                            <div class="node" id="rec-s2" onclick="handleClick('rec-s2')">
-                                                                <div class="recommendation-node">
-                                                                    <h4>Strategy S2: Interventional</h4>
-                                                                    <p>All interventional studies</p>
-                                                                    <span class="recall-badge">98.7% Recall</span>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                        <!-- Branch 5: High Quality -->
+                        <div class="branch">
+                            <div class="branch-label yes">High Quality Subset</div>
+                            <div class="connector"></div>
+                            <div class="arrow-down"></div>
+                            <div class="node" id="s8-node" onclick="handleNodeClick('S8')">
+                                <div class="strategy-node low-recall">
+                                    <h4><i class="fas fa-award"></i>S8: RCT+Phase3/4</h4>
+                                    <p>Most restrictive - highest quality</p>
+                                    <span class="recall-badge">8% Retention | 33.8% Recall</span>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <button class="reset-btn" onclick="resetFlowchart()">Reset Flowchart</button>
+                    <button class="reset-btn" onclick="resetFlowchart()">
+                        <i class="fas fa-redo"></i>Reset Selection
+                    </button>
                 </div>
             </div>
 
+            <!-- Side Panel -->
             <div class="side-panel">
-                <!-- Strategy Performance Table -->
+                <!-- Quick Strategy Table -->
                 <div class="info-card">
-                    <h3><span class="icon">📊</span> Strategy Performance</h3>
-                    <table class="strategy-table">
+                    <h3>
+                        <span class="icon-box"><i class="fas fa-chart-line"></i></span>
+                        Strategy Quick View
+                    </h3>
+                    <table class="strategy-table" id="quick-table">
                         <thead>
                             <tr>
                                 <th>Strategy</th>
+                                <th>Retention</th>
                                 <th>Recall</th>
-                                <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr onclick="handleClick('rec-s1')">
-                                <td><strong>S1</strong> Condition Only</td>
-                                <td>98.7%</td>
+                            <tr onclick="handleNodeClick('S1')" data-strategy="S1">
+                                <td><span class="strategy-id">S1</span> Condition</td>
                                 <td>
-                                    <div class="recall-bar">
-                                        <div class="recall-fill high" style="width: 98.7%"></div>
+                                    <div class="retention-bar">
+                                        <div class="retention-fill high" style="width: 100%"></div>
                                     </div>
                                 </td>
+                                <td>48.2%</td>
                             </tr>
-                            <tr onclick="handleClick('rec-s2')">
-                                <td><strong>S2</strong> Interventional</td>
-                                <td>98.7%</td>
+                            <tr onclick="handleNodeClick('S3')" data-strategy="S3">
+                                <td><span class="strategy-id">S3</span> Randomized</td>
                                 <td>
-                                    <div class="recall-bar">
-                                        <div class="recall-fill high" style="width: 98.7%"></div>
+                                    <div class="retention-bar">
+                                        <div class="retention-fill medium" style="width: 54%"></div>
                                     </div>
                                 </td>
+                                <td>63.2%</td>
                             </tr>
-                            <tr onclick="handleClick('rec-s3')">
-                                <td><strong>S3</strong> Randomized</td>
-                                <td>98.7%</td>
+                            <tr onclick="handleNodeClick('S6')" data-strategy="S6">
+                                <td><span class="strategy-id">S6</span> Completed</td>
                                 <td>
-                                    <div class="recall-bar">
-                                        <div class="recall-fill high" style="width: 98.7%"></div>
+                                    <div class="retention-bar">
+                                        <div class="retention-fill medium" style="width: 55%"></div>
                                     </div>
                                 </td>
+                                <td>51.7%</td>
                             </tr>
-                            <tr onclick="handleClick('rec-s6')">
-                                <td><strong>S6</strong> Completed</td>
-                                <td>87.0%</td>
+                            <tr onclick="handleNodeClick('S5')" data-strategy="S5">
+                                <td><span class="strategy-id">S5</span> Has Results</td>
                                 <td>
-                                    <div class="recall-bar">
-                                        <div class="recall-fill medium" style="width: 87%"></div>
+                                    <div class="retention-bar">
+                                        <div class="retention-fill low" style="width: 14%"></div>
                                     </div>
                                 </td>
+                                <td>55.5%</td>
                             </tr>
-                            <tr onclick="handleClick('rec-s8')">
-                                <td><strong>S10</strong> Treatment RCTs</td>
-                                <td>89.6%</td>
+                            <tr onclick="handleNodeClick('S8')" data-strategy="S8">
+                                <td><span class="strategy-id">S8</span> RCT+Phase3/4</td>
                                 <td>
-                                    <div class="recall-bar">
-                                        <div class="recall-fill medium" style="width: 89.6%"></div>
+                                    <div class="retention-bar">
+                                        <div class="retention-fill low" style="width: 8%"></div>
                                     </div>
                                 </td>
-                            </tr>
-                            <tr onclick="handleClick('rec-s5')">
-                                <td><strong>S5</strong> Has Results</td>
-                                <td>63.6%</td>
-                                <td>
-                                    <div class="recall-bar">
-                                        <div class="recall-fill medium" style="width: 63.6%"></div>
-                                    </div>
-                                </td>
-                            </tr>
-                            <tr onclick="handleClick('rec-s8')">
-                                <td><strong>S8</strong> RCT+Phase3/4</td>
-                                <td>42.9%</td>
-                                <td>
-                                    <div class="recall-bar">
-                                        <div class="recall-fill low" style="width: 42.9%"></div>
-                                    </div>
-                                </td>
+                                <td>33.8%</td>
                             </tr>
                         </tbody>
                     </table>
@@ -760,142 +861,347 @@
 
                 <!-- Detail Panel -->
                 <div class="info-card detail-panel" id="detail-panel">
-                    <h3>Strategy Details</h3>
+                    <h3><i class="fas fa-info-circle"></i> Strategy Details</h3>
                     <div class="strategy-name" id="detail-name">Select a strategy</div>
-                    <div class="description" id="detail-description">Click on any recommendation node to see details.</div>
-                    <div class="api-query" id="detail-query">query.cond=&lt;condition&gt;</div>
+                    <div class="description" id="detail-description">Click on any strategy node or table row to see detailed information.</div>
+                    <div class="api-query" id="detail-query">query.cond={condition}</div>
                     <div class="metrics">
+                        <div class="metric">
+                            <div class="metric-value" id="detail-retention">--</div>
+                            <div class="metric-label">Retention</div>
+                        </div>
                         <div class="metric">
                             <div class="metric-value" id="detail-recall">--</div>
                             <div class="metric-label">Recall</div>
                         </div>
                         <div class="metric">
-                            <div class="metric-value" id="detail-count">--</div>
-                            <div class="metric-label">Est. Results</div>
+                            <div class="metric-value" id="detail-workload">--</div>
+                            <div class="metric-label">Workload Reduction</div>
+                        </div>
+                        <div class="metric">
+                            <div class="metric-value" id="detail-sensitivity">--</div>
+                            <div class="metric-label">Sensitivity</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Key Recommendations -->
+                <!-- Use Cases Card -->
                 <div class="info-card">
-                    <h3><span class="icon">💡</span> Key Recommendations</h3>
-                    <ul style="list-style: none; font-size: 0.9rem; color: var(--gray-600); line-height: 1.8;">
-                        <li>✓ <strong>Systematic Reviews:</strong> Use S1 + AACT</li>
-                        <li>✓ <strong>RCT Meta-analysis:</strong> Use S3</li>
-                        <li>✓ <strong>Scoping Review:</strong> Use S2 or S6</li>
-                        <li>✓ <strong>Quick Scan:</strong> Use S8 or S10</li>
-                        <li>⚠ Never rely on single source</li>
-                        <li>⚠ Always search WHO ICTRP too</li>
+                    <h3>
+                        <span class="icon-box"><i class="fas fa-lightbulb"></i></span>
+                        Quick Recommendations
+                    </h3>
+                    <ul class="use-cases-list">
+                        <li><i class="fas fa-check"></i><span><strong>Systematic Reviews:</strong> Use S1 (maximum recall)</span></li>
+                        <li><i class="fas fa-check"></i><span><strong>RCT Meta-analysis:</strong> Use S3 (best balance)</span></li>
+                        <li><i class="fas fa-check"></i><span><strong>Rapid Reviews:</strong> Use S7 or S8</span></li>
+                        <li><i class="fas fa-check"></i><span><strong>Treatment Focus:</strong> Use S10</span></li>
+                        <li class="warning"><i class="fas fa-exclamation-triangle"></i><span>Never rely on a single search source</span></li>
+                        <li class="warning"><i class="fas fa-exclamation-triangle"></i><span>Always search WHO ICTRP too</span></li>
                     </ul>
                 </div>
             </div>
         </div>
 
+        <!-- Full Strategy Guide Table -->
+        <div class="table-section">
+            <h2><i class="fas fa-table"></i>Complete Strategy Reference Guide</h2>
+            <table class="full-table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Strategy Name</th>
+                        <th>Retention</th>
+                        <th>Recall</th>
+                        <th>Sensitivity</th>
+                        <th>Best For</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr onclick="handleNodeClick('S1')">
+                        <td><span class="strategy-id">S1</span></td>
+                        <td><strong>Condition Only</strong></td>
+                        <td>
+                            100%
+                            <div class="retention-bar"><div class="retention-fill high" style="width: 100%"></div></div>
+                        </td>
+                        <td>48.2%</td>
+                        <td><span class="sensitivity-badge high">High</span></td>
+                        <td class="best-for">Systematic reviews requiring maximum recall</td>
+                    </tr>
+                    <tr onclick="handleNodeClick('S2')">
+                        <td><span class="strategy-id">S2</span></td>
+                        <td><strong>Interventional Studies</strong></td>
+                        <td>
+                            77%
+                            <div class="retention-bar"><div class="retention-fill high" style="width: 77%"></div></div>
+                        </td>
+                        <td>53.9%</td>
+                        <td><span class="sensitivity-badge high">High</span></td>
+                        <td class="best-for">RCT-focused reviews</td>
+                    </tr>
+                    <tr onclick="handleNodeClick('S3')">
+                        <td><span class="strategy-id">S3</span></td>
+                        <td><strong>Randomized Allocation</strong></td>
+                        <td>
+                            54%
+                            <div class="retention-bar"><div class="retention-fill medium" style="width: 54%"></div></div>
+                        </td>
+                        <td>63.2%</td>
+                        <td><span class="sensitivity-badge medium">Medium</span></td>
+                        <td class="best-for">True RCTs only - Best balance</td>
+                    </tr>
+                    <tr onclick="handleNodeClick('S4')">
+                        <td><span class="strategy-id">S4</span></td>
+                        <td><strong>Phase 3/4 Studies</strong></td>
+                        <td>
+                            16%
+                            <div class="retention-bar"><div class="retention-fill low" style="width: 16%"></div></div>
+                        </td>
+                        <td>34.4%</td>
+                        <td><span class="sensitivity-badge low">Low</span></td>
+                        <td class="best-for">Late-phase efficacy trials</td>
+                    </tr>
+                    <tr onclick="handleNodeClick('S5')">
+                        <td><span class="strategy-id">S5</span></td>
+                        <td><strong>Has Posted Results</strong></td>
+                        <td>
+                            14%
+                            <div class="retention-bar"><div class="retention-fill low" style="width: 14%"></div></div>
+                        </td>
+                        <td>55.5%</td>
+                        <td><span class="sensitivity-badge low">Low</span></td>
+                        <td class="best-for">Trials with available outcome data</td>
+                    </tr>
+                    <tr onclick="handleNodeClick('S6')">
+                        <td><span class="strategy-id">S6</span></td>
+                        <td><strong>Completed Status</strong></td>
+                        <td>
+                            55%
+                            <div class="retention-bar"><div class="retention-fill medium" style="width: 55%"></div></div>
+                        </td>
+                        <td>51.7%</td>
+                        <td><span class="sensitivity-badge medium">Medium</span></td>
+                        <td class="best-for">Finished trials only</td>
+                    </tr>
+                    <tr onclick="handleNodeClick('S7')">
+                        <td><span class="strategy-id">S7</span></td>
+                        <td><strong>Interventional + Completed</strong></td>
+                        <td>
+                            43%
+                            <div class="retention-bar"><div class="retention-fill medium" style="width: 43%"></div></div>
+                        </td>
+                        <td>56.8%</td>
+                        <td><span class="sensitivity-badge medium">Medium</span></td>
+                        <td class="best-for">Completed RCTs</td>
+                    </tr>
+                    <tr onclick="handleNodeClick('S8')">
+                        <td><span class="strategy-id">S8</span></td>
+                        <td><strong>RCT + Phase 3/4 + Completed</strong></td>
+                        <td>
+                            8%
+                            <div class="retention-bar"><div class="retention-fill low" style="width: 8%"></div></div>
+                        </td>
+                        <td>33.8%</td>
+                        <td><span class="sensitivity-badge low">Low</span></td>
+                        <td class="best-for">Highest quality subset - Rapid reviews</td>
+                    </tr>
+                    <tr onclick="handleNodeClick('S9')">
+                        <td><span class="strategy-id">S9</span></td>
+                        <td><strong>Full-Text RCT Keywords</strong></td>
+                        <td>
+                            72%
+                            <div class="retention-bar"><div class="retention-fill high" style="width: 72%"></div></div>
+                        </td>
+                        <td>51.6%</td>
+                        <td><span class="sensitivity-badge medium">Medium</span></td>
+                        <td class="best-for">Text-based RCT search</td>
+                    </tr>
+                    <tr onclick="handleNodeClick('S10')">
+                        <td><span class="strategy-id">S10</span></td>
+                        <td><strong>Treatment RCTs Only</strong></td>
+                        <td>
+                            36%
+                            <div class="retention-bar"><div class="retention-fill medium" style="width: 36%"></div></div>
+                        </td>
+                        <td>60.0%</td>
+                        <td><span class="sensitivity-badge medium">Medium</span></td>
+                        <td class="best-for">Treatment purpose trials</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
         <footer>
-            <p>Based on validated testing across 155 studies from 12 medical conditions</p>
+            <p>Based on validated testing against Cochrane systematic review data</p>
             <p>Source: CT.gov Search Strategy Validation Project</p>
-            <a href="../README.md" class="back-link">
-                <span>←</span> Back to Documentation
+            <a href="index.html" class="back-link">
+                <i class="fas fa-arrow-left"></i> Back to Documentation
             </a>
         </footer>
     </div>
 
     <script>
-        const strategyDetails = {
-            'rec-s1': {
+        // Strategy details data
+        const strategies = {
+            'S1': {
                 name: 'S1: Condition Only (Maximum Recall)',
-                description: 'The most sensitive search strategy. Uses only the condition/disease field with no filters. Recommended by Cochrane for systematic reviews where missing studies is unacceptable.',
-                query: 'query.cond=<condition>',
-                recall: '98.7%',
-                count: '~23,000 (diabetes)'
+                description: 'The most sensitive search strategy. Uses only the condition/disease field with no filters. This is the Cochrane-recommended approach for systematic reviews where missing studies is unacceptable. Returns the highest number of results.',
+                query: 'query.cond={condition}',
+                retention: '100%',
+                recall: '48.2%',
+                workload: '0%',
+                sensitivity: 'High',
+                useCases: ['Systematic reviews', 'Scoping reviews', 'Cochrane searches', 'Safety reviews']
             },
-            'rec-s2': {
+            'S2': {
                 name: 'S2: Interventional Studies',
-                description: 'Filters to interventional study types only, excluding observational and registry studies. Good balance of sensitivity and specificity.',
-                query: 'query.cond=<condition>&query.term=AREA[StudyType]INTERVENTIONAL',
-                recall: '98.7%',
-                count: '~20,000 (diabetes)'
+                description: 'Filters to interventional study types only, excluding observational and registry studies. Good balance of sensitivity and reduced screening burden. Reduces results by ~23%.',
+                query: 'query.cond={condition}&query.term=AREA[StudyType]INTERVENTIONAL',
+                retention: '77%',
+                recall: '53.9%',
+                workload: '23%',
+                sensitivity: 'High',
+                useCases: ['Meta-analyses of treatment effects', 'Reviews excluding observational data']
             },
-            'rec-s3': {
+            'S3': {
                 name: 'S3: Randomized Allocation Only',
-                description: 'True randomized controlled trials only. Excludes single-arm and non-randomized studies. Ideal for efficacy meta-analyses.',
-                query: 'query.cond=<condition>&query.term=AREA[DesignAllocation]RANDOMIZED',
-                recall: '98.7%',
-                count: '~14,000 (diabetes)'
+                description: 'True randomized controlled trials only. Excludes single-arm and non-randomized studies. Best balance of recall and precision for RCT-focused reviews. Recommended for Cochrane intervention reviews.',
+                query: 'query.cond={condition}&query.term=AREA[DesignAllocation]RANDOMIZED',
+                retention: '54%',
+                recall: '63.2%',
+                workload: '46%',
+                sensitivity: 'Medium',
+                useCases: ['RCT-only systematic reviews', 'Cochrane intervention reviews', 'Meta-analyses requiring randomization']
             },
-            'rec-s5': {
+            'S4': {
+                name: 'S4: Phase 3/4 Studies',
+                description: 'Filters to later-phase clinical trials (Phase 3 and Phase 4) only. Focuses on larger efficacy trials. May miss important early-phase data.',
+                query: 'query.cond={condition}&query.term=AREA[Phase](PHASE3 OR PHASE4)',
+                retention: '16%',
+                recall: '34.4%',
+                workload: '84%',
+                sensitivity: 'Low',
+                useCases: ['Reviews focused on efficacy trials', 'Regulatory submission evidence', 'Large-scale effectiveness studies']
+            },
+            'S5': {
                 name: 'S5: Has Posted Results',
-                description: 'Only studies that have posted results on CT.gov. Useful when you need actual outcome data without publication searching.',
-                query: 'query.cond=<condition>&query.term=AREA[ResultsFirstPostDate]RANGE[MIN,MAX]',
-                recall: '63.6%',
-                count: 'Variable'
+                description: 'Only studies that have posted results on ClinicalTrials.gov. Useful when you need actual outcome data without publication searching. Only ~14% of trials have posted results.',
+                query: 'query.cond={condition}&query.term=AREA[ResultsFirstPostDate]RANGE[MIN,MAX]',
+                retention: '14%',
+                recall: '55.5%',
+                workload: '86%',
+                sensitivity: 'Low',
+                useCases: ['Identifying publication bias', 'Finding trials with outcome data', 'Quick results screening']
             },
-            'rec-s6': {
-                name: 'S6/S7: Completed Status',
-                description: 'Filters to completed studies only. Useful for identifying trials likely to have published results or for post-hoc analyses.',
-                query: 'query.cond=<condition>&filter.overallStatus=COMPLETED',
-                recall: '87.0%',
-                count: '~14,500 (diabetes)'
+            'S6': {
+                name: 'S6: Completed Status',
+                description: 'Filters to trials with "Completed" overall status. Useful for identifying trials likely to have published results or for post-hoc analyses.',
+                query: 'query.cond={condition}&filter.overallStatus=COMPLETED',
+                retention: '55%',
+                recall: '51.7%',
+                workload: '45%',
+                sensitivity: 'Medium',
+                useCases: ['Reviews focused on finished trials', 'Avoiding ongoing studies', 'When you need final results']
             },
-            'rec-s8': {
-                name: 'S8/S10: Focused High Precision',
-                description: 'Highly filtered search combining RCT design, Phase 3/4, and completed status. Yields fewer results for quick screening but may miss relevant studies.',
-                query: 'query.cond=<condition>&query.term=AREA[StudyType]INTERVENTIONAL AND AREA[Phase](PHASE3 OR PHASE4)&filter.overallStatus=COMPLETED',
-                recall: '42.9%',
-                count: '~2,700 (diabetes)'
+            'S7': {
+                name: 'S7: Interventional + Completed',
+                description: 'Combines interventional study type with completed status for finished RCTs. Good for systematic reviews of completed intervention trials. Reduces workload by 57%.',
+                query: 'query.cond={condition}&query.term=AREA[StudyType]INTERVENTIONAL&filter.overallStatus=COMPLETED',
+                retention: '43%',
+                recall: '56.8%',
+                workload: '57%',
+                sensitivity: 'Medium',
+                useCases: ['Systematic reviews of completed RCTs', 'Meta-analyses requiring final data']
             },
-            'rec-aact': {
-                name: 'AACT Database Supplement',
-                description: 'The Aggregate Analysis of ClinicalTrials.gov (AACT) database provides structured SQL access to CT.gov data. Recommended as a supplementary source for comprehensive searches.',
-                query: 'SELECT * FROM studies WHERE condition LIKE \'%<condition>%\'',
-                recall: 'Varies',
-                count: 'Complete DB'
+            'S8': {
+                name: 'S8: RCT + Phase 3/4 + Completed',
+                description: 'Most restrictive filter combining randomized, Phase 3/4, and completed criteria. Yields highest quality subset but may miss important smaller trials. Only 8% retention.',
+                query: 'query.cond={condition}&query.term=AREA[DesignAllocation]RANDOMIZED AND AREA[Phase](PHASE3 OR PHASE4)&filter.overallStatus=COMPLETED',
+                retention: '8%',
+                recall: '33.8%',
+                workload: '92%',
+                sensitivity: 'Low',
+                useCases: ['Rapid reviews with quality focus', 'Guideline development with strict criteria', 'Quick evidence assessment']
+            },
+            'S9': {
+                name: 'S9: Full-Text RCT Keywords',
+                description: 'Text-based search combining condition with RCT-related keywords. Useful when condition field may be incomplete or when supplementing structured searches.',
+                query: 'query.term={condition} AND randomized AND controlled',
+                retention: '72%',
+                recall: '51.6%',
+                workload: '28%',
+                sensitivity: 'Medium',
+                useCases: ['Supplementing structured searches', 'Finding trials with RCT in title/description']
+            },
+            'S10': {
+                name: 'S10: Treatment RCTs Only',
+                description: 'Randomized trials with treatment as primary purpose. Excludes prevention, diagnostic, and supportive care trials. Good for treatment-focused reviews.',
+                query: 'query.cond={condition}&query.term=AREA[DesignAllocation]RANDOMIZED AND AREA[DesignPrimaryPurpose]TREATMENT',
+                retention: '36%',
+                recall: '60.0%',
+                workload: '64%',
+                sensitivity: 'Medium',
+                useCases: ['Treatment-focused reviews', 'Excluding prevention/diagnostic trials', 'When therapeutic effect is primary outcome']
             }
         };
 
-        let selectedNode = null;
+        let selectedStrategy = null;
 
-        function handleClick(nodeId) {
+        function handleNodeClick(strategyId) {
             // Remove previous selection
             document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+            document.querySelectorAll('.strategy-table tr').forEach(r => r.classList.remove('active'));
+            document.querySelectorAll('.full-table tr').forEach(r => r.classList.remove('active'));
+
+            if (strategyId === 'start') {
+                document.getElementById('start').classList.add('selected');
+                return;
+            }
 
             // Add selection to clicked node
+            const nodeId = strategyId.toLowerCase() + '-node';
             const node = document.getElementById(nodeId);
             if (node) {
                 node.classList.add('selected');
-                selectedNode = nodeId;
             }
 
-            // Show details if it's a recommendation
-            if (nodeId.startsWith('rec-')) {
-                showDetails(nodeId);
-            }
+            // Highlight table row
+            const tableRows = document.querySelectorAll(`[data-strategy="${strategyId}"]`);
+            tableRows.forEach(row => row.classList.add('active'));
+
+            // Show details
+            showStrategyDetails(strategyId);
+            selectedStrategy = strategyId;
         }
 
-        function showDetails(strategyId) {
-            const details = strategyDetails[strategyId];
-            if (!details) return;
+        function showStrategyDetails(strategyId) {
+            const strategy = strategies[strategyId];
+            if (!strategy) return;
 
             const panel = document.getElementById('detail-panel');
             panel.classList.add('active');
 
-            document.getElementById('detail-name').textContent = details.name;
-            document.getElementById('detail-description').textContent = details.description;
-            document.getElementById('detail-query').textContent = details.query;
-            document.getElementById('detail-recall').textContent = details.recall;
-            document.getElementById('detail-count').textContent = details.count;
+            document.getElementById('detail-name').textContent = strategy.name;
+            document.getElementById('detail-description').textContent = strategy.description;
+            document.getElementById('detail-query').textContent = strategy.query;
+            document.getElementById('detail-retention').textContent = strategy.retention;
+            document.getElementById('detail-recall').textContent = strategy.recall;
+            document.getElementById('detail-workload').textContent = strategy.workload;
+            document.getElementById('detail-sensitivity').textContent = strategy.sensitivity;
         }
 
         function resetFlowchart() {
             document.querySelectorAll('.node').forEach(n => n.classList.remove('selected'));
+            document.querySelectorAll('.strategy-table tr').forEach(r => r.classList.remove('active'));
+            document.querySelectorAll('.full-table tr').forEach(r => r.classList.remove('active'));
             document.getElementById('detail-panel').classList.remove('active');
-            selectedNode = null;
+            selectedStrategy = null;
         }
 
-        // Initialize with detail panel hidden
+        // Auto-select S1 on load to show example
         document.addEventListener('DOMContentLoaded', function() {
-            // Auto-show S1 details on load
-            setTimeout(() => handleClick('rec-s1'), 500);
+            setTimeout(() => handleNodeClick('S1'), 500);
         });
     </script>
 </body>

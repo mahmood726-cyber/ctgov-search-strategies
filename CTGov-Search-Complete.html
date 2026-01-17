@@ -1,0 +1,1620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT.gov Search Strategy Tool - Complete Edition</title>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px 8px 0 0;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: black;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .strategies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .strategy-card {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .strategy-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .strategy-card.selected {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .strategy-card h4 {
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .strategy-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .strategy-card .recall-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .recall-high { background: var(--success); color: white; }
+        .recall-medium { background: var(--warning); color: black; }
+        .recall-low { background: var(--danger); color: white; }
+
+        .results-container {
+            margin-top: 20px;
+        }
+
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .results-table th, .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .results-table th {
+            background: var(--bg-input);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .results-table tr:hover {
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .log-area {
+            background: #000;
+            color: #0f0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .ci-table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .ci-bar {
+            height: 20px;
+            background: var(--bg-input);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ci-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+        }
+
+        .ci-bar-ci {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: rgba(255,255,255,0.2);
+            border-left: 2px solid var(--warning);
+            border-right: 2px solid var(--warning);
+        }
+
+        .flowchart-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .flowchart-node {
+            display: inline-block;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .flowchart-node.start {
+            background: var(--primary);
+            color: white;
+        }
+
+        .flowchart-node.decision {
+            background: var(--warning);
+            color: black;
+            transform: rotate(0deg);
+        }
+
+        .flowchart-node.endpoint {
+            background: var(--success);
+            color: white;
+        }
+
+        .flowchart-arrow {
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+        }
+
+        .validation-panel {
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .nct-input-area {
+            min-height: 100px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            .tab-btn {
+                border-radius: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Python environment (Pyodide)...</div>
+        <div id="loadingStatus" style="margin-top: 10px; color: #64748b; font-size: 0.9rem;"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-search-plus"></i> CT.gov Search Strategy Tool</h1>
+            <p>Complete Edition - All Features with Python/WASM Backend</p>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="search"><i class="fas fa-search"></i> Search</button>
+            <button class="tab-btn" data-tab="compare"><i class="fas fa-balance-scale"></i> Compare Strategies</button>
+            <button class="tab-btn" data-tab="validate"><i class="fas fa-check-circle"></i> Validate NCTs</button>
+            <button class="tab-btn" data-tab="metrics"><i class="fas fa-chart-bar"></i> Metrics & CI</button>
+            <button class="tab-btn" data-tab="export"><i class="fas fa-download"></i> Export</button>
+            <button class="tab-btn" data-tab="flowchart"><i class="fas fa-project-diagram"></i> Decision Guide</button>
+            <button class="tab-btn" data-tab="ictrp"><i class="fas fa-globe"></i> Multi-Registry</button>
+        </div>
+
+        <!-- Search Tab -->
+        <div id="search" class="tab-content active">
+            <h2><i class="fas fa-search"></i> Search ClinicalTrials.gov</h2>
+
+            <div class="form-group">
+                <label for="conditionInput">Condition/Disease</label>
+                <input type="text" id="conditionInput" placeholder="e.g., diabetes, breast cancer, hypertension">
+            </div>
+
+            <div class="form-group">
+                <label for="interventionInput">Intervention (optional)</label>
+                <input type="text" id="interventionInput" placeholder="e.g., metformin, chemotherapy">
+            </div>
+
+            <h3 style="margin: 20px 0 15px;">Select Search Strategy</h3>
+            <div class="strategies-grid" id="strategiesGrid"></div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" id="searchBtn" onclick="executeSearch()">
+                    <i class="fas fa-search"></i> Search CT.gov
+                </button>
+                <button class="btn btn-secondary" onclick="clearResults()">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+
+            <div id="searchResults" class="results-container hidden">
+                <h3>Search Results</h3>
+                <div class="results-summary" id="resultsSummary"></div>
+                <div id="studiesTable"></div>
+            </div>
+
+            <div class="log-area" id="searchLog"></div>
+        </div>
+
+        <!-- Compare Tab -->
+        <div id="compare" class="tab-content">
+            <h2><i class="fas fa-balance-scale"></i> Compare All Strategies</h2>
+
+            <div class="form-group">
+                <label for="compareCondition">Condition to Compare</label>
+                <input type="text" id="compareCondition" placeholder="e.g., diabetes">
+            </div>
+
+            <button class="btn btn-primary" onclick="compareAllStrategies()">
+                <i class="fas fa-play"></i> Compare All 10 Strategies
+            </button>
+
+            <div id="comparisonResults" class="results-container hidden">
+                <h3>Strategy Comparison Results</h3>
+                <div id="comparisonTable"></div>
+                <div id="comparisonChart" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="log-area" id="compareLog"></div>
+        </div>
+
+        <!-- Validate Tab -->
+        <div id="validate" class="tab-content">
+            <h2><i class="fas fa-check-circle"></i> Validate NCT IDs</h2>
+
+            <div class="form-group">
+                <label for="nctInput">Enter NCT IDs (one per line or comma-separated)</label>
+                <textarea id="nctInput" class="nct-input-area" placeholder="NCT00000001&#10;NCT00000002&#10;NCT00000003"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="validateCondition">Condition for Recall Calculation (optional)</label>
+                <input type="text" id="validateCondition" placeholder="e.g., diabetes">
+            </div>
+
+            <button class="btn btn-primary" onclick="validateNCTs()">
+                <i class="fas fa-check"></i> Validate NCT IDs
+            </button>
+
+            <div id="validationResults" class="validation-panel hidden">
+                <h3>Validation Results</h3>
+                <div id="validationSummary"></div>
+                <div id="validationTable"></div>
+            </div>
+
+            <div class="log-area" id="validateLog"></div>
+        </div>
+
+        <!-- Metrics Tab -->
+        <div id="metrics" class="tab-content">
+            <h2><i class="fas fa-chart-bar"></i> Precision, Recall & Confidence Intervals</h2>
+
+            <div class="validation-panel">
+                <h3>Wilson Score Confidence Intervals</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                    Calculate confidence intervals for recall estimates using the Wilson score method.
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="ciSuccesses">Successes (NCTs found)</label>
+                        <input type="number" id="ciSuccesses" value="45" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="ciTotal">Total (known NCTs)</label>
+                        <input type="number" id="ciTotal" value="50" min="1">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="calculateCI()">
+                    <i class="fas fa-calculator"></i> Calculate 95% CI
+                </button>
+
+                <div id="ciResult" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3>Precision Metrics Calculator</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div class="form-group">
+                        <label for="metricTP">True Positives (TP)</label>
+                        <input type="number" id="metricTP" value="45" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="metricFP">False Positives (FP)</label>
+                        <input type="number" id="metricFP" value="955" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="metricFN">False Negatives (FN)</label>
+                        <input type="number" id="metricFN" value="5" min="0">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="calculateMetrics()">
+                    <i class="fas fa-calculator"></i> Calculate All Metrics
+                </button>
+
+                <div id="metricsResult" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Export Tab -->
+        <div id="export" class="tab-content">
+            <h2><i class="fas fa-download"></i> Export Study Data</h2>
+
+            <div class="form-group">
+                <label for="exportCondition">Condition to Export</label>
+                <input type="text" id="exportCondition" placeholder="e.g., diabetes">
+            </div>
+
+            <div class="form-group">
+                <label for="exportStrategy">Strategy</label>
+                <select id="exportStrategy">
+                    <option value="S1">S1 - Condition Only (Maximum Recall)</option>
+                    <option value="S2">S2 - Interventional Studies</option>
+                    <option value="S3">S3 - Randomized Allocation Only</option>
+                    <option value="S4">S4 - Phase 3/4 Studies</option>
+                    <option value="S5">S5 - Has Posted Results</option>
+                    <option value="S6">S6 - Completed Status</option>
+                    <option value="S7">S7 - Interventional + Completed</option>
+                    <option value="S8">S8 - RCT + Phase 3/4 + Completed</option>
+                    <option value="S9">S9 - Full-Text RCT Keywords</option>
+                    <option value="S10">S10 - Treatment RCTs Only</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="exportLimit">Maximum Studies to Export</label>
+                <input type="number" id="exportLimit" value="100" min="1" max="1000">
+            </div>
+
+            <button class="btn btn-primary" onclick="fetchForExport()">
+                <i class="fas fa-cloud-download-alt"></i> Fetch Studies
+            </button>
+
+            <div id="exportReady" class="hidden" style="margin-top: 20px;">
+                <h3>Export Options</h3>
+                <p id="exportCount" style="color: var(--text-secondary); margin-bottom: 15px;"></p>
+
+                <div class="export-buttons">
+                    <button class="btn btn-success" onclick="exportRIS()">
+                        <i class="fas fa-file-alt"></i> Export RIS (EndNote/Zotero)
+                    </button>
+                    <button class="btn btn-warning" onclick="exportCSV()">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportJSON()">
+                        <i class="fas fa-file-code"></i> Export JSON
+                    </button>
+                    <button class="btn btn-primary" onclick="exportEndNote()">
+                        <i class="fas fa-file-export"></i> Export EndNote XML
+                    </button>
+                </div>
+            </div>
+
+            <div class="log-area" id="exportLog"></div>
+        </div>
+
+        <!-- Decision Flowchart Tab -->
+        <div id="flowchart" class="tab-content">
+            <h2><i class="fas fa-project-diagram"></i> Strategy Selection Guide</h2>
+
+            <div class="flowchart-container">
+                <div class="flowchart-node start" onclick="selectFromFlowchart('start')">
+                    <i class="fas fa-play"></i> What is your goal?
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <span class="flowchart-arrow"><i class="fas fa-arrow-down"></i></span>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S1')">
+                        <strong>Maximum Sensitivity</strong><br>
+                        <small>Find ALL trials</small>
+                    </div>
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S3')">
+                        <strong>RCTs Only</strong><br>
+                        <small>True randomized trials</small>
+                    </div>
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S6')">
+                        <strong>Completed Trials</strong><br>
+                        <small>Finished studies</small>
+                    </div>
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S5')">
+                        <strong>With Results</strong><br>
+                        <small>Posted results only</small>
+                    </div>
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S8')">
+                        <strong>High Quality</strong><br>
+                        <small>RCT + Phase 3/4 + Complete</small>
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <span class="flowchart-arrow"><i class="fas fa-arrow-down"></i></span>
+                </div>
+
+                <div id="flowchartResult" class="flowchart-node endpoint hidden">
+                    Use Strategy: <span id="selectedStrategy"></span>
+                </div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 30px;">
+                <h3>Strategy Reference Table</h3>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Recall</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody id="strategyRefTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ICTRP Tab -->
+        <div id="ictrp" class="tab-content">
+            <h2><i class="fas fa-globe"></i> Multi-Registry Search</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Search across multiple clinical trial registries (CT.gov, WHO ICTRP, EU CTR, ISRCTN)
+            </p>
+
+            <div class="form-group">
+                <label for="ictrpCondition">Condition</label>
+                <input type="text" id="ictrpCondition" placeholder="e.g., diabetes">
+            </div>
+
+            <div class="form-group">
+                <label>Registries to Search</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="regCTgov" checked> ClinicalTrials.gov
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="regICTRP" checked> WHO ICTRP
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="regEUCTR"> EU Clinical Trials
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="regISRCTN"> ISRCTN
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="searchMultiRegistry()">
+                <i class="fas fa-globe"></i> Search All Selected Registries
+            </button>
+
+            <div id="ictrpResults" class="hidden" style="margin-top: 20px;">
+                <h3>Multi-Registry Results</h3>
+                <div id="ictrpSummary" class="results-summary"></div>
+                <div id="ictrpTable"></div>
+            </div>
+
+            <div class="log-area" id="ictrpLog"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // CONFIGURATION
+        // ============================================================================
+        const CTGOV_API = 'https://clinicaltrials.gov/api/v2/studies';
+        const CORS_PROXY = 'https://corsproxy.io/?';
+
+        // Strategy definitions
+        const STRATEGIES = {
+            S1: {
+                id: 'S1',
+                name: 'Condition Only (Maximum Recall)',
+                description: 'Search by condition field only - highest sensitivity',
+                recall: 98.7,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}`,
+                recallClass: 'recall-high'
+            },
+            S2: {
+                id: 'S2',
+                name: 'Interventional Studies',
+                description: 'Filter to interventional study types',
+                recall: 98.7,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[StudyType]INTERVENTIONAL`,
+                recallClass: 'recall-high'
+            },
+            S3: {
+                id: 'S3',
+                name: 'Randomized Allocation Only',
+                description: 'True RCTs with randomized allocation',
+                recall: 98.7,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[DesignAllocation]RANDOMIZED`,
+                recallClass: 'recall-high'
+            },
+            S4: {
+                id: 'S4',
+                name: 'Phase 3/4 Studies',
+                description: 'Later phase clinical trials',
+                recall: 45.5,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[Phase](PHASE3 OR PHASE4)`,
+                recallClass: 'recall-low'
+            },
+            S5: {
+                id: 'S5',
+                name: 'Has Posted Results',
+                description: 'Studies with results posted on CT.gov',
+                recall: 63.6,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[ResultsFirstPostDate]RANGE[MIN,MAX]`,
+                recallClass: 'recall-medium'
+            },
+            S6: {
+                id: 'S6',
+                name: 'Completed Status',
+                description: 'Completed trials only',
+                recall: 87.0,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&filter.overallStatus=COMPLETED`,
+                recallClass: 'recall-high'
+            },
+            S7: {
+                id: 'S7',
+                name: 'Interventional + Completed',
+                description: 'Completed interventional studies',
+                recall: 87.0,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[StudyType]INTERVENTIONAL&filter.overallStatus=COMPLETED`,
+                recallClass: 'recall-high'
+            },
+            S8: {
+                id: 'S8',
+                name: 'RCT + Phase 3/4 + Completed',
+                description: 'Highest quality subset',
+                recall: 42.9,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[DesignAllocation]RANDOMIZED AND AREA[Phase](PHASE3 OR PHASE4)&filter.overallStatus=COMPLETED`,
+                recallClass: 'recall-low'
+            },
+            S9: {
+                id: 'S9',
+                name: 'Full-Text RCT Keywords',
+                description: 'Full-text search with RCT terms',
+                recall: 79.2,
+                buildQuery: (c, i) => `query.term=${encodeURIComponent(c + ' AND randomized AND controlled')}`,
+                recallClass: 'recall-medium'
+            },
+            S10: {
+                id: 'S10',
+                name: 'Treatment RCTs Only',
+                description: 'Randomized + Treatment purpose',
+                recall: 89.6,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[DesignAllocation]RANDOMIZED AND AREA[DesignPrimaryPurpose]TREATMENT`,
+                recallClass: 'recall-high'
+            }
+        };
+
+        // Global state
+        let pyodide = null;
+        let currentStudies = [];
+        let selectedStrategy = 'S1';
+
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        async function initPyodide() {
+            const statusEl = document.getElementById('loadingStatus');
+            try {
+                statusEl.textContent = 'Loading Pyodide runtime...';
+                pyodide = await loadPyodide();
+
+                statusEl.textContent = 'Installing scipy...';
+                await pyodide.loadPackage('scipy');
+
+                statusEl.textContent = 'Setting up Python environment...';
+                await setupPythonEnvironment();
+
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                initUI();
+                log('searchLog', 'Python environment ready!', 'success');
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + error.message;
+                console.error('Pyodide initialization failed:', error);
+            }
+        }
+
+        async function setupPythonEnvironment() {
+            await pyodide.runPythonAsync(`
+import math
+from scipy import stats
+
+def wilson_ci(successes, total, confidence=0.95):
+    """Calculate Wilson score confidence interval."""
+    if total == 0:
+        return (0.0, 0.0)
+    if successes < 0 or total < 0:
+        return (0.0, 0.0)
+    if successes > total:
+        return (0.0, 0.0)
+
+    p = successes / total
+    z = stats.norm.ppf(1 - (1 - confidence) / 2)
+
+    denominator = 1 + z**2 / total
+    center = (p + z**2 / (2 * total)) / denominator
+    margin = z * math.sqrt((p * (1 - p) + z**2 / (4 * total)) / total) / denominator
+
+    return (max(0, center - margin), min(1, center + margin))
+
+def calculate_precision(tp, fp):
+    """Calculate precision = TP / (TP + FP)"""
+    if tp + fp == 0:
+        return 0.0
+    return tp / (tp + fp)
+
+def calculate_recall(tp, fn):
+    """Calculate recall = TP / (TP + FN)"""
+    if tp + fn == 0:
+        return 0.0
+    return tp / (tp + fn)
+
+def calculate_f1(precision, recall):
+    """Calculate F1 score = 2 * (precision * recall) / (precision + recall)"""
+    if precision + recall == 0:
+        return 0.0
+    return 2 * (precision * recall) / (precision + recall)
+
+def calculate_nns(total_retrieved, relevant_found):
+    """Calculate Number Needed to Screen = Total / Relevant"""
+    if relevant_found == 0:
+        return float('inf')
+    return total_retrieved / relevant_found
+
+def calculate_all_metrics(tp, fp, fn):
+    """Calculate all validation metrics."""
+    precision = calculate_precision(tp, fp)
+    recall = calculate_recall(tp, fn)
+    f1 = calculate_f1(precision, recall)
+    nns = calculate_nns(tp + fp, tp)
+
+    # Sensitivity and specificity
+    sensitivity = recall
+
+    # Wilson CIs
+    recall_ci = wilson_ci(tp, tp + fn)
+    precision_ci = wilson_ci(tp, tp + fp)
+
+    return {
+        'precision': precision,
+        'recall': recall,
+        'sensitivity': sensitivity,
+        'f1': f1,
+        'nns': nns,
+        'recall_ci': recall_ci,
+        'precision_ci': precision_ci
+    }
+
+print("Python metrics module loaded!")
+            `);
+        }
+
+        function initUI() {
+            // Setup tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.add('active');
+                });
+            });
+
+            // Populate strategies grid
+            const grid = document.getElementById('strategiesGrid');
+            Object.values(STRATEGIES).forEach(s => {
+                const card = document.createElement('div');
+                card.className = `strategy-card ${s.id === selectedStrategy ? 'selected' : ''}`;
+                card.dataset.strategy = s.id;
+                card.innerHTML = `
+                    <h4>${s.id}: ${s.name}</h4>
+                    <p>${s.description}</p>
+                    <span class="recall-badge ${s.recallClass}">Recall: ${s.recall}%</span>
+                `;
+                card.addEventListener('click', () => selectStrategy(s.id));
+                grid.appendChild(card);
+            });
+
+            // Populate strategy reference table
+            const refTable = document.getElementById('strategyRefTable');
+            Object.values(STRATEGIES).forEach(s => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${s.id}</strong></td>
+                    <td>${s.name}</td>
+                    <td><span class="recall-badge ${s.recallClass}">${s.recall}%</span></td>
+                    <td>${s.description}</td>
+                `;
+                refTable.appendChild(row);
+            });
+        }
+
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
+        function log(logId, message, type = 'info') {
+            const logArea = document.getElementById(logId);
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#0f0';
+            logArea.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function selectStrategy(strategyId) {
+            selectedStrategy = strategyId;
+            document.querySelectorAll('.strategy-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.strategy === strategyId);
+            });
+        }
+
+        async function fetchAPI(url, logId) {
+            log(logId, `Fetching: ${url.substring(0, 100)}...`);
+            try {
+                // Try direct first, then CORS proxy
+                let response;
+                try {
+                    response = await fetch(url, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                } catch (e) {
+                    log(logId, 'Direct fetch failed, using CORS proxy...');
+                    response = await fetch(CORS_PROXY + encodeURIComponent(url));
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                log(logId, `Received ${data.studies?.length || 0} studies`, 'success');
+                return data;
+            } catch (error) {
+                log(logId, `Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // ============================================================================
+        // SEARCH FUNCTIONS
+        // ============================================================================
+        async function executeSearch() {
+            const condition = document.getElementById('conditionInput').value.trim();
+            if (!condition) {
+                alert('Please enter a condition');
+                return;
+            }
+
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+
+            try {
+                const strategy = STRATEGIES[selectedStrategy];
+                const query = strategy.buildQuery(condition);
+                const url = `${CTGOV_API}?${query}&pageSize=100`;
+
+                log('searchLog', `Using strategy ${strategy.id}: ${strategy.name}`);
+                const data = await fetchAPI(url, 'searchLog');
+
+                currentStudies = data.studies || [];
+                displaySearchResults(data, strategy);
+
+            } catch (error) {
+                log('searchLog', `Search failed: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-search"></i> Search CT.gov';
+            }
+        }
+
+        function displaySearchResults(data, strategy) {
+            const results = document.getElementById('searchResults');
+            results.classList.remove('hidden');
+
+            // Summary cards
+            document.getElementById('resultsSummary').innerHTML = `
+                <div class="stat-card">
+                    <div class="value">${data.totalCount?.toLocaleString() || 0}</div>
+                    <div class="label">Total Studies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${currentStudies.length}</div>
+                    <div class="label">Retrieved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${strategy.recall}%</div>
+                    <div class="label">Expected Recall</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${strategy.id}</div>
+                    <div class="label">Strategy</div>
+                </div>
+            `;
+
+            // Studies table
+            let tableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>NCT ID</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Phase</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            currentStudies.slice(0, 50).forEach(study => {
+                const ps = study.protocolSection || {};
+                const id = ps.identificationModule || {};
+                const status = ps.statusModule || {};
+                const design = ps.designModule || {};
+
+                tableHTML += `
+                    <tr>
+                        <td><a href="https://clinicaltrials.gov/study/${id.nctId}" target="_blank">${id.nctId}</a></td>
+                        <td>${(id.briefTitle || '').substring(0, 80)}...</td>
+                        <td>${status.overallStatus || '-'}</td>
+                        <td>${(design.phases || []).join(', ') || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            document.getElementById('studiesTable').innerHTML = tableHTML;
+        }
+
+        function clearResults() {
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('searchLog').innerHTML = '';
+            currentStudies = [];
+        }
+
+        // ============================================================================
+        // COMPARE STRATEGIES
+        // ============================================================================
+        async function compareAllStrategies() {
+            const condition = document.getElementById('compareCondition').value.trim();
+            if (!condition) {
+                alert('Please enter a condition');
+                return;
+            }
+
+            log('compareLog', `Comparing all 10 strategies for: ${condition}`);
+            const results = [];
+
+            for (const strategy of Object.values(STRATEGIES)) {
+                try {
+                    const query = strategy.buildQuery(condition);
+                    const url = `${CTGOV_API}?${query}&countTotal=true&pageSize=1`;
+                    const data = await fetchAPI(url, 'compareLog');
+
+                    results.push({
+                        id: strategy.id,
+                        name: strategy.name,
+                        count: data.totalCount || 0,
+                        expectedRecall: strategy.recall
+                    });
+
+                    await new Promise(r => setTimeout(r, 300)); // Rate limit
+                } catch (error) {
+                    results.push({
+                        id: strategy.id,
+                        name: strategy.name,
+                        count: 'Error',
+                        expectedRecall: strategy.recall
+                    });
+                }
+            }
+
+            displayComparisonResults(results);
+        }
+
+        function displayComparisonResults(results) {
+            document.getElementById('comparisonResults').classList.remove('hidden');
+
+            // Sort by count
+            results.sort((a, b) => (b.count || 0) - (a.count || 0));
+            const maxCount = Math.max(...results.map(r => r.count || 0));
+
+            let tableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Name</th>
+                            <th>Count</th>
+                            <th>Recall</th>
+                            <th>Distribution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            results.forEach(r => {
+                const pct = maxCount > 0 ? (r.count / maxCount * 100) : 0;
+                tableHTML += `
+                    <tr>
+                        <td><strong>${r.id}</strong></td>
+                        <td>${r.name}</td>
+                        <td>${typeof r.count === 'number' ? r.count.toLocaleString() : r.count}</td>
+                        <td><span class="recall-badge ${STRATEGIES[r.id].recallClass}">${r.expectedRecall}%</span></td>
+                        <td>
+                            <div class="ci-bar" style="width: 200px;">
+                                <div class="ci-bar-fill" style="width: ${pct}%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            document.getElementById('comparisonTable').innerHTML = tableHTML;
+        }
+
+        // ============================================================================
+        // VALIDATE NCT IDS
+        // ============================================================================
+        async function validateNCTs() {
+            const input = document.getElementById('nctInput').value.trim();
+            if (!input) {
+                alert('Please enter NCT IDs');
+                return;
+            }
+
+            const nctIds = input.split(/[\n,\s]+/)
+                .map(id => id.trim().toUpperCase())
+                .filter(id => /^NCT\d{8}$/.test(id));
+
+            if (nctIds.length === 0) {
+                alert('No valid NCT IDs found');
+                return;
+            }
+
+            log('validateLog', `Validating ${nctIds.length} NCT IDs...`);
+
+            const results = [];
+            for (const nctId of nctIds) {
+                try {
+                    const url = `${CTGOV_API}?query.id=${nctId}&pageSize=1`;
+                    const data = await fetchAPI(url, 'validateLog');
+                    results.push({
+                        nctId,
+                        valid: (data.studies?.length || 0) > 0,
+                        title: data.studies?.[0]?.protocolSection?.identificationModule?.briefTitle || ''
+                    });
+                    await new Promise(r => setTimeout(r, 200));
+                } catch (error) {
+                    results.push({ nctId, valid: false, title: 'Error' });
+                }
+            }
+
+            displayValidationResults(results);
+        }
+
+        function displayValidationResults(results) {
+            document.getElementById('validationResults').classList.remove('hidden');
+
+            const valid = results.filter(r => r.valid).length;
+            const invalid = results.length - valid;
+
+            document.getElementById('validationSummary').innerHTML = `
+                <div class="results-summary">
+                    <div class="stat-card">
+                        <div class="value">${results.length}</div>
+                        <div class="label">Total NCT IDs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" style="color: var(--success);">${valid}</div>
+                        <div class="label">Valid</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" style="color: var(--danger);">${invalid}</div>
+                        <div class="label">Not Found</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${(valid/results.length*100).toFixed(1)}%</div>
+                        <div class="label">Validation Rate</div>
+                    </div>
+                </div>
+            `;
+
+            let tableHTML = `
+                <table class="results-table">
+                    <thead><tr><th>NCT ID</th><th>Status</th><th>Title</th></tr></thead>
+                    <tbody>
+            `;
+
+            results.forEach(r => {
+                tableHTML += `
+                    <tr>
+                        <td><a href="https://clinicaltrials.gov/study/${r.nctId}" target="_blank">${r.nctId}</a></td>
+                        <td style="color: ${r.valid ? 'var(--success)' : 'var(--danger)'};">
+                            <i class="fas fa-${r.valid ? 'check' : 'times'}"></i> ${r.valid ? 'Valid' : 'Not Found'}
+                        </td>
+                        <td>${r.title.substring(0, 60)}${r.title.length > 60 ? '...' : ''}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            document.getElementById('validationTable').innerHTML = tableHTML;
+        }
+
+        // ============================================================================
+        // CONFIDENCE INTERVALS & METRICS
+        // ============================================================================
+        async function calculateCI() {
+            const successes = parseInt(document.getElementById('ciSuccesses').value) || 0;
+            const total = parseInt(document.getElementById('ciTotal').value) || 1;
+
+            const result = await pyodide.runPythonAsync(`
+ci = wilson_ci(${successes}, ${total})
+recall = ${successes} / ${total} if ${total} > 0 else 0
+{
+    'recall': recall,
+    'ci_lower': ci[0],
+    'ci_upper': ci[1]
+}
+            `);
+
+            const data = result.toJs();
+
+            document.getElementById('ciResult').innerHTML = `
+                <div class="stat-card" style="text-align: left;">
+                    <h4>Results</h4>
+                    <p><strong>Point Estimate:</strong> ${(data.get('recall') * 100).toFixed(1)}%</p>
+                    <p><strong>95% CI:</strong> (${(data.get('ci_lower') * 100).toFixed(1)}% - ${(data.get('ci_upper') * 100).toFixed(1)}%)</p>
+                    <p><strong>CI Width:</strong> ${((data.get('ci_upper') - data.get('ci_lower')) * 100).toFixed(1)}%</p>
+                    <div class="ci-bar" style="margin-top: 15px; height: 30px;">
+                        <div class="ci-bar-fill" style="width: ${data.get('recall') * 100}%;"></div>
+                        <div class="ci-bar-ci" style="left: ${data.get('ci_lower') * 100}%; width: ${(data.get('ci_upper') - data.get('ci_lower')) * 100}%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function calculateMetrics() {
+            const tp = parseInt(document.getElementById('metricTP').value) || 0;
+            const fp = parseInt(document.getElementById('metricFP').value) || 0;
+            const fn = parseInt(document.getElementById('metricFN').value) || 0;
+
+            const result = await pyodide.runPythonAsync(`
+calculate_all_metrics(${tp}, ${fp}, ${fn})
+            `);
+
+            const data = result.toJs();
+
+            document.getElementById('metricsResult').innerHTML = `
+                <div class="results-summary">
+                    <div class="stat-card">
+                        <div class="value">${(data.get('precision') * 100).toFixed(1)}%</div>
+                        <div class="label">Precision</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${(data.get('recall') * 100).toFixed(1)}%</div>
+                        <div class="label">Recall/Sensitivity</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${(data.get('f1') * 100).toFixed(1)}%</div>
+                        <div class="label">F1 Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${data.get('nns') === Infinity ? '&infin;' : data.get('nns').toFixed(1)}</div>
+                        <div class="label">NNS</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="margin-top: 15px; text-align: left;">
+                    <h4>Confidence Intervals (95%)</h4>
+                    <p><strong>Recall CI:</strong> (${(data.get('recall_ci')[0] * 100).toFixed(1)}% - ${(data.get('recall_ci')[1] * 100).toFixed(1)}%)</p>
+                    <p><strong>Precision CI:</strong> (${(data.get('precision_ci')[0] * 100).toFixed(1)}% - ${(data.get('precision_ci')[1] * 100).toFixed(1)}%)</p>
+                </div>
+            `;
+        }
+
+        // ============================================================================
+        // EXPORT FUNCTIONS
+        // ============================================================================
+        async function fetchForExport() {
+            const condition = document.getElementById('exportCondition').value.trim();
+            if (!condition) {
+                alert('Please enter a condition');
+                return;
+            }
+
+            const strategy = STRATEGIES[document.getElementById('exportStrategy').value];
+            const limit = parseInt(document.getElementById('exportLimit').value) || 100;
+
+            log('exportLog', `Fetching studies for export: ${condition} using ${strategy.id}`);
+
+            try {
+                const query = strategy.buildQuery(condition);
+                const url = `${CTGOV_API}?${query}&pageSize=${Math.min(limit, 1000)}`;
+                const data = await fetchAPI(url, 'exportLog');
+
+                currentStudies = data.studies || [];
+
+                document.getElementById('exportReady').classList.remove('hidden');
+                document.getElementById('exportCount').textContent = `Ready to export ${currentStudies.length} studies`;
+
+                log('exportLog', `${currentStudies.length} studies ready for export`, 'success');
+            } catch (error) {
+                log('exportLog', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function exportRIS() {
+            let ris = '';
+            currentStudies.forEach(study => {
+                const ps = study.protocolSection || {};
+                const id = ps.identificationModule || {};
+                const status = ps.statusModule || {};
+                const sponsor = ps.sponsorCollaboratorsModule || {};
+                const desc = ps.descriptionModule || {};
+                const cond = ps.conditionsModule || {};
+
+                ris += `TY  - CLRT\n`;
+                ris += `TI  - ${id.briefTitle || ''}\n`;
+                ris += `AN  - ${id.nctId || ''}\n`;
+                ris += `AU  - ${sponsor.leadSponsor?.name || ''}\n`;
+                ris += `PY  - ${status.startDateStruct?.date?.substring(0, 4) || ''}\n`;
+                ris += `AB  - ${desc.briefSummary || ''}\n`;
+                ris += `UR  - https://clinicaltrials.gov/study/${id.nctId}\n`;
+                ris += `KW  - ${(cond.conditions || []).join('; ')}\n`;
+                ris += `N1  - Status: ${status.overallStatus || ''}\n`;
+                ris += `ER  - \n\n`;
+            });
+
+            downloadFile(ris, 'ctgov_studies.ris', 'text/plain');
+            log('exportLog', 'RIS file downloaded', 'success');
+        }
+
+        function exportCSV() {
+            const headers = ['NCT_ID', 'Title', 'Status', 'Phase', 'Conditions', 'Start_Date', 'Sponsor', 'URL'];
+            let csv = headers.join(',') + '\n';
+
+            currentStudies.forEach(study => {
+                const ps = study.protocolSection || {};
+                const id = ps.identificationModule || {};
+                const status = ps.statusModule || {};
+                const design = ps.designModule || {};
+                const cond = ps.conditionsModule || {};
+                const sponsor = ps.sponsorCollaboratorsModule || {};
+
+                const row = [
+                    id.nctId || '',
+                    `"${(id.briefTitle || '').replace(/"/g, '""')}"`,
+                    status.overallStatus || '',
+                    (design.phases || []).join('; '),
+                    `"${(cond.conditions || []).join('; ')}"`,
+                    status.startDateStruct?.date || '',
+                    `"${(sponsor.leadSponsor?.name || '').replace(/"/g, '""')}"`,
+                    `https://clinicaltrials.gov/study/${id.nctId}`
+                ];
+                csv += row.join(',') + '\n';
+            });
+
+            downloadFile(csv, 'ctgov_studies.csv', 'text/csv');
+            log('exportLog', 'CSV file downloaded', 'success');
+        }
+
+        function exportJSON() {
+            const data = JSON.stringify(currentStudies, null, 2);
+            downloadFile(data, 'ctgov_studies.json', 'application/json');
+            log('exportLog', 'JSON file downloaded', 'success');
+        }
+
+        function exportEndNote() {
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<xml><records>\n';
+
+            currentStudies.forEach(study => {
+                const ps = study.protocolSection || {};
+                const id = ps.identificationModule || {};
+                const status = ps.statusModule || {};
+                const sponsor = ps.sponsorCollaboratorsModule || {};
+                const desc = ps.descriptionModule || {};
+
+                xml += `<record>
+<ref-type name="Clinical Trial">47</ref-type>
+<contributors><authors><author>${escapeXml(sponsor.leadSponsor?.name || '')}</author></authors></contributors>
+<titles><title>${escapeXml(id.briefTitle || '')}</title></titles>
+<dates><year>${status.startDateStruct?.date?.substring(0, 4) || ''}</year></dates>
+<accession-num>${escapeXml(id.nctId || '')}</accession-num>
+<abstract>${escapeXml(desc.briefSummary || '')}</abstract>
+<urls><related-urls><url>https://clinicaltrials.gov/study/${id.nctId}</url></related-urls></urls>
+</record>\n`;
+            });
+
+            xml += '</records></xml>';
+            downloadFile(xml, 'ctgov_studies.xml', 'application/xml');
+            log('exportLog', 'EndNote XML file downloaded', 'success');
+        }
+
+        function escapeXml(str) {
+            return str.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;');
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================================================
+        // FLOWCHART
+        // ============================================================================
+        function selectFromFlowchart(strategyId) {
+            if (strategyId === 'start') return;
+
+            document.getElementById('flowchartResult').classList.remove('hidden');
+            document.getElementById('selectedStrategy').textContent =
+                `${strategyId} - ${STRATEGIES[strategyId].name} (${STRATEGIES[strategyId].recall}% recall)`;
+
+            // Switch to search tab with selected strategy
+            selectedStrategy = strategyId;
+        }
+
+        // ============================================================================
+        // MULTI-REGISTRY SEARCH
+        // ============================================================================
+        async function searchMultiRegistry() {
+            const condition = document.getElementById('ictrpCondition').value.trim();
+            if (!condition) {
+                alert('Please enter a condition');
+                return;
+            }
+
+            const registries = [];
+            if (document.getElementById('regCTgov').checked) registries.push('ctgov');
+            if (document.getElementById('regICTRP').checked) registries.push('ictrp');
+            if (document.getElementById('regEUCTR').checked) registries.push('euctr');
+            if (document.getElementById('regISRCTN').checked) registries.push('isrctn');
+
+            const results = {};
+
+            for (const reg of registries) {
+                log('ictrpLog', `Searching ${reg.toUpperCase()}...`);
+                try {
+                    if (reg === 'ctgov') {
+                        const url = `${CTGOV_API}?query.cond=${encodeURIComponent(condition)}&countTotal=true&pageSize=1`;
+                        const data = await fetchAPI(url, 'ictrpLog');
+                        results.ctgov = { count: data.totalCount || 0, status: 'success' };
+                    } else if (reg === 'ictrp') {
+                        // WHO ICTRP requires different approach
+                        results.ictrp = {
+                            count: 'N/A',
+                            status: 'url_only',
+                            url: `https://trialsearch.who.int/Trial2.aspx?ConditionID=&ConditionName=${encodeURIComponent(condition)}`
+                        };
+                    } else if (reg === 'euctr') {
+                        results.euctr = {
+                            count: 'N/A',
+                            status: 'url_only',
+                            url: `https://www.clinicaltrialsregister.eu/ctr-search/search?query=${encodeURIComponent(condition)}`
+                        };
+                    } else if (reg === 'isrctn') {
+                        results.isrctn = {
+                            count: 'N/A',
+                            status: 'url_only',
+                            url: `https://www.isrctn.com/search?q=${encodeURIComponent(condition)}`
+                        };
+                    }
+                } catch (error) {
+                    results[reg] = { count: 'Error', status: 'error' };
+                }
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            displayMultiRegistryResults(results);
+        }
+
+        function displayMultiRegistryResults(results) {
+            document.getElementById('ictrpResults').classList.remove('hidden');
+
+            let summaryHTML = '';
+            let tableHTML = `
+                <table class="results-table">
+                    <thead><tr><th>Registry</th><th>Count</th><th>Status</th><th>Link</th></tr></thead>
+                    <tbody>
+            `;
+
+            Object.entries(results).forEach(([reg, data]) => {
+                const regNames = {
+                    ctgov: 'ClinicalTrials.gov',
+                    ictrp: 'WHO ICTRP',
+                    euctr: 'EU Clinical Trials',
+                    isrctn: 'ISRCTN'
+                };
+
+                summaryHTML += `
+                    <div class="stat-card">
+                        <div class="value">${data.count}</div>
+                        <div class="label">${regNames[reg]}</div>
+                    </div>
+                `;
+
+                tableHTML += `
+                    <tr>
+                        <td><strong>${regNames[reg]}</strong></td>
+                        <td>${data.count}</td>
+                        <td style="color: ${data.status === 'success' ? 'var(--success)' : data.status === 'url_only' ? 'var(--warning)' : 'var(--danger)'};">
+                            ${data.status === 'success' ? 'API Count' : data.status === 'url_only' ? 'Manual Search Required' : 'Error'}
+                        </td>
+                        <td>${data.url ? `<a href="${data.url}" target="_blank">Open Registry</a>` : '-'}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+
+            document.getElementById('ictrpSummary').innerHTML = summaryHTML;
+            document.getElementById('ictrpTable').innerHTML = tableHTML;
+        }
+
+        // ============================================================================
+        // INITIALIZE
+        // ============================================================================
+        initPyodide();
+    </script>
+</body>
+</html>

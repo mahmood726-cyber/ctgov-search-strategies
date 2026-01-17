@@ -9,6 +9,7 @@ Set credentials via:
 """
 
 import psycopg2
+from psycopg2 import sql
 import json
 import os
 from pathlib import Path
@@ -112,12 +113,14 @@ def search_by_nct_list(conn, nct_ids):
     """Directly search for specific NCT IDs in AACT"""
     cursor = conn.cursor()
 
-    placeholders = ','.join(['%s'] * len(nct_ids))
-    query = f"""
+    # Use psycopg2.sql module for safe query construction
+    query = sql.SQL("""
         SELECT DISTINCT s.nct_id
         FROM studies s
         WHERE s.nct_id IN ({placeholders})
-    """
+    """).format(
+        placeholders=sql.SQL(',').join(sql.Placeholder() for _ in nct_ids)
+    )
 
     cursor.execute(query, nct_ids)
     results = cursor.fetchall()
@@ -133,16 +136,17 @@ def search_rcts_comprehensive(conn, condition, known_ncts):
     # First, let's see what conditions the known NCT IDs have
     if known_ncts:
         nct_list = list(known_ncts)
-        placeholders = ','.join(['%s'] * len(nct_list))
 
-        # Get all conditions for our known NCT IDs
-        query = f"""
+        # Use psycopg2.sql module for safe query construction
+        query = sql.SQL("""
             SELECT DISTINCT c.name, COUNT(*) as cnt
             FROM conditions c
             WHERE c.nct_id IN ({placeholders})
             GROUP BY c.name
             ORDER BY cnt DESC
-        """
+        """).format(
+            placeholders=sql.SQL(',').join(sql.Placeholder() for _ in nct_list)
+        )
         cursor.execute(query, nct_list)
         actual_conditions = cursor.fetchall()
 

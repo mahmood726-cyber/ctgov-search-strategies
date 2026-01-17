@@ -174,7 +174,8 @@ class AdvancedSearcher:
 
     def calculate_recall(self, search_result: SearchResult, known_nct_ids: Set[str]) -> RecallResult:
         """Calculate recall metrics for a search result"""
-        found_set = set(search_result.nct_ids)
+        # Normalize both sets to uppercase for consistent comparison
+        found_set = set(nct.upper() for nct in search_result.nct_ids)
         known_set = set(nct.upper() for nct in known_nct_ids)
 
         found = len(found_set.intersection(known_set))
