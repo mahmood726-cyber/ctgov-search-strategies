@@ -68,6 +68,7 @@ CONDITION_SYNONYMS = {
     ]
 }
 
+
 def search_single(query: str) -> Set[str]:
     """Execute a single search and return NCT IDs"""
     try:
@@ -78,6 +79,7 @@ def search_single(query: str) -> Set[str]:
         print(f"    Error: {e}")
     return set()
 
+
 def lookup_nct(nct_id: str) -> Dict:
     """Get details for a specific NCT ID"""
     url = f"{CTGOV_API}/{nct_id}"
@@ -85,9 +87,10 @@ def lookup_nct(nct_id: str) -> Dict:
         resp = session.get(url, timeout=TIMEOUT)
         if resp.status_code == 200:
             return resp.json()
-    except:
+    except Exception:
         pass
     return {}
+
 
 def analyze_nct_details(nct_id: str) -> Dict:
     """Extract searchable fields from an NCT record"""
@@ -113,6 +116,7 @@ def analyze_nct_details(nct_id: str) -> Dict:
         "allocation": design.get("designInfo", {}).get("allocation", ""),
         "overall_status": status.get("overallStatus", "")
     }
+
 
 def run_challenge_analysis():
     """Analyze challenging conditions"""
@@ -144,9 +148,9 @@ def run_challenge_analysis():
             print(f"\nSkipping {condition} - no known NCT IDs")
             continue
 
-        print(f"\n{'='*70}")
+        print(f"\n{'=' * 70}")
         print(f"  {condition.upper()} ({len(known_ncts)} known NCT IDs)")
-        print(f"{'='*70}")
+        print(f"{'=' * 70}")
 
         # First, analyze the NCT records to understand how they're indexed
         print("\n  Analyzing NCT record details...")
@@ -160,7 +164,7 @@ def run_challenge_analysis():
                 print(f"    Allocation: {details['allocation']}")
 
         # Test different search strategies
-        print(f"\n  Testing search strategies...")
+        print("\n  Testing search strategies...")
         strategy_results = {}
 
         for strat_name, query_template in CHALLENGE_STRATEGIES.items():
@@ -176,7 +180,7 @@ def run_challenge_analysis():
             print(f"    {strat_name}: {recall:.1f}% ({len(overlap)}/{len(known_ncts)})")
 
         # Test synonyms
-        print(f"\n  Testing synonyms...")
+        print("\n  Testing synonyms...")
         synonyms = CONDITION_SYNONYMS.get(condition, [condition])
         combined_ncts = set()
 
@@ -203,7 +207,7 @@ def run_challenge_analysis():
         print(f"  OR query: {or_recall:.1f}% ({len(or_overlap)}/{len(known_ncts)})")
 
         # Direct NCT ID lookup to find actual indexing
-        print(f"\n  Checking actual indexing of missing NCT IDs...")
+        print("\n  Checking actual indexing of missing NCT IDs...")
         missing = known_ncts - combined_ncts
         for nct in list(missing)[:5]:
             details = analyze_nct_details(nct)
@@ -240,6 +244,7 @@ def run_challenge_analysis():
     print(f"\n  Results saved: {output_file}")
 
     return all_results
+
 
 if __name__ == "__main__":
     run_challenge_analysis()

@@ -237,9 +237,11 @@ def sample_recall_metrics() -> Dict[str, Any]:
         "total_known": 10,
         "found": 8,
         "recall": 80.0,
-        "nct_ids_found": ["NCT00000001", "NCT00000002", "NCT00000003",
-                         "NCT00000004", "NCT00000005", "NCT00000006",
-                         "NCT00000007", "NCT00000008"],
+        "nct_ids_found": [
+            "NCT00000001", "NCT00000002", "NCT00000003",
+            "NCT00000004", "NCT00000005", "NCT00000006",
+            "NCT00000007", "NCT00000008"
+        ],
         "nct_ids_missed": ["NCT00000009", "NCT00000010"]
     }
 

@@ -72,6 +72,7 @@ CORE_STRATEGIES = {
     "C_RCT_COMP": "query.term=AREA[DesignAllocation]RANDOMIZED&filter.overallStatus=COMPLETED",
 }
 
+
 def search_single(query: str) -> Set[str]:
     """Execute search and return NCT IDs"""
     with cache_lock:
@@ -85,9 +86,10 @@ def search_single(query: str) -> Set[str]:
         with cache_lock:
             cache[query] = ncts
         return ncts
-    except:
+    except Exception:
         pass
     return set()
+
 
 def search_parallel(queries: List[str]) -> Dict[str, Set[str]]:
     """Search multiple queries in parallel"""
@@ -98,9 +100,10 @@ def search_parallel(queries: List[str]) -> Dict[str, Set[str]]:
             q = futures[f]
             try:
                 results[q] = f.result()
-            except:
+            except Exception:
                 results[q] = set()
     return results
+
 
 def enhanced_search(condition: str, use_rct_filter: bool = True) -> Set[str]:
     """
@@ -145,6 +148,7 @@ def enhanced_search(condition: str, use_rct_filter: bool = True) -> Set[str]:
             all_ncts.update(ncts)
 
     return all_ncts
+
 
 def test_enhanced_strategy():
     """Test the enhanced strategy against known NCT IDs"""
@@ -210,14 +214,14 @@ def test_enhanced_strategy():
     print(f"  {'OVERALL':<25} {overall_recall:>7.1f}% {total_found:>5}/{total_known}")
 
     # Comparison with previous best
-    print(f"\n  Previous best (C2): 74.65%")
+    print("\n  Previous best (C2): 74.65%")
     print(f"  Enhanced strategy: {overall_recall:.2f}%")
     print(f"  Improvement: +{overall_recall - 74.65:.2f}%")
 
     # Conditions still below 80%
     low_recall = [r for r in results if r["recall"] < 80]
     if low_recall:
-        print(f"\n  Conditions still below 80% recall:")
+        print("\n  Conditions still below 80% recall:")
         for r in low_recall:
             print(f"    - {r['condition']}: {r['recall']:.1f}%")
 
@@ -239,6 +243,7 @@ def test_enhanced_strategy():
     print(f"\n  Results saved: {output_file}")
 
     return export
+
 
 if __name__ == "__main__":
     test_enhanced_strategy()

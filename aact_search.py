@@ -27,6 +27,7 @@ from datetime import datetime
 AACT_DOWNLOADS = "https://aact.ctti-clinicaltrials.org/pipe_files"
 AACT_STATIC = "https://aact.ctti-clinicaltrials.org/static/exported_files"
 
+
 def get_aact_connection_info():
     """Print AACT database connection information"""
     print("""
@@ -57,6 +58,7 @@ def get_aact_connection_info():
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 """)
+
 
 def generate_sql_queries(condition: str, synonyms: List[str] = None):
     """Generate SQL queries for AACT database"""
@@ -102,6 +104,7 @@ ORDER BY s.nct_id;
 """
     return sql
 
+
 def print_alternative_approach():
     """Print alternative approach using downloadable files"""
     print("""
@@ -127,6 +130,7 @@ def print_alternative_approach():
 ║                                                                      ║
 ╚══════════════════════════════════════════════════════════════════════╝
 """)
+
 
 def demonstrate_with_sample():
     """Demonstrate the concept with sample data"""
@@ -157,6 +161,7 @@ def demonstrate_with_sample():
     - Incorrect condition indexing at source
     - Data entry issues in original registration
 """)
+
 
 def main():
     """Main function"""
@@ -221,6 +226,7 @@ def main():
             f.write("\n")
 
     print(f"\n  SQL queries saved to: {sql_file}")
+
 
 if __name__ == "__main__":
     main()

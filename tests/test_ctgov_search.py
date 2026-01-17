@@ -10,7 +10,7 @@ from dataclasses import dataclass
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from ctgov_search import CTGovSearcher, SearchResult, RecallMetrics
+from ctgov_search import CTGovSearcher, SearchResult, RecallMetrics  # noqa: E402
 
 
 class FakeResponse:

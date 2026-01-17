@@ -42,6 +42,7 @@ UNFINDABLE_VIA_API = [
     "NCT03415646", "NCT03420703", "NCT03756987"  # Postoperative pain
 ]
 
+
 def connect_aact():
     """Connect to AACT database"""
     print("Connecting to AACT database...")
@@ -61,6 +62,7 @@ def connect_aact():
     except Exception as e:
         print(f"  Connection failed: {e}")
         return None
+
 
 def check_nct_exists(conn, nct_id):
     """Check if NCT ID exists in AACT and get details"""
@@ -96,6 +98,7 @@ def check_nct_exists(conn, nct_id):
         }
     return None
 
+
 def get_conditions_for_nct(conn, nct_id):
     """Get all condition names for a given NCT ID"""
     cursor = conn.cursor()
@@ -103,6 +106,7 @@ def get_conditions_for_nct(conn, nct_id):
     results = cursor.fetchall()
     cursor.close()
     return [r[0] for r in results]
+
 
 def search_by_nct_list(conn, nct_ids):
     """Directly search for specific NCT IDs in AACT"""
@@ -120,6 +124,7 @@ def search_by_nct_list(conn, nct_ids):
     cursor.close()
 
     return set(r[0] for r in results)
+
 
 def search_rcts_comprehensive(conn, condition, known_ncts):
     """Search AACT using comprehensive approach - find what conditions are actually indexed"""
@@ -160,6 +165,7 @@ def search_rcts_comprehensive(conn, condition, known_ncts):
 
     cursor.close()
     return set(), []
+
 
 def main():
     output_dir = Path("C:/Users/user/Downloads/ctgov-search-strategies/output")
@@ -319,6 +325,7 @@ def main():
 
     conn.close()
     print("\n  Database connection closed.")
+
 
 if __name__ == "__main__":
     main()

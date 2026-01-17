@@ -95,6 +95,7 @@ LANDMARK_CV_TRIALS = [
     "NCT01131676",  # CANVAS
 ]
 
+
 def connect_aact():
     """Connect to AACT database"""
     if not AACT_CONFIG['user'] or not AACT_CONFIG['password']:
@@ -106,6 +107,7 @@ def connect_aact():
     except Exception as e:
         print(f"  Connection failed: {e}")
         return None
+
 
 def get_condition_rcts(conn, condition_terms, limit=200):
     """Get RCTs for specific condition terms"""
@@ -131,6 +133,7 @@ def get_condition_rcts(conn, condition_terms, limit=200):
 
     return set(r[0] for r in results)
 
+
 def check_ncts_in_aact(conn, nct_ids):
     """Check which NCT IDs exist in AACT"""
     if not nct_ids:
@@ -145,6 +148,7 @@ def check_ncts_in_aact(conn, nct_ids):
     cursor.close()
 
     return set(r[0] for r in results)
+
 
 def search_ctgov_api(condition, fields=None):
     """Search CT.gov API for a condition"""
@@ -163,10 +167,11 @@ def search_ctgov_api(condition, fields=None):
             params["filter.overallStatus"] = "COMPLETED"
             found, _ = fetch_nct_ids(session, params, timeout=30, page_size=100)
             ncts.update(found)
-        except:
+        except Exception:
             pass
 
     return ncts
+
 
 def main():
     output_dir = Path("C:/Users/user/Downloads/ctgov-search-strategies/output")
@@ -369,6 +374,7 @@ def main():
     print(f"  Results saved: {output_file}")
 
     conn.close()
+
 
 if __name__ == "__main__":
     main()

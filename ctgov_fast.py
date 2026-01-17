@@ -43,6 +43,7 @@ COMBOS = {
 cache = {}
 cache_lock = threading.Lock()
 
+
 def search(condition: str, strategy_id: str) -> Tuple[int, List[str], float]:
     """Search and return (count, nct_ids, time)"""
     cache_key = f"{condition}:{strategy_id}"
@@ -66,9 +67,10 @@ def search(condition: str, strategy_id: str) -> Tuple[int, List[str], float]:
         with cache_lock:
             cache[cache_key] = result
         return result
-    except:
+    except Exception:
         pass
     return (0, [], 0)
+
 
 def search_parallel(condition: str) -> Dict:
     """Search all base strategies in parallel"""
@@ -79,9 +81,10 @@ def search_parallel(condition: str) -> Dict:
             sid = futures[f]
             try:
                 results[sid] = f.result()
-            except:
+            except Exception:
                 results[sid] = (0, [], 0)
     return results
+
 
 def search_combo(condition: str, combo_id: str, base_results: Dict) -> Tuple[int, Set[str]]:
     """Combine results from multiple strategies"""
@@ -96,11 +99,13 @@ def search_combo(condition: str, combo_id: str, base_results: Dict) -> Tuple[int
             all_ncts.update(ncts)
     return (len(all_ncts), all_ncts)
 
+
 def calc_recall(found_ncts: Set[str], known_ncts: Set[str]) -> float:
     """Calculate recall percentage"""
     if not known_ncts:
         return 0
     return len(found_ncts & known_ncts) / len(known_ncts) * 100
+
 
 def analyze_condition(condition: str, known_ncts: Set[str]) -> Dict:
     """Full analysis for one condition"""
@@ -136,6 +141,7 @@ def analyze_condition(condition: str, known_ncts: Set[str]) -> Dict:
         "total_time": elapsed
     }
 
+
 def print_results(results: Dict):
     """Print compact results"""
     print(f"\n{results['condition'].upper()} ({results['known']} known)")
@@ -152,6 +158,7 @@ def print_results(results: Dict):
 
     print("-" * 60)
     print(f"BEST: {results['best_strategy']} = {results['best_recall']:.1f}% | Time: {results['total_time']:.1f}s")
+
 
 def main():
     output_dir = Path("C:/Users/user/Downloads/ctgov-search-strategies/output")
@@ -196,9 +203,11 @@ def main():
     print(f"{'ID':<6} {'Avg Recall':>10} {'Overall':>10} {'Found':>8}")
     print("-" * 40)
 
-    sorted_s = sorted(strategy_totals.items(),
-                     key=lambda x: sum(x[1]["recalls"])/len(x[1]["recalls"]) if x[1]["recalls"] else 0,
-                     reverse=True)
+    sorted_s = sorted(
+        strategy_totals.items(),
+        key=lambda x: sum(x[1]["recalls"]) / len(x[1]["recalls"]) if x[1]["recalls"] else 0,
+        reverse=True
+    )
 
     for sid, data in sorted_s:
         avg = sum(data["recalls"]) / len(data["recalls"]) if data["recalls"] else 0
@@ -209,7 +218,7 @@ def main():
 
     # Winner
     winner = sorted_s[0]
-    print(f"\nWINNER: {winner[0]} with {sum(winner[1]['recalls'])/len(winner[1]['recalls']):.1f}% avg recall")
+    print(f"\nWINNER: {winner[0]} with {sum(winner[1]['recalls']) / len(winner[1]['recalls']):.1f}% avg recall")
 
     # Save
     out_file = output_dir / f"fast_analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -217,12 +226,15 @@ def main():
         "timestamp": datetime.now().isoformat(),
         "conditions": len(condition_groups),
         "results": [{k: v for k, v in r.items() if k != "all_recalls"} for r in all_results],
-        "summary": {sid: {"avg_recall": sum(d["recalls"])/len(d["recalls"]) if d["recalls"] else 0}
-                   for sid, d in strategy_totals.items()}
+        "summary": {
+            sid: {"avg_recall": sum(d["recalls"]) / len(d["recalls"]) if d["recalls"] else 0}
+            for sid, d in strategy_totals.items()
+        }
     }
     with open(out_file, 'w') as f:
         json.dump(export, f, indent=2)
     print(f"\nSaved: {out_file}")
+
 
 if __name__ == "__main__":
     main()

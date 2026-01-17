@@ -8,7 +8,7 @@ import unittest
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from ctgov_config import (
+from ctgov_config import (  # noqa: E402
     CTGOV_API,
     DEFAULT_TIMEOUT,
     DEFAULT_PAGE_SIZE,

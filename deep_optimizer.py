@@ -45,6 +45,7 @@ TOP_STRATEGIES = {
 cache = {}
 cache_lock = threading.Lock()
 
+
 def search_strategy(condition: str, strategy_id: str) -> Set[str]:
     """Search and return NCT IDs"""
     cache_key = f"{condition}:{strategy_id}"
@@ -64,9 +65,10 @@ def search_strategy(condition: str, strategy_id: str) -> Set[str]:
         with cache_lock:
             cache[cache_key] = ncts
         return ncts
-    except:
+    except Exception:
         pass
     return set()
+
 
 def search_all_strategies(condition: str) -> Dict[str, Set[str]]:
     """Search all strategies in parallel"""
@@ -77,9 +79,10 @@ def search_all_strategies(condition: str) -> Dict[str, Set[str]]:
             sid = futures[f]
             try:
                 results[sid] = f.result()
-            except:
+            except Exception:
                 results[sid] = set()
     return results
+
 
 def evaluate_combo(combo: Tuple[str, ...], all_results: Dict[str, Dict[str, Set[str]]],
                    condition_groups: Dict[str, Set[str]]) -> Tuple[float, int, int, Dict[str, float]]:
@@ -102,6 +105,7 @@ def evaluate_combo(combo: Tuple[str, ...], all_results: Dict[str, Dict[str, Set[
 
     overall_recall = total_found / total_known * 100 if total_known > 0 else 0
     return overall_recall, total_found, total_known, per_condition
+
 
 def run_deep_optimization():
     """Run deep optimization with focus on larger combinations"""
@@ -129,7 +133,7 @@ def run_deep_optimization():
     print("\nPhase 1: Searching strategies...")
     all_results = {}
     for i, (condition, known_ncts) in enumerate(condition_groups.items()):
-        print(f"  [{i+1}/{len(condition_groups)}] {condition}...", end=" ", flush=True)
+        print(f"  [{i + 1}/{len(condition_groups)}] {condition}...", end=" ", flush=True)
         results = search_all_strategies(condition)
         all_results[condition] = results
 
@@ -181,7 +185,7 @@ def run_deep_optimization():
 
     for i, r in enumerate(results[:30]):
         combo_str = r["name"][:40] + "..." if len(r["name"]) > 40 else r["name"]
-        print(f"{i+1:<5} {r['size']:>4} {r['recall']:>7.2f}% {r['found']:>7} {combo_str}")
+        print(f"{i + 1:<5} {r['size']:>4} {r['recall']:>7.2f}% {r['found']:>7} {combo_str}")
 
     # Best by size
     print("\n" + "=" * 70)
@@ -213,7 +217,7 @@ def run_deep_optimization():
     for cond, recall in winner["per_condition"].items():
         if recall < 50:
             known = len(condition_groups[cond])
-            print(f"  {cond}: {recall:.1f}% ({int(recall*known/100)}/{known})")
+            print(f"  {cond}: {recall:.1f}% ({int(recall * known / 100)}/{known})")
 
     # Winner summary
     print("\n" + "=" * 70)
@@ -291,6 +295,7 @@ def run_deep_optimization():
     print(f"\n  Results saved: {output_file}")
 
     return export
+
 
 if __name__ == "__main__":
     run_deep_optimization()

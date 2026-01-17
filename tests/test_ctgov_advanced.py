@@ -10,7 +10,7 @@ import threading
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from ctgov_advanced import (
+from ctgov_advanced import (  # noqa: E402
     SearchResult,
     RecallResult,
     AdvancedSearcher,

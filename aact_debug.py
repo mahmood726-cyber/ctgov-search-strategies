@@ -25,6 +25,7 @@ AACT_CONFIG = {
     'password': os.environ.get('AACT_PASSWORD', '')
 }
 
+
 def main():
     print("=" * 70)
     print("  AACT DATABASE DEBUG")
@@ -142,6 +143,7 @@ def main():
     cursor.close()
     conn.close()
     print("\n  Debug complete.")
+
 
 if __name__ == "__main__":
     main()

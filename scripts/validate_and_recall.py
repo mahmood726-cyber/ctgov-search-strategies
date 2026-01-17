@@ -14,9 +14,9 @@ from urllib.parse import quote
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ctgov_config import CTGOV_API, DEFAULT_RATE_LIMIT, DEFAULT_TIMEOUT
-from ctgov_terms import normalize_condition
-from ctgov_utils import (
+from ctgov_config import CTGOV_API, DEFAULT_RATE_LIMIT, DEFAULT_TIMEOUT  # noqa: E402
+from ctgov_terms import normalize_condition  # noqa: E402
+from ctgov_utils import (  # noqa: E402
     build_params,
     fetch_matching_nct_ids,
     fetch_total_count,
@@ -71,6 +71,7 @@ STRATEGIES = {
     }
 }
 
+
 def validate_single_nct(nct_id: str) -> Dict:
     """Validate a single NCT ID exists on CT.gov and get study details"""
     nct_id = nct_id.strip().upper()
@@ -110,6 +111,7 @@ def validate_single_nct(nct_id: str) -> Dict:
     except Exception as e:
         return {"nct_id": nct_id, "exists": False, "error": str(e)}
 
+
 def validate_all_ncts(nct_ids: List[str]) -> Tuple[List[Dict], Dict]:
     """Validate all NCT IDs and return results with summary"""
     results = []
@@ -146,6 +148,7 @@ def validate_all_ncts(nct_ids: List[str]) -> Tuple[List[Dict], Dict]:
 
     return results, summary
 
+
 def get_condition_from_nct(validated_results: List[Dict]) -> Dict[str, List[str]]:
     """Group NCT IDs by their primary condition for recall testing"""
     condition_groups = {}
@@ -170,6 +173,7 @@ def get_condition_from_nct(validated_results: List[Dict]) -> Dict[str, List[str]
 
     return condition_groups
 
+
 def search_ctgov(query: str, known_nct_ids: List[str]) -> Tuple[int, List[str]]:
     """Search CT.gov and return total count plus matched known NCT IDs."""
     try:
@@ -183,6 +187,7 @@ def search_ctgov(query: str, known_nct_ids: List[str]) -> Tuple[int, List[str]]:
     except Exception as e:
         print(f"    Search error: {e}")
         return 0, []
+
 
 def calculate_recall(condition: str, known_nct_ids: List[str], strategy_id: str) -> Dict:
     """Calculate recall for a strategy against known NCT IDs"""
@@ -215,6 +220,7 @@ def calculate_recall(condition: str, known_nct_ids: List[str], strategy_id: str)
         "missed_ids": list(missed)
     }
 
+
 def test_recall_all_strategies(condition: str, known_nct_ids: List[str]) -> List[Dict]:
     """Test all strategies for recall against known NCT IDs"""
     results = []
@@ -234,6 +240,7 @@ def test_recall_all_strategies(condition: str, known_nct_ids: List[str]) -> List
         time.sleep(RATE_LIMIT)
 
     return results
+
 
 def main():
     # Paths
@@ -266,7 +273,7 @@ def main():
 
     validated_results, validation_summary = validate_all_ncts(nct_ids)
 
-    print(f"\nValidation Summary:")
+    print("\nValidation Summary:")
     print(f"  Total: {validation_summary['total']}")
     print(f"  Valid: {validation_summary['valid']} ({validation_summary['validation_rate']:.1f}%)")
     print(f"  Not Found: {validation_summary['invalid']}")
@@ -296,7 +303,7 @@ def main():
 
     condition_groups = get_condition_from_nct(valid_ncts)
 
-    print(f"\nCondition groups found:")
+    print("\nCondition groups found:")
     for condition, ncts in sorted(condition_groups.items(), key=lambda x: -len(x[1])):
         print(f"  {condition}: {len(ncts)} studies")
 
@@ -369,6 +376,7 @@ def main():
     print("\n" + "=" * 70)
     print("VALIDATION AND RECALL TESTING COMPLETE")
     print("=" * 70)
+
 
 if __name__ == "__main__":
     main()

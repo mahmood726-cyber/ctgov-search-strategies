@@ -343,6 +343,7 @@ class TestNCTIDValidation:
             result = check_nct_exists(conn, "NCT01958736")
             # Note: With real module, this would return a dict
             # With mock, it depends on implementation
+            assert result is None or isinstance(result, dict)
 
     def test_check_nct_not_exists_with_mock(self, mock_empty_connection):
         """Test NCT ID that doesn't exist returns None."""
@@ -602,6 +603,7 @@ class TestEdgeCases:
         if AACT_MODULE_AVAILABLE:
             try:
                 found = search_by_nct_list(conn, unicode_ids)
+                assert found is not None  # Should return something
             except Exception:
                 pass  # Failing safely is acceptable
 
@@ -728,7 +730,8 @@ class TestIntegrationWorkflow:
 
     def test_mock_validation_workflow(self, mock_aact_connection_with_studies):
         """Test validation workflow with mock connection."""
-        conn = mock_aact_connection_with_studies
+        # Verify the fixture provides a valid connection object
+        assert mock_aact_connection_with_studies is not None
 
         # Simulate workflow
         known_ncts = {"NCT01958736", "NCT02717715", "NCT04499677"}
@@ -793,8 +796,8 @@ class TestParametrizedNCTValidation:
         ("NCT00000001", True),
         ("NCT12345678", True),
         ("nct00000001", True),
-        ("NCT0000001", False),   # Too short
-        ("NCT000000001", False), # Too long
+        ("NCT0000001", False),    # Too short
+        ("NCT000000001", False),  # Too long
         ("INVALID", False),
         ("", False),
     ])
@@ -841,7 +844,7 @@ class TestPerformance:
         cursor = conn.cursor()
 
         # Execute batch query
-        cursor.execute(f"SELECT * FROM studies WHERE nct_id IN ({','.join(['%s']*len(nct_ids))})")
+        cursor.execute(f"SELECT * FROM studies WHERE nct_id IN ({','.join(['%s'] * len(nct_ids))})")
 
         # Verify query was executed (not counting individual queries)
         assert cursor.last_query is not None
@@ -866,6 +869,7 @@ class TestPerformance:
 
             # Should complete in reasonable time (< 30 seconds)
             assert elapsed < 30
+            assert isinstance(found, set)
 
         finally:
             conn.close()

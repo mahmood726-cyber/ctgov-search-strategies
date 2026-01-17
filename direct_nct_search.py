@@ -14,6 +14,7 @@ from ctgov_utils import build_params, fetch_nct_ids, get_session
 session = get_session("CTgov-Direct/1.0")
 TIMEOUT = DEFAULT_TIMEOUT
 
+
 def get_nct_conditions(nct_id: str) -> List[str]:
     """Get conditions for a specific NCT ID"""
     url = f"{CTGOV_API}/{nct_id}"
@@ -23,9 +24,10 @@ def get_nct_conditions(nct_id: str) -> List[str]:
             data = resp.json()
             conds = data.get("protocolSection", {}).get("conditionsModule", {}).get("conditions", [])
             return conds
-    except:
+    except Exception:
         pass
     return []
+
 
 def search_and_count(query: str) -> int:
     """Search and return total count"""
@@ -41,21 +43,23 @@ def search_and_count(query: str) -> int:
         print(f"Error: {e}")
     return 0
 
+
 def search_ncts(query: str) -> Set[str]:
     """Search and return NCT IDs (up to 1000)"""
     try:
         params = build_params(query)
         ncts, _ = fetch_nct_ids(session, params, timeout=TIMEOUT, page_size=1000)
         return ncts
-    except:
+    except Exception:
         pass
     return set()
 
+
 def analyze_nct_searchability(nct_ids: List[str], condition_term: str):
     """Analyze how to find specific NCT IDs"""
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"  SEARCHABILITY ANALYSIS: {condition_term}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     # First check total results for condition search
     count = search_and_count(f"query.cond={quote(condition_term)}")
@@ -80,7 +84,7 @@ def analyze_nct_searchability(nct_ids: List[str], condition_term: str):
         print(f"    - {c}")
 
     # Try searching by each actual condition term
-    print(f"\n  Testing searches by actual condition terms...")
+    print("\n  Testing searches by actual condition terms...")
     nct_set = set(n.upper() for n in nct_ids)
 
     best_term = None
@@ -99,7 +103,7 @@ def analyze_nct_searchability(nct_ids: List[str], condition_term: str):
             best_term = cond_term
 
     # Try combining terms with OR
-    print(f"\n  Testing OR combinations...")
+    print("\n  Testing OR combinations...")
     combined = set()
     for cond_term in all_cond_terms:
         found = search_ncts(f"query.cond={quote(cond_term)}")
@@ -118,7 +122,7 @@ def analyze_nct_searchability(nct_ids: List[str], condition_term: str):
             # Try direct NCT search
             found_direct = search_ncts(f"query.term={nct}")
             if nct in found_direct:
-                print(f"      -> Found via direct NCT search!")
+                print("      -> Found via direct NCT search!")
 
     return {
         "condition": condition_term,
@@ -128,6 +132,7 @@ def analyze_nct_searchability(nct_ids: List[str], condition_term: str):
         "combined_recall": final_recall,
         "missing": len(still_missing)
     }
+
 
 def run_analysis():
     """Run full analysis"""
@@ -153,9 +158,9 @@ def run_analysis():
             results[cond] = analyze_nct_searchability(ncts, cond)
 
     # Summary
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("  FINAL SUMMARY")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     for cond, r in results.items():
         print(f"\n  {cond}:")
@@ -164,9 +169,9 @@ def run_analysis():
         print(f"    Still unreachable: {r['missing']}")
 
     # Recommendations
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print("  RECOMMENDATIONS")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
     print("""
   1. STROKE: Search by specific terms like 'Cerebrovascular Stroke',
      'Cerebrovascular Accident' instead of generic 'stroke'
@@ -183,6 +188,7 @@ def run_analysis():
   condition terms. Systematic reviewers must use specific condition
   vocabulary, not generic terms.
     """)
+
 
 if __name__ == "__main__":
     run_analysis()

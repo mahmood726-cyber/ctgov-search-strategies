@@ -580,7 +580,7 @@ class CTGovSearcher:
             filepath: Path to the output CSV file.
         """
         with open(filepath, "w", newline="", encoding="utf-8") as f:
-            writer: csv.writer = csv.writer(f)
+            writer: Any = csv.writer(f)
             writer.writerow(
                 [
                     "strategy_id",

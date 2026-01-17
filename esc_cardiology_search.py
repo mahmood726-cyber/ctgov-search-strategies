@@ -286,6 +286,7 @@ ESC_LANDMARK_TRIALS = {
     },
 }
 
+
 def connect_aact():
     """Connect to AACT database"""
     if not AACT_CONFIG['user'] or not AACT_CONFIG['password']:
@@ -297,6 +298,7 @@ def connect_aact():
     except Exception as e:
         print(f"  Connection failed: {e}")
         return None
+
 
 def search_condition_rcts(conn, search_terms, limit=500):
     """Search AACT for RCTs matching condition terms"""
@@ -321,6 +323,7 @@ def search_condition_rcts(conn, search_terms, limit=500):
 
     return [{"nct_id": r[0], "title": r[1], "status": r[2], "allocation": r[3]} for r in results]
 
+
 def verify_landmark_trials(conn, nct_ids):
     """Verify landmark trials exist in AACT"""
     if not nct_ids:
@@ -344,6 +347,7 @@ def verify_landmark_trials(conn, nct_ids):
     missing_list = [nct for nct in nct_ids if nct not in found]
 
     return found_list, missing_list
+
 
 def main():
     output_dir = Path("C:/Users/user/Downloads/ctgov-search-strategies/output")
@@ -374,7 +378,7 @@ def main():
         landmark_ncts = guideline_data['landmark_trials']
         found, missing = verify_landmark_trials(conn, landmark_ncts)
 
-        print(f"\n  Landmark Trials:")
+        print("\n  Landmark Trials:")
         print(f"    Defined: {len(landmark_ncts)}")
         print(f"    Found in AACT: {len(found)}")
         if missing:
@@ -396,7 +400,7 @@ def main():
             status = rct.get('status', 'Unknown')
             status_counts[status] = status_counts.get(status, 0) + 1
 
-        print(f"    Status breakdown:")
+        print("    Status breakdown:")
         for status, count in sorted(status_counts.items(), key=lambda x: -x[1])[:4]:
             print(f"      {status}: {count}")
 
@@ -475,6 +479,7 @@ def main():
 
     conn.close()
     print("\n  Database connection closed.")
+
 
 if __name__ == "__main__":
     main()

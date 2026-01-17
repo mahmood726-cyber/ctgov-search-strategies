@@ -96,6 +96,7 @@ BASE_STRATEGIES = {
 cache = {}
 cache_lock = threading.Lock()
 
+
 @dataclass
 class ScenarioResult:
     scenario_id: int
@@ -105,6 +106,7 @@ class ScenarioResult:
     found: int
     known: int
     unique_ncts: int
+
 
 def search_strategy(condition: str, strategy_id: str) -> Set[str]:
     """Search and return NCT IDs"""
@@ -125,9 +127,10 @@ def search_strategy(condition: str, strategy_id: str) -> Set[str]:
         with cache_lock:
             cache[cache_key] = ncts
         return ncts
-    except:
+    except Exception:
         pass
     return set()
+
 
 def search_parallel_batch(condition: str, strategy_ids: List[str]) -> Dict[str, Set[str]]:
     """Search multiple strategies in parallel"""
@@ -138,9 +141,10 @@ def search_parallel_batch(condition: str, strategy_ids: List[str]) -> Dict[str, 
             sid = futures[f]
             try:
                 results[sid] = f.result()
-            except:
+            except Exception:
                 results[sid] = set()
     return results
+
 
 def evaluate_combo(combo: Tuple[str, ...], strategy_results: Dict[str, Set[str]], known_ncts: Set[str]) -> ScenarioResult:
     """Evaluate a combination of strategies"""
@@ -163,6 +167,7 @@ def evaluate_combo(combo: Tuple[str, ...], strategy_results: Dict[str, Set[str]]
         unique_ncts=len(combined)
     )
 
+
 def generate_all_combinations(strategies: List[str], max_combo_size: int = 4) -> List[Tuple[str, ...]]:
     """Generate all possible strategy combinations"""
     combos = []
@@ -170,6 +175,7 @@ def generate_all_combinations(strategies: List[str], max_combo_size: int = 4) ->
         for combo in itertools.combinations(strategies, size):
             combos.append(combo)
     return combos
+
 
 def run_optimization(output_dir: Path, max_scenarios: int = 1000):
     """Run 1000 scenario optimization"""
@@ -243,7 +249,7 @@ def run_optimization(output_dir: Path, max_scenarios: int = 1000):
 
     start_time = time.time()
     for i, (condition, known_ncts) in enumerate(condition_groups.items()):
-        print(f"  [{i+1}/{len(condition_groups)}] {condition}...", end=" ", flush=True)
+        print(f"  [{i + 1}/{len(condition_groups)}] {condition}...", end=" ", flush=True)
         results = search_parallel_batch(condition, all_strategy_ids)
         all_results[condition] = results
 
@@ -300,7 +306,7 @@ def run_optimization(output_dir: Path, max_scenarios: int = 1000):
 
     for i, result in enumerate(scenario_results[:50]):
         combo_str = result.combo_name[:45] + "..." if len(result.combo_name) > 45 else result.combo_name
-        print(f"{i+1:<6} {result.recall:>7.2f}% {result.found:>8} {combo_str}")
+        print(f"{i + 1:<6} {result.recall:>7.2f}% {result.found:>8} {combo_str}")
 
     # Analysis by combo size
     print("\n" + "=" * 70)
@@ -405,6 +411,7 @@ def run_optimization(output_dir: Path, max_scenarios: int = 1000):
     print(f"\n  Results saved: {output_file}")
 
     return export_data
+
 
 if __name__ == "__main__":
     output_dir = Path("C:/Users/user/Downloads/ctgov-search-strategies/output")

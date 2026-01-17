@@ -90,6 +90,7 @@ STRATEGIES = {
     }
 }
 
+
 class CTgovWorkflow:
     """Comprehensive CT.gov search workflow"""
 

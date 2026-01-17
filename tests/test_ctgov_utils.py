@@ -5,7 +5,7 @@ from unittest.mock import Mock
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from ctgov_utils import build_params, fetch_nct_ids, iter_study_pages
+from ctgov_utils import build_params, fetch_nct_ids, iter_study_pages  # noqa: E402
 
 
 class FakeResponse:

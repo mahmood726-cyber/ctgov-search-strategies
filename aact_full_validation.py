@@ -29,6 +29,7 @@ AACT_CONFIG = {
     'password': os.environ.get('AACT_PASSWORD', '')
 }
 
+
 def connect_aact():
     """Connect to AACT database"""
     print("Connecting to AACT database...")
@@ -44,6 +45,7 @@ def connect_aact():
     except Exception as e:
         print(f"  Connection failed: {e}")
         return None
+
 
 def get_nct_details(conn, nct_id):
     """Get details for a single NCT ID"""
@@ -75,6 +77,7 @@ def get_nct_details(conn, nct_id):
             'found': True
         }
     return {'nct_id': nct_id, 'found': False}
+
 
 def batch_check_ncts(conn, nct_ids):
     """Check multiple NCT IDs at once"""
@@ -109,6 +112,7 @@ def batch_check_ncts(conn, nct_ids):
         }
 
     return found_dict
+
 
 def main():
     output_dir = Path("C:/Users/user/Downloads/ctgov-search-strategies/output")
@@ -193,7 +197,7 @@ def main():
             imperfect_conditions.append((condition, recall, list(known_ncts - found_ncts)))
 
     print("-" * 60)
-    print(f"  {'TOTAL':<35} {len(all_ncts):>6} {found_count:>6} {found_count/len(all_ncts)*100:>7.1f}%")
+    print(f"  {'TOTAL':<35} {len(all_ncts):>6} {found_count:>6} {found_count / len(all_ncts) * 100:>7.1f}%")
 
     # Summary
     print("\n" + "=" * 70)
@@ -237,15 +241,15 @@ def main():
 
     print("\n  By Allocation:")
     for alloc, count in sorted(allocations.items(), key=lambda x: -x[1]):
-        print(f"    {alloc}: {count} ({count/found_count*100:.1f}%)")
+        print(f"    {alloc}: {count} ({count / found_count * 100:.1f}%)")
 
     print("\n  By Status:")
     for status, count in sorted(statuses.items(), key=lambda x: -x[1])[:10]:
-        print(f"    {status}: {count} ({count/found_count*100:.1f}%)")
+        print(f"    {status}: {count} ({count / found_count * 100:.1f}%)")
 
     print("\n  By Study Type:")
     for stype, count in sorted(study_types.items(), key=lambda x: -x[1]):
-        print(f"    {stype}: {count} ({count/found_count*100:.1f}%)")
+        print(f"    {stype}: {count} ({count / found_count * 100:.1f}%)")
 
     # Save results
     output_file = output_dir / f"aact_full_validation_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
@@ -272,6 +276,7 @@ def main():
 
     conn.close()
     print("\n  Database connection closed.")
+
 
 if __name__ == "__main__":
     main()

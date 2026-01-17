@@ -57,6 +57,7 @@ EXPANSIONS = {
     ]
 }
 
+
 def search_ctgov(query: str) -> Set[str]:
     """Search CT.gov API"""
     try:
@@ -69,9 +70,10 @@ def search_ctgov(query: str) -> Set[str]:
             page_size=DEFAULT_PAGE_SIZE,
         )
         return ncts
-    except:
+    except Exception:
         pass
     return set()
+
 
 def search_ctgov_parallel(queries: List[str]) -> Set[str]:
     """Parallel CT.gov search"""
@@ -81,9 +83,10 @@ def search_ctgov_parallel(queries: List[str]) -> Set[str]:
         for f in concurrent.futures.as_completed(futures):
             try:
                 all_ncts.update(f.result())
-            except:
+            except Exception:
                 pass
     return all_ncts
+
 
 def search_pubmed_ncts(condition: str) -> Set[str]:
     """Extract NCT IDs from PubMed articles"""
@@ -135,8 +138,9 @@ def search_pubmed_ncts(condition: str) -> Set[str]:
 
         return all_ncts
 
-    except:
+    except Exception:
         return set()
+
 
 def search_europe_pmc_ncts(condition: str) -> Set[str]:
     """Extract NCT IDs from Europe PMC"""
@@ -160,9 +164,10 @@ def search_europe_pmc_ncts(condition: str) -> Set[str]:
                     ncts = re.findall(r'NCT\d{8}', abstract, re.IGNORECASE)
                     all_ncts.update(n.upper() for n in ncts)
             return all_ncts
-    except:
+    except Exception:
         pass
     return set()
+
 
 def enhanced_ctgov_search(condition: str) -> Set[str]:
     """Enhanced CT.gov multi-term search"""
@@ -176,6 +181,7 @@ def enhanced_ctgov_search(condition: str) -> Set[str]:
         queries.append(f"query.cond={quote(term)}&query.term=AREA[DesignAllocation]RANDOMIZED")
 
     return search_ctgov_parallel(queries)
+
 
 def combined_search(condition: str) -> Dict:
     """Combined multi-source search"""
@@ -199,6 +205,7 @@ def combined_search(condition: str) -> Dict:
     results["combined"] = results["ctgov"] | results["pubmed"] | results["europepmc"]
 
     return results
+
 
 def test_combined():
     """Test combined approach"""
@@ -307,6 +314,7 @@ def test_combined():
         json.dump(export, f, indent=2, default=list)
 
     print(f"\n  Results saved: {output_file}")
+
 
 if __name__ == "__main__":
     test_combined()

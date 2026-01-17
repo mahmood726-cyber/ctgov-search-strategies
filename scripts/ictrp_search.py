@@ -35,7 +35,7 @@ import random
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from ctgov_config import CTGOV_API, DEFAULT_TIMEOUT, DEFAULT_RATE_LIMIT, DEFAULT_USER_AGENT
+from ctgov_config import CTGOV_API, DEFAULT_TIMEOUT, DEFAULT_RATE_LIMIT, DEFAULT_USER_AGENT  # noqa: E402
 
 # Configure logging
 logging.basicConfig(
@@ -72,6 +72,7 @@ DEFAULT_HEADERS = {
 # =============================================================================
 # DATA CLASSES
 # =============================================================================
+
 
 class TrialStatus(Enum):
     """Standard trial status values across registries."""
@@ -193,6 +194,7 @@ class SearchResult:
 # =============================================================================
 # HELPER FUNCTIONS
 # =============================================================================
+
 
 def rate_limit(min_interval: float = ICTRP_RATE_LIMIT):
     """
@@ -316,6 +318,7 @@ def normalize_status(status: str) -> str:
 # =============================================================================
 # ICTRP SEARCHER CLASS
 # =============================================================================
+
 
 class ICTRPSearcher:
     """
@@ -986,6 +989,7 @@ class ICTRPSearcher:
 # MULTI-REGISTRY SEARCHER CLASS
 # =============================================================================
 
+
 class MultiRegistrySearcher:
     """
     Search across multiple trial registries.
@@ -1070,7 +1074,6 @@ class MultiRegistrySearcher:
                 protocol = study.get('protocolSection', {})
                 id_module = protocol.get('identificationModule', {})
                 status_module = protocol.get('statusModule', {})
-                desc_module = protocol.get('descriptionModule', {})
                 design_module = protocol.get('designModule', {})
 
                 # Extract secondary IDs
@@ -1207,7 +1210,7 @@ class MultiRegistrySearcher:
         }
 
         # First, get secondary IDs from ClinicalTrials.gov
-        print(f"  Checking ClinicalTrials.gov for secondary IDs...")
+        print("  Checking ClinicalTrials.gov for secondary IDs...")
         ctgov_result = self.search_ctgov(nct_id, strategy="basic", max_results=1)
 
         if ctgov_result.is_successful() and ctgov_result.trials:
@@ -1223,7 +1226,7 @@ class MultiRegistrySearcher:
         time.sleep(DEFAULT_RATE_LIMIT)
 
         # Then search ICTRP for cross-registrations
-        print(f"  Searching WHO ICTRP for cross-registrations...")
+        print("  Searching WHO ICTRP for cross-registrations...")
         ictrp_result = self.ictrp.search_by_nct_id(nct_id)
 
         if ictrp_result.is_successful():
@@ -1349,6 +1352,7 @@ class MultiRegistrySearcher:
 # REPORT GENERATION
 # =============================================================================
 
+
 def create_comprehensive_search_report(
     condition: str,
     output_dir: Path,
@@ -1368,9 +1372,9 @@ def create_comprehensive_search_report(
     if searcher is None:
         searcher = MultiRegistrySearcher()
 
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"Comprehensive Trial Registry Search: {condition.upper()}")
-    print(f"{'='*70}")
+    print(f"{'=' * 70}")
 
     # Search all registries
     results = searcher.search_all_registries(condition)
@@ -1462,6 +1466,7 @@ def create_comprehensive_search_report(
 # MAIN FUNCTION
 # =============================================================================
 
+
 def main():
     """Main function demonstrating the ICTRP search capabilities."""
 
@@ -1509,7 +1514,7 @@ def main():
         deduplicate=True
     )
 
-    print(f"\nCombined search results for 'cystic fibrosis':")
+    print("\nCombined search results for 'cystic fibrosis':")
     print(f"  CT.gov total: {combined_result['ctgov']['total']}")
     print(f"  ICTRP total: {combined_result['ictrp']['total']}")
     print(f"  Combined count: {combined_result['combined_count']}")

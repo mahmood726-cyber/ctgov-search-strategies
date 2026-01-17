@@ -62,6 +62,7 @@ JCPT_CARDIOVASCULAR = [
     "NCT04189029", "NCT03851497"
 ]
 
+
 def connect_aact():
     """Connect to AACT database"""
     if not AACT_CONFIG['user'] or not AACT_CONFIG['password']:
@@ -73,6 +74,7 @@ def connect_aact():
     except Exception as e:
         print(f"  Connection failed: {e}")
         return None
+
 
 def get_cardiovascular_rcts(conn, limit=500):
     """Get cardiovascular RCTs from AACT"""
@@ -105,6 +107,7 @@ def get_cardiovascular_rcts(conn, limit=500):
 
     return [r[0] for r in results]
 
+
 def check_ncts_in_aact(conn, nct_ids):
     """Check which NCT IDs exist in AACT"""
     cursor = conn.cursor()
@@ -120,23 +123,25 @@ def check_ncts_in_aact(conn, nct_ids):
 
     return set(r[0] for r in results)
 
+
 def check_ncts_on_ctgov_api(nct_ids, batch_size=50):
     """Check which NCT IDs are findable via CT.gov API"""
     found = set()
     session = get_session("Expanded-Validation/1.0")
 
     for i in range(0, len(nct_ids), batch_size):
-        batch = list(nct_ids)[i:i+batch_size]
+        batch = list(nct_ids)[i:i + batch_size]
         nct_filter = " OR ".join([f'AREA[NCTId]{nct}' for nct in batch])
         try:
             ncts, _ = fetch_nct_ids(
                 session, {"query.term": nct_filter}, timeout=30, page_size=100
             )
             found.update(ncts)
-        except:
+        except Exception:
             pass
 
     return found
+
 
 def search_condition_ctgov_api(condition):
     """Search CT.gov API for a condition"""
@@ -149,10 +154,11 @@ def search_condition_ctgov_api(condition):
             page_size=1000,
         )
         return ncts
-    except:
+    except Exception:
         pass
 
     return set()
+
 
 def main():
     output_dir = Path("C:/Users/user/Downloads/ctgov-search-strategies/output")
@@ -265,7 +271,7 @@ def main():
   Dataset Size:           {len(all_ncts)} NCT IDs
 
   AACT Database:
-    - Found:              {len(found_in_aact)} ({len(found_in_aact)/len(all_ncts)*100:.1f}%)
+    - Found:              {len(found_in_aact)} ({len(found_in_aact) / len(all_ncts) * 100:.1f}%)
     - Missing:            {len(missing_from_aact)}
 
   For Gold Standard (Cochrane + JCPT, n={len(test_set)}):
@@ -301,6 +307,7 @@ def main():
     print(f"  Results saved: {output_file}")
 
     conn.close()
+
 
 if __name__ == "__main__":
     main()

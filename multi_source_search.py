@@ -30,6 +30,7 @@ EUROPE_PMC = "https://www.ebi.ac.uk/europepmc/webservices/rest/search"
 session = requests.Session()
 session.headers.update({'User-Agent': 'NCT-MultiSource/1.0'})
 
+
 def search_pubmed_for_condition(condition: str, max_results: int = 1000) -> List[str]:
     """Search PubMed for articles about a condition and extract NCT IDs"""
     print(f"    Searching PubMed for '{condition}'...")
@@ -55,6 +56,7 @@ def search_pubmed_for_condition(condition: str, max_results: int = 1000) -> List
 
     return []
 
+
 def get_nct_ids_from_pubmed_articles(pmids: List[str], batch_size: int = 100) -> Set[str]:
     """Fetch PubMed articles and extract NCT IDs from abstracts and metadata"""
     all_ncts = set()
@@ -64,7 +66,7 @@ def get_nct_ids_from_pubmed_articles(pmids: List[str], batch_size: int = 100) ->
 
     # Process in batches
     for i in range(0, len(pmids), batch_size):
-        batch = pmids[i:i+batch_size]
+        batch = pmids[i:i + batch_size]
 
         params = {
             "db": "pubmed",
@@ -103,6 +105,7 @@ def get_nct_ids_from_pubmed_articles(pmids: List[str], batch_size: int = 100) ->
 
     return all_ncts
 
+
 def search_europe_pmc(condition: str, max_results: int = 1000) -> Set[str]:
     """Search Europe PMC for NCT IDs"""
     print(f"    Searching Europe PMC for '{condition}'...")
@@ -140,6 +143,7 @@ def search_europe_pmc(condition: str, max_results: int = 1000) -> Set[str]:
         print(f"      Error: {e}")
 
     return all_ncts
+
 
 def search_pubmed_nct_linkage(condition: str) -> Set[str]:
     """Use PubMed's direct NCT linkage database"""
@@ -227,6 +231,7 @@ def resolve_clinicaltrials_links(links: List[str]) -> Set[str]:
 
     return ncts
 
+
 def search_ctgov_publications(nct_id: str) -> List[str]:
     """Check if a CT.gov study has linked publications"""
     url = f"{CTGOV_API}/{nct_id}"
@@ -242,10 +247,11 @@ def search_ctgov_publications(nct_id: str) -> List[str]:
                 if pmid:
                     pmids.append(pmid)
             return pmids
-    except:
+    except Exception:
         pass
 
     return []
+
 
 def reverse_search_from_nct(nct_id: str) -> Dict:
     """Given an NCT ID, find what search terms would find it via PubMed"""
@@ -280,6 +286,7 @@ def reverse_search_from_nct(nct_id: str) -> Dict:
 
     return result
 
+
 def comprehensive_search(condition: str) -> Tuple[Set[str], Dict]:
     """Comprehensive multi-source search for a condition"""
     print(f"\n  Comprehensive search for: {condition}")
@@ -312,6 +319,7 @@ def comprehensive_search(condition: str) -> Tuple[Set[str], Dict]:
     print(f"    Total unique NCT IDs: {len(all_ncts)}")
 
     return all_ncts, stats
+
 
 def test_multi_source():
     """Test multi-source approach for finding missing NCT IDs"""
@@ -443,6 +451,7 @@ def test_multi_source():
     print(f"\n  Results saved: {output_file}")
 
     return results
+
 
 if __name__ == "__main__":
     test_multi_source()

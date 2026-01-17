@@ -25,6 +25,7 @@ from ctgov_utils import build_params, fetch_nct_ids, get_session
 MAX_WORKERS = 5
 TIMEOUT = DEFAULT_TIMEOUT
 
+
 @dataclass
 class SearchResult:
     strategy_id: str
@@ -35,6 +36,7 @@ class SearchResult:
     execution_time: float = 0.0
     error: Optional[str] = None
 
+
 @dataclass
 class RecallResult:
     strategy_id: str
@@ -44,6 +46,7 @@ class RecallResult:
     recall: float
     precision_proxy: float  # found/total_results
     f1_score: float
+
 
 class AdvancedSearcher:
     """Advanced CT.gov searcher with combination strategies and parallel execution"""
@@ -335,7 +338,7 @@ def run_comprehensive_analysis(conditions: List[str], known_nct_ids_by_condition
 
     sorted_strategies = sorted(
         strategy_totals.items(),
-        key=lambda x: sum(x[1]["recalls"])/len(x[1]["recalls"]) if x[1]["recalls"] else 0,
+        key=lambda x: sum(x[1]["recalls"]) / len(x[1]["recalls"]) if x[1]["recalls"] else 0,
         reverse=True
     )
 
@@ -355,8 +358,8 @@ def run_comprehensive_analysis(conditions: List[str], known_nct_ids_by_condition
         "conditions_analyzed": len(conditions),
         "strategy_summary": {
             sid: {
-                "avg_recall": sum(d["recalls"])/len(d["recalls"]) if d["recalls"] else 0,
-                "overall_recall": d["total_found"]/d["total_known"]*100 if d["total_known"]>0 else 0,
+                "avg_recall": sum(d["recalls"]) / len(d["recalls"]) if d["recalls"] else 0,
+                "overall_recall": d["total_found"] / d["total_known"] * 100 if d["total_known"] > 0 else 0,
                 "total_found": d["total_found"],
                 "total_known": d["total_known"]
             }

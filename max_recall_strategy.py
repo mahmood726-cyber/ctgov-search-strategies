@@ -63,6 +63,7 @@ EXPANSIONS = {
     ]
 }
 
+
 def search(query: str) -> Set[str]:
     """Execute search"""
     with cache_lock:
@@ -76,9 +77,10 @@ def search(query: str) -> Set[str]:
         with cache_lock:
             cache[query] = ncts
         return ncts
-    except:
+    except Exception:
         pass
     return set()
+
 
 def search_parallel(queries: List[str]) -> Set[str]:
     """Search in parallel and combine results"""
@@ -88,9 +90,10 @@ def search_parallel(queries: List[str]) -> Set[str]:
         for f in concurrent.futures.as_completed(futures):
             try:
                 all_ncts.update(f.result())
-            except:
+            except Exception:
                 pass
     return all_ncts
+
 
 def max_recall_search(condition: str) -> Set[str]:
     """Maximum recall search using all methods"""
@@ -138,6 +141,7 @@ def max_recall_search(condition: str) -> Set[str]:
         queries.append(f"query.term={quote(or_terms)}")
 
     return search_parallel(queries)
+
 
 def test_max_recall():
     """Test maximum recall strategy"""
@@ -202,10 +206,10 @@ def test_max_recall():
     print(f"  {'OVERALL':<25} {overall_recall:>7.2f}% {total_found:>5}/{total_known}")
 
     # Improvement tracking
-    print(f"\n  Progress:")
-    print(f"    Original S3:     63.38%")
-    print(f"    C2 combo:        74.65%")
-    print(f"    Enhanced:        88.73%")
+    print("\n  Progress:")
+    print("    Original S3:     63.38%")
+    print("    C2 combo:        74.65%")
+    print("    Enhanced:        88.73%")
     print(f"    MAX RECALL:      {overall_recall:.2f}%")
     print(f"    Total gain:      +{overall_recall - 63.38:.2f}%")
 
@@ -237,6 +241,7 @@ def test_max_recall():
     print(f"\n  Results saved: {output_file}")
 
     return export
+
 
 if __name__ == "__main__":
     test_max_recall()

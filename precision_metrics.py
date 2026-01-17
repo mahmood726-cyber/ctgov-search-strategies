@@ -19,7 +19,44 @@ import csv
 import math
 from dataclasses import dataclass, field
 from datetime import datetime
-from typing import Dict, List, Optional, Set, Tuple, Union
+from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, Union
+
+
+class ScreeningBurdenDict(TypedDict, total=False):
+    """TypedDict for screening burden comparison results."""
+    strategy_id: str
+    strategy_name: str
+    total_retrieved: int
+    relevant_found: int
+    precision: float
+    nns: float
+    rank: int
+
+
+class StrategyMetricsDict(TypedDict):
+    """TypedDict for strategy metrics in report generation."""
+    result: Any  # StrategyResult - using Any to avoid forward reference issues
+    found_relevant: int
+    precision: float
+    recall: float
+    f1: float
+    nns: float
+
+
+class ROCPointDict(TypedDict, total=False):
+    """TypedDict for ROC curve data points."""
+    strategy_id: str
+    strategy_name: str
+    fpr: float
+    tpr: float
+    sensitivity: float
+    specificity: float
+
+
+class ROCDataDict(TypedDict):
+    """TypedDict for ROC data return value."""
+    points: List[ROCPointDict]
+    auc_estimates: Dict[str, float]
 
 
 @dataclass
@@ -229,7 +266,7 @@ class ScreeningEfficiencyAnalyzer:
     @staticmethod
     def compare_screening_burden(
         strategies_results: List[StrategyResult]
-    ) -> List[Dict[str, Union[str, int, float]]]:
+    ) -> List[ScreeningBurdenDict]:
         """
         Compare and rank strategies by screening burden.
 
@@ -259,7 +296,7 @@ class ScreeningEfficiencyAnalyzer:
             ...     print(f"{r['rank']}. {r['strategy_id']}: NNS={r['nns']:.1f}")
         """
         calc = PrecisionCalculator()
-        burden_data = []
+        burden_data: List[ScreeningBurdenDict] = []
 
         for result in strategies_results:
             precision = calc.calculate_precision(
@@ -281,7 +318,11 @@ class ScreeningEfficiencyAnalyzer:
             })
 
         # Sort by NNS (lower is better), treating inf as very large
-        burden_data.sort(key=lambda x: x['nns'] if x['nns'] != float('inf') else float('inf'))
+        def get_nns_for_sort(x: ScreeningBurdenDict) -> float:
+            nns_val = x.get('nns', float('inf'))
+            return nns_val if nns_val != float('inf') else float('inf')
+
+        burden_data.sort(key=get_nns_for_sort)
 
         # Add ranks
         for i, item in enumerate(burden_data, 1):
@@ -567,22 +608,22 @@ def generate_precision_report(
 
     lines = []
     lines.append(f"# Precision Metrics Report: {condition.title()}")
-    lines.append(f"")
+    lines.append("")
     lines.append(f"**Generated:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     lines.append(f"**Gold Standard Size:** {len(known_ncts)} NCT IDs")
     if total_database_size:
         lines.append(f"**Database Size:** {total_database_size:,} records")
-    lines.append(f"")
-    lines.append(f"---")
-    lines.append(f"")
+    lines.append("")
+    lines.append("---")
+    lines.append("")
 
     # Strategy comparison table
-    lines.append(f"## Strategy Comparison")
-    lines.append(f"")
-    lines.append(f"| Strategy | Retrieved | Relevant | Precision | Recall | F1 | NNS |")
-    lines.append(f"|----------|-----------|----------|-----------|--------|-----|-----|")
+    lines.append("## Strategy Comparison")
+    lines.append("")
+    lines.append("| Strategy | Retrieved | Relevant | Precision | Recall | F1 | NNS |")
+    lines.append("|----------|-----------|----------|-----------|--------|-----|-----|")
 
-    strategy_metrics = []
+    strategy_metrics: List[StrategyMetricsDict] = []
     for result in strategies_results:
         # Calculate overlap with known relevant
         found_relevant = len(result.nct_ids_found & known_ncts) if result.nct_ids_found else result.relevant_found
@@ -608,16 +649,16 @@ def generate_precision_report(
             f"{f1:.3f} | {nns_str} |"
         )
 
-    lines.append(f"")
+    lines.append("")
 
     # Screening efficiency section
-    lines.append(f"## Screening Efficiency Analysis")
-    lines.append(f"")
-    lines.append(f"*Estimated time to screen enough records to find one relevant study*")
-    lines.append(f"*(assuming 2 minutes per abstract)*")
-    lines.append(f"")
-    lines.append(f"| Strategy | NNS | Hours per Relevant | Workload vs S1 |")
-    lines.append(f"|----------|-----|-------------------|----------------|")
+    lines.append("## Screening Efficiency Analysis")
+    lines.append("")
+    lines.append("*Estimated time to screen enough records to find one relevant study*")
+    lines.append("*(assuming 2 minutes per abstract)*")
+    lines.append("")
+    lines.append("| Strategy | NNS | Hours per Relevant | Workload vs S1 |")
+    lines.append("|----------|-----|-------------------|----------------|")
 
     baseline_count = strategies_results[0].total_retrieved if strategies_results else 0
 
@@ -637,17 +678,30 @@ def generate_precision_report(
             f"{hours_str} | {reduction_str} |"
         )
 
-    lines.append(f"")
+    lines.append("")
 
     # Best strategy recommendation
-    lines.append(f"## Recommendations")
-    lines.append(f"")
+    lines.append("## Recommendations")
+    lines.append("")
 
-    # Find best by different criteria
-    best_recall = max(strategy_metrics, key=lambda x: x['recall'])
-    best_precision = max(strategy_metrics, key=lambda x: x['precision'])
-    best_f1 = max(strategy_metrics, key=lambda x: x['f1'])
-    best_nns = min(strategy_metrics, key=lambda x: x['nns'] if x['nns'] != float('inf') else float('inf'))
+    # Find best by different criteria - using typed helper functions
+    def get_recall(x: StrategyMetricsDict) -> float:
+        return x['recall']
+
+    def get_precision(x: StrategyMetricsDict) -> float:
+        return x['precision']
+
+    def get_f1(x: StrategyMetricsDict) -> float:
+        return x['f1']
+
+    def get_nns(x: StrategyMetricsDict) -> float:
+        nns_val = x['nns']
+        return nns_val if nns_val != float('inf') else float('inf')
+
+    best_recall = max(strategy_metrics, key=get_recall)
+    best_precision = max(strategy_metrics, key=get_precision)
+    best_f1 = max(strategy_metrics, key=get_f1)
+    best_nns = min(strategy_metrics, key=get_nns)
 
     lines.append(f"- **Highest Recall (Sensitivity):** {best_recall['result'].strategy_id} "
                  f"({best_recall['recall']:.1%})")
@@ -657,12 +711,12 @@ def generate_precision_report(
                  f"({best_f1['f1']:.3f})")
     lines.append(f"- **Most Efficient (Lowest NNS):** {best_nns['result'].strategy_id} "
                  f"(NNS={best_nns['nns']:.1f})")
-    lines.append(f"")
+    lines.append("")
 
     # Full metrics for best strategy if total_database_size provided
     if total_database_size and strategy_metrics:
         lines.append(f"## Detailed Metrics for Best F1 Strategy ({best_f1['result'].strategy_id})")
-        lines.append(f"")
+        lines.append("")
 
         tp = best_f1['found_relevant']
         fp = best_f1['result'].total_retrieved - tp
@@ -671,8 +725,8 @@ def generate_precision_report(
 
         full = validator.full_metrics(tp, fp, fn, tn)
 
-        lines.append(f"| Metric | Value |")
-        lines.append(f"|--------|-------|")
+        lines.append("| Metric | Value |")
+        lines.append("|--------|-------|")
         lines.append(f"| Sensitivity | {full['sensitivity']:.4f} |")
         lines.append(f"| Specificity | {full['specificity']:.4f} |")
         lines.append(f"| Precision (PPV) | {full['precision']:.4f} |")
@@ -681,10 +735,10 @@ def generate_precision_report(
         lines.append(f"| LR+ | {full['lr_positive']:.2f} |")
         lines.append(f"| LR- | {full['lr_negative']:.4f} |")
         lines.append(f"| DOR | {full['dor']:.2f} |")
-        lines.append(f"")
+        lines.append("")
 
-    lines.append(f"---")
-    lines.append(f"*Report generated by precision_metrics.py*")
+    lines.append("---")
+    lines.append("*Report generated by precision_metrics.py*")
 
     return "\n".join(lines)
 
@@ -727,7 +781,7 @@ def create_roc_data(
     strategies_results: List[StrategyResult],
     known_ncts: Set[str],
     total_database_size: int
-) -> Dict[str, List[Dict[str, float]]]:
+) -> ROCDataDict:
     """
     Create ROC curve data for plotting strategy performance.
 
@@ -749,9 +803,8 @@ def create_roc_data(
         >>> for point in roc['points']:
         ...     print(f"{point['strategy_id']}: FPR={point['fpr']:.3f}, TPR={point['tpr']:.3f}")
     """
-    validator = ValidationMetrics()
-    points = []
-    auc_estimates = {}
+    points: List[ROCPointDict] = []
+    auc_estimates: Dict[str, float] = {}
 
     # Add origin point (0, 0)
     points.append({
@@ -797,7 +850,10 @@ def create_roc_data(
     })
 
     # Sort by FPR for plotting
-    points.sort(key=lambda x: (x['fpr'], -x['tpr']))
+    def roc_sort_key(x: ROCPointDict) -> Tuple[float, float]:
+        return (x.get('fpr', 0.0), -x.get('tpr', 0.0))
+
+    points.sort(key=roc_sort_key)
 
     return {
         'points': points,
@@ -879,7 +935,7 @@ if __name__ == "__main__":
     ranked = analyzer.compare_screening_burden(strategies)
     print("\n  Strategies ranked by screening efficiency (NNS):\n")
     print(f"  {'Rank':<5} {'Strategy':<10} {'NNS':>8} {'Precision':>10}")
-    print(f"  {'-'*35}")
+    print(f"  {'-' * 35}")
 
     for r in ranked:
         print(f"  {r['rank']:<5} {r['strategy_id']:<10} {r['nns']:>8.1f} {r['precision']:>10.2%}")
@@ -887,7 +943,8 @@ if __name__ == "__main__":
     # Time estimates
     print("\n  Estimated screening time (2 min/abstract):")
     for r in ranked:
-        hours = analyzer.estimate_screening_time(r['nns'])
+        nns_value = r.get('nns', float('inf'))
+        hours = analyzer.estimate_screening_time(nns_value)
         print(f"    {r['strategy_id']}: {hours:.1f} hours per relevant study found")
 
     # Workload reduction
@@ -909,13 +966,13 @@ if __name__ == "__main__":
 
     full_metrics = validator.full_metrics(tp, fp, fn, tn)
 
-    print(f"\n  Confusion Matrix:")
+    print("\n  Confusion Matrix:")
     print(f"    True Positives:  {tp:,}")
     print(f"    False Positives: {fp:,}")
     print(f"    False Negatives: {fn}")
     print(f"    True Negatives:  {tn:,}")
 
-    print(f"\n  Diagnostic Metrics:")
+    print("\n  Diagnostic Metrics:")
     print(f"    Sensitivity:  {full_metrics['sensitivity']:.4f}")
     print(f"    Specificity:  {full_metrics['specificity']:.4f}")
     print(f"    Precision:    {full_metrics['precision']:.4f}")
@@ -923,7 +980,7 @@ if __name__ == "__main__":
     print(f"    F1 Score:     {full_metrics['f1_score']:.4f}")
     print(f"    Accuracy:     {full_metrics['accuracy']:.4f}")
 
-    print(f"\n  Likelihood Ratios:")
+    print("\n  Likelihood Ratios:")
     print(f"    LR+: {full_metrics['lr_positive']:.2f}")
     print(f"    LR-: {full_metrics['lr_negative']:.4f}")
     print(f"    DOR: {full_metrics['dor']:.2f}")
@@ -954,13 +1011,17 @@ if __name__ == "__main__":
 
     print("\n  ROC Points (for plotting):")
     print(f"  {'Strategy':<25} {'FPR':>8} {'TPR':>8}")
-    print(f"  {'-'*43}")
+    print(f"  {'-' * 43}")
 
     for point in roc_data['points']:
-        name = point.get('strategy_name', point['strategy_id'])[:25]
-        print(f"  {name:<25} {point['fpr']:>8.4f} {point['tpr']:>8.4f}")
+        strategy_name = point.get('strategy_name')
+        strategy_id = point.get('strategy_id', '')
+        name = (strategy_name if strategy_name else strategy_id)[:25]
+        fpr_value = point.get('fpr', 0.0)
+        tpr_value = point.get('tpr', 0.0)
+        print(f"  {name:<25} {fpr_value:>8.4f} {tpr_value:>8.4f}")
 
-    print(f"\n  AUC Estimates:")
+    print("\n  AUC Estimates:")
     for strat_id, auc in roc_data['auc_estimates'].items():
         print(f"    {strat_id}: {auc:.3f}")
 
