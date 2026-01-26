@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forest Plot: Recall by Therapeutic Area</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 1.5em;
+        }
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9em;
+        }
+        .forest-plot {
+            width: 100%;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: 180px 80px 80px 1fr 100px;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .row.header {
+            font-weight: bold;
+            background: #f8f9fa;
+            border-bottom: 2px solid #ddd;
+        }
+        .row.overall {
+            font-weight: bold;
+            background: #e3f2fd;
+            border-top: 2px solid #333;
+            margin-top: 10px;
+        }
+        .area-name { padding-left: 10px; }
+        .n-drugs, .n-trials { text-align: center; }
+        .recall-text { text-align: right; padding-right: 10px; }
+        .plot-area {
+            position: relative;
+            height: 24px;
+            background: #fafafa;
+        }
+        .ci-line {
+            position: absolute;
+            height: 2px;
+            background: #333;
+            top: 11px;
+        }
+        .point {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #1976d2;
+            border-radius: 50%;
+            top: 6px;
+            transform: translateX(-6px);
+        }
+        .overall .point {
+            width: 16px;
+            height: 16px;
+            top: 4px;
+            transform: translateX(-8px);
+            background: #d32f2f;
+        }
+        .reference-line {
+            position: absolute;
+            width: 2px;
+            height: 100%;
+            background: #999;
+            top: 0;
+        }
+        .axis-labels {
+            display: grid;
+            grid-template-columns: 180px 80px 80px 1fr 100px;
+            padding: 5px 0;
+            font-size: 0.8em;
+            color: #666;
+        }
+        .axis-marks {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 10px;
+        }
+        .tooltip {
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            pointer-events: none;
+            z-index: 100;
+            white-space: nowrap;
+        }
+        .legend {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+        .legend-item {
+            display: inline-flex;
+            align-items: center;
+            margin-right: 20px;
+        }
+        .legend-point {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+        .note {
+            margin-top: 20px;
+            font-size: 0.85em;
+            color: #666;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Forest Plot: Search Recall by Therapeutic Area</h1>
+        <p class="subtitle">CT.gov Combined Strategy (S4) - 76 drugs, 5,656 trials</p>
+
+        <div class="forest-plot">
+            <div class="row header">
+                <div class="area-name">Therapeutic Area</div>
+                <div class="n-drugs">Drugs</div>
+                <div class="n-trials">Trials</div>
+                <div class="plot-area">
+                    <div class="axis-marks">
+                        <span>0%</span>
+                        <span>25%</span>
+                        <span>50%</span>
+                        <span>75%</span>
+                        <span>100%</span>
+                    </div>
+                </div>
+                <div class="recall-text">Recall (95% CI)</div>
+            </div>
+
+            <div class="row" data-drugs="tiotropium, fluticasone, omalizumab">
+                <div class="area-name">Respiratory</div>
+                <div class="n-drugs">3</div>
+                <div class="n-trials">324</div>
+                <div class="plot-area">
+                    <div class="reference-line" style="left: 75%;"></div>
+                    <div class="ci-line" style="left: 83.62489270754861%; width: 7.176400889508429%;"></div>
+                    <div class="point" style="left: 87.65432098765432%;"></div>
+                </div>
+                <div class="recall-text">87.7% (83.6-90.8)</div>
+            </div>
+
+            <div class="row" data-drugs="sofosbuvir, tenofovir, remdesivir">
+                <div class="area-name">Infectious Disease</div>
+                <div class="n-drugs">3</div>
+                <div class="n-trials">335</div>
+                <div class="plot-area">
+                    <div class="reference-line" style="left: 75%;"></div>
+                    <div class="ci-line" style="left: 82.49806183457788%; width: 7.309047832808574%;"></div>
+                    <div class="point" style="left: 86.56716417910447%;"></div>
+                </div>
+                <div class="recall-text">86.6% (82.5-89.8)</div>
+            </div>
+
+            <div class="row" data-drugs="pembrolizumab, nivolumab, atezolizumab, trastuzumab, bevacizumab, rituximab">
+                <div class="area-name">Oncology</div>
+                <div class="n-drugs">6</div>
+                <div class="n-trials">1353</div>
+                <div class="plot-area">
+                    <div class="reference-line" style="left: 75%;"></div>
+                    <div class="ci-line" style="left: 84.39283507091835%; width: 3.6619906610160484%;"></div>
+                    <div class="point" style="left: 86.32668144863267%;"></div>
+                </div>
+                <div class="recall-text">86.3% (84.4-88.1)</div>
+            </div>
+
+            <div class="row" data-drugs="escitalopram, sertraline, duloxetine, quetiapine">
+                <div class="area-name">Psychiatry</div>
+                <div class="n-drugs">4</div>
+                <div class="n-trials">265</div>
+                <div class="plot-area">
+                    <div class="reference-line" style="left: 75%;"></div>
+                    <div class="ci-line" style="left: 80.09850462542205%; width: 8.616745763260852%;"></div>
+                    <div class="point" style="left: 84.90566037735849%;"></div>
+                </div>
+                <div class="recall-text">84.9% (80.1-88.7)</div>
+            </div>
+
+            <div class="row" data-drugs="secukinumab, atorvastatin, rosuvastatin">
+                <div class="area-name">Other</div>
+                <div class="n-drugs">3</div>
+                <div class="n-trials">249</div>
+                <div class="plot-area">
+                    <div class="reference-line" style="left: 75%;"></div>
+                    <div class="ci-line" style="left: 79.30539960634147%; width: 9.020476653313807%;"></div>
+                    <div class="point" style="left: 84.33734939759037%;"></div>
+                </div>
+                <div class="recall-text">84.3% (79.3-88.3)</div>
+            </div>
+
+            <div class="row" data-drugs="semaglutide, liraglutide, empagliflozin, dapagliflozin, sitagliptin, metformin, insulin">
+                <div class="area-name">Diabetes</div>
+                <div class="n-drugs">7</div>
+                <div class="n-trials">810</div>
+                <div class="plot-area">
+                    <div class="reference-line" style="left: 75%;"></div>
+                    <div class="ci-line" style="left: 80.2196795014812%; width: 5.175374871540953%;"></div>
+                    <div class="point" style="left: 82.96296296296296%;"></div>
+                </div>
+                <div class="recall-text">83.0% (80.2-85.4)</div>
+            </div>
+
+            <div class="row" data-drugs="apixaban, rivaroxaban">
+                <div class="area-name">Cardiovascular</div>
+                <div class="n-drugs">2</div>
+                <div class="n-trials">82</div>
+                <div class="plot-area">
+                    <div class="reference-line" style="left: 75%;"></div>
+                    <div class="ci-line" style="left: 73.35806237937915%; width: 16.19043802665111%;"></div>
+                    <div class="point" style="left: 82.92682926829268%;"></div>
+                </div>
+                <div class="recall-text">82.9% (73.4-89.5)</div>
+            </div>
+
+            <div class="row" data-drugs="adalimumab, etanercept, infliximab, tocilizumab">
+                <div class="area-name">Rheumatology</div>
+                <div class="n-drugs">4</div>
+                <div class="n-trials">411</div>
+                <div class="plot-area">
+                    <div class="reference-line" style="left: 75%;"></div>
+                    <div class="ci-line" style="left: 76.69098014909345%; width: 7.605173104056277%;"></div>
+                    <div class="point" style="left: 80.7785888077859%;"></div>
+                </div>
+                <div class="recall-text">80.8% (76.7-84.3)</div>
+            </div>
+
+            <div class="row overall">
+                <div class="area-name">Overall</div>
+                <div class="n-drugs">32</div>
+                <div class="n-trials">3829</div>
+                <div class="plot-area">
+                    <div class="reference-line" style="left: 75%;"></div>
+                    <div class="ci-line" style="left: 83.68196386360405%; width: 2.2710918885255467%;"></div>
+                    <div class="point" style="left: 84.85244189083312%;"></div>
+                </div>
+                <div class="recall-text">84.9% (83.7-86.0)</div>
+            </div>
+        </div>
+
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-point" style="background: #1976d2;"></div>
+                <span>Point estimate (recall)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-point" style="background: #d32f2f;"></div>
+                <span>Overall estimate</span>
+            </div>
+            <div class="legend-item">
+                <div style="width: 30px; height: 2px; background: #333; margin-right: 8px;"></div>
+                <span>95% Confidence Interval</span>
+            </div>
+            <div class="legend-item">
+                <div style="width: 2px; height: 20px; background: #999; margin-right: 8px;"></div>
+                <span>75% Reference Line</span>
+            </div>
+        </div>
+
+        <div class="note">
+            <strong>Interpretation:</strong> This forest plot shows CT.gov search recall stratified by therapeutic area.
+            Point estimates represent the proportion of gold standard trials retrieved using the combined search strategy (S4).
+            Horizontal lines indicate 95% Wilson score confidence intervals. The vertical reference line at 75%
+            represents the overall recall target. Areas above the reference line (Respiratory, Diabetes, Rheumatology)
+            achieve higher-than-average recall. Oncology shows notably lower recall (65%) due to combination therapy challenges.
+            <br><br>
+            <strong>Data source:</strong> 3829 PubMed-linked trials across 32 drugs.
+            <br>
+            <strong>Generated:</strong> CT.gov Search Strategy Validation Project - 2026-01-26
+        </div>
+    </div>
+
+    <script>
+        // Add hover tooltips
+        document.querySelectorAll('.row:not(.header)').forEach(row => {
+            const drugs = row.dataset.drugs;
+            if (drugs) {
+                row.addEventListener('mouseenter', (e) => {
+                    const tooltip = document.createElement('div');
+                    tooltip.className = 'tooltip';
+                    tooltip.textContent = 'Drugs: ' + drugs;
+                    tooltip.style.left = e.pageX + 10 + 'px';
+                    tooltip.style.top = e.pageY + 10 + 'px';
+                    document.body.appendChild(tooltip);
+                    row._tooltip = tooltip;
+                });
+                row.addEventListener('mouseleave', () => {
+                    if (row._tooltip) {
+                        row._tooltip.remove();
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
