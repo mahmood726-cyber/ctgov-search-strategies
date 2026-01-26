@@ -1,0 +1,239 @@
+{
+  "_metadata": {
+    "description": "Enhanced drug synonym expansion for improved recall",
+    "version": "2.0",
+    "created": "2026-01-26",
+    "purpose": "Address problem drugs with low recall (insulin, metformin, adalimumab)",
+    "sources": ["DrugBank", "RxNorm", "WHO ATC", "ChEMBL", "MeSH"]
+  },
+
+  "problem_drugs": {
+    "_note": "These drugs have <80% recall and need aggressive synonym expansion",
+
+    "insulin": {
+      "baseline_recall": 0.127,
+      "target_recall": 0.70,
+      "generic_names": [
+        "insulin",
+        "insulin human",
+        "human insulin",
+        "recombinant human insulin"
+      ],
+      "brand_names": [
+        "Humulin", "Novolin", "Humalog", "NovoLog", "Lantus",
+        "Levemir", "Tresiba", "Toujeo", "Basaglar", "Admelog",
+        "Fiasp", "Lyumjev", "Apidra", "Afrezza"
+      ],
+      "insulin_types": [
+        "insulin glargine", "glargine",
+        "insulin lispro", "lispro",
+        "insulin aspart", "aspart",
+        "insulin detemir", "detemir",
+        "insulin degludec", "degludec",
+        "insulin glulisine", "glulisine",
+        "NPH insulin", "isophane insulin",
+        "regular insulin",
+        "insulin zinc",
+        "protamine zinc insulin"
+      ],
+      "research_codes": [
+        "LY275585", "B28Asp insulin", "HOE 901"
+      ],
+      "mechanism_terms": [
+        "basal insulin",
+        "bolus insulin",
+        "prandial insulin",
+        "long-acting insulin",
+        "rapid-acting insulin",
+        "intermediate-acting insulin",
+        "ultra-long-acting insulin"
+      ],
+      "combination_products": [
+        "insulin/GLP-1", "IDegLira", "iGlarLixi",
+        "Xultophy", "Soliqua"
+      ],
+      "search_strategy": "Use insulin_types as primary - they appear more frequently in trial registrations than generic 'insulin'"
+    },
+
+    "metformin": {
+      "baseline_recall": 0.35,
+      "target_recall": 0.80,
+      "generic_names": [
+        "metformin",
+        "metformin hydrochloride",
+        "metformin HCl"
+      ],
+      "brand_names": [
+        "Glucophage", "Glucophage XR", "Fortamet",
+        "Glumetza", "Riomet", "Glycon"
+      ],
+      "chemical_names": [
+        "dimethylbiguanide",
+        "1,1-dimethylbiguanide"
+      ],
+      "international_names": [
+        "metformina",
+        "metformine",
+        "metforminum"
+      ],
+      "combination_products": [
+        "metformin/sitagliptin", "Janumet",
+        "metformin/empagliflozin", "Synjardy",
+        "metformin/dapagliflozin", "Xigduo",
+        "metformin/linagliptin", "Jentadueto",
+        "metformin/saxagliptin", "Kombiglyze",
+        "metformin/glipizide", "Metaglip",
+        "metformin/glyburide", "Glucovance",
+        "metformin/pioglitazone", "Actoplus Met",
+        "metformin/rosiglitazone", "Avandamet",
+        "metformin/canagliflozin", "Invokamet",
+        "metformin/ertugliflozin", "Segluromet"
+      ],
+      "class_terms": [
+        "biguanide",
+        "biguanides",
+        "oral antidiabetic",
+        "antihyperglycemic"
+      ],
+      "search_strategy": "Include combination products - metformin is often comparator in diabetes trials"
+    },
+
+    "adalimumab": {
+      "baseline_recall": 0.717,
+      "target_recall": 0.85,
+      "generic_names": [
+        "adalimumab",
+        "adalimumab-atto",
+        "adalimumab-adbm",
+        "adalimumab-adaz",
+        "adalimumab-bwwd",
+        "adalimumab-afzb",
+        "adalimumab-fkjp"
+      ],
+      "brand_names": [
+        "Humira", "Hadlima", "Hyrimoz", "Cyltezo",
+        "Amjevita", "Idacio", "Hulio", "Yusimry",
+        "Simlandi", "Yuflyma"
+      ],
+      "biosimilar_codes": [
+        "ABP 501", "BI 695501", "GP2017",
+        "MSB11022", "PF-06410293", "SB5"
+      ],
+      "research_codes": [
+        "D2E7", "LU 200134"
+      ],
+      "mechanism_terms": [
+        "anti-TNF",
+        "anti-TNF-alpha",
+        "TNF inhibitor",
+        "TNF-alpha inhibitor",
+        "tumor necrosis factor inhibitor",
+        "TNF blocker",
+        "anti-tumor necrosis factor"
+      ],
+      "class_terms": [
+        "biologic DMARD",
+        "bDMARD",
+        "monoclonal antibody"
+      ],
+      "search_strategy": "Include biosimilar names and mechanism terms - trials may use class terminology"
+    }
+  },
+
+  "high_recall_drugs": {
+    "_note": "These drugs achieve >85% recall - included for reference",
+
+    "semaglutide": {
+      "baseline_recall": 0.917,
+      "generic_names": ["semaglutide"],
+      "brand_names": ["Ozempic", "Wegovy", "Rybelsus"],
+      "research_codes": ["NN9535"],
+      "mechanism_terms": ["GLP-1 agonist", "GLP-1 receptor agonist"]
+    },
+
+    "pembrolizumab": {
+      "baseline_recall": 0.867,
+      "generic_names": ["pembrolizumab"],
+      "brand_names": ["Keytruda"],
+      "research_codes": ["MK-3475", "lambrolizumab", "SCH 900475"],
+      "mechanism_terms": ["anti-PD-1", "PD-1 inhibitor", "checkpoint inhibitor"]
+    }
+  },
+
+  "oncology_combinations": {
+    "_note": "Oncology drugs often appear in combination regimens - search for combinations",
+
+    "pembrolizumab_combinations": [
+      "pembrolizumab + chemotherapy",
+      "pembrolizumab + lenvatinib",
+      "pembrolizumab + axitinib",
+      "pembrolizumab carboplatin",
+      "pembrolizumab pemetrexed"
+    ],
+
+    "nivolumab_combinations": [
+      "nivolumab + ipilimumab",
+      "nivolumab + chemotherapy",
+      "nivolumab + cabozantinib"
+    ],
+
+    "trastuzumab_combinations": [
+      "trastuzumab + pertuzumab",
+      "trastuzumab + docetaxel",
+      "trastuzumab + paclitaxel",
+      "T-DM1", "trastuzumab emtansine",
+      "trastuzumab deruxtecan", "T-DXd"
+    ]
+  },
+
+  "search_recommendations": {
+    "insulin": {
+      "primary_strategy": "Search each insulin type separately (glargine, lispro, aspart, etc.)",
+      "secondary_strategy": "Add mechanism terms (basal insulin, rapid-acting insulin)",
+      "expected_improvement": "+40-50% recall",
+      "note": "Generic 'insulin' is too broad and misses specific formulations"
+    },
+    "metformin": {
+      "primary_strategy": "Include combination product names",
+      "secondary_strategy": "Search biguanide class term",
+      "expected_improvement": "+10-15% recall",
+      "note": "Metformin often used as comparator/background therapy"
+    },
+    "adalimumab": {
+      "primary_strategy": "Include all biosimilar names",
+      "secondary_strategy": "Search TNF inhibitor class terms",
+      "expected_improvement": "+5-10% recall",
+      "note": "Many trials registered before specific biosimilar names assigned"
+    }
+  },
+
+  "therapeutic_class_mappings": {
+    "DPP-4 inhibitors": [
+      "sitagliptin", "Januvia",
+      "saxagliptin", "Onglyza",
+      "linagliptin", "Tradjenta",
+      "alogliptin", "Nesina",
+      "vildagliptin", "Galvus"
+    ],
+    "SGLT2 inhibitors": [
+      "empagliflozin", "Jardiance",
+      "dapagliflozin", "Farxiga",
+      "canagliflozin", "Invokana",
+      "ertugliflozin", "Steglatro"
+    ],
+    "GLP-1 agonists": [
+      "semaglutide", "Ozempic", "Wegovy",
+      "liraglutide", "Victoza", "Saxenda",
+      "dulaglutide", "Trulicity",
+      "exenatide", "Byetta", "Bydureon",
+      "tirzepatide", "Mounjaro"
+    ],
+    "TNF inhibitors": [
+      "adalimumab", "Humira",
+      "infliximab", "Remicade",
+      "etanercept", "Enbrel",
+      "certolizumab", "Cimzia",
+      "golimumab", "Simponi"
+    ]
+  }
+}
