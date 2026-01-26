@@ -476,22 +476,157 @@ class MultiRegistrySearcher:
 
     def search_ctgov(self, query: str) -> List[SearchResult]:
         """
-        Search ClinicalTrials.gov.
+        Search ClinicalTrials.gov using API v2.
 
-        Note: This is a mock implementation. Real implementation would
-        call the CT.gov API.
+        Args:
+            query: CT.gov API query string
+
+        Returns:
+            List of SearchResult objects
         """
-        # Mock results for demonstration
-        return []
+        import requests
+        import time
+
+        CTGOV_API_BASE = "https://clinicaltrials.gov/api/v2/studies"
+        results = []
+
+        try:
+            # Parse query string into params
+            params = {
+                'format': 'json',
+                'pageSize': 100
+            }
+
+            # Add query parameters
+            for part in query.split('&'):
+                if '=' in part:
+                    key, value = part.split('=', 1)
+                    params[key] = value
+
+            page_token = None
+            pages_fetched = 0
+            max_pages = 10  # Limit to 1000 results
+
+            while pages_fetched < max_pages:
+                if page_token:
+                    params['pageToken'] = page_token
+
+                response = requests.get(CTGOV_API_BASE, params=params, timeout=30)
+                response.raise_for_status()
+                data = response.json()
+
+                studies = data.get('studies', [])
+                for study in studies:
+                    protocol = study.get('protocolSection', {})
+                    id_module = protocol.get('identificationModule', {})
+                    status_module = protocol.get('statusModule', {})
+                    design_module = protocol.get('designModule', {})
+                    arms_module = protocol.get('armsInterventionsModule', {})
+                    conditions_module = protocol.get('conditionsModule', {})
+
+                    # Extract interventions
+                    interventions = []
+                    for arm in arms_module.get('interventions', []):
+                        interventions.append(arm.get('name', ''))
+
+                    # Extract conditions
+                    conditions = conditions_module.get('conditions', [])
+
+                    results.append(SearchResult(
+                        registry='ClinicalTrials.gov',
+                        nct_id=id_module.get('nctId', ''),
+                        title=id_module.get('briefTitle', ''),
+                        status=status_module.get('overallStatus', ''),
+                        phase=','.join(design_module.get('phases', [])),
+                        enrollment=status_module.get('enrollmentInfo', {}).get('count'),
+                        start_date=status_module.get('startDateStruct', {}).get('date'),
+                        conditions=conditions,
+                        interventions=interventions
+                    ))
+
+                # Check for next page
+                page_token = data.get('nextPageToken')
+                if not page_token:
+                    break
+
+                pages_fetched += 1
+                time.sleep(0.2)  # Rate limiting
+
+        except requests.RequestException as e:
+            print(f"CT.gov API error: {e}")
+        except (KeyError, ValueError) as e:
+            print(f"Parse error: {e}")
+
+        return results
 
     def search_ictrp(self, pico: ParsedPICO,
                      expanded_terms: Dict[str, ExpandedTerms]) -> List[SearchResult]:
         """
-        Search WHO ICTRP.
+        Search WHO ICTRP via web scraping.
 
-        Note: This is a mock implementation.
+        Note: ICTRP doesn't have a public API, so this uses web scraping
+        with rate limiting. For production use, consider using the ICTRP
+        data exports instead.
         """
-        return []
+        import requests
+        from bs4 import BeautifulSoup
+        import time
+
+        ICTRP_SEARCH_URL = "https://trialsearch.who.int/Trial2.aspx"
+        results = []
+
+        try:
+            # Build search terms
+            search_terms = []
+            if pico.intervention and pico.intervention in expanded_terms:
+                search_terms.extend(expanded_terms[pico.intervention].synonyms[:3])
+            if pico.population and pico.population in expanded_terms:
+                search_terms.extend(expanded_terms[pico.population].synonyms[:2])
+
+            if not search_terms:
+                return results
+
+            search_query = ' AND '.join(search_terms[:3])
+
+            # Make search request
+            params = {
+                'SearchText': search_query,
+                'SearchType': 'basic'
+            }
+
+            response = requests.get(ICTRP_SEARCH_URL, params=params, timeout=30)
+            response.raise_for_status()
+
+            # Parse HTML response
+            soup = BeautifulSoup(response.content, 'html.parser')
+
+            # Find trial entries (structure depends on ICTRP HTML)
+            for trial_row in soup.select('.trial-row, .search-result'):
+                trial_id = trial_row.select_one('.trial-id, .id')
+                title = trial_row.select_one('.trial-title, .title')
+                status = trial_row.select_one('.status')
+
+                if trial_id and title:
+                    results.append(SearchResult(
+                        registry='WHO ICTRP',
+                        nct_id=trial_id.get_text(strip=True),
+                        title=title.get_text(strip=True),
+                        status=status.get_text(strip=True) if status else '',
+                        phase=None,
+                        enrollment=None,
+                        start_date=None,
+                        conditions=[],
+                        interventions=[]
+                    ))
+
+            time.sleep(1.0)  # Respectful rate limiting for web scraping
+
+        except requests.RequestException as e:
+            print(f"ICTRP search error: {e}")
+        except Exception as e:
+            print(f"ICTRP parse error: {e}")
+
+        return results
 
     def deduplicate_results(self, all_results: List[SearchResult]) -> Tuple[List[SearchResult], int]:
         """

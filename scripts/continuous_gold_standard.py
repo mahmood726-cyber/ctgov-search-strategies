@@ -187,16 +187,106 @@ class PubMedScanner:
     def scan_for_new_trials(self, drug: str, condition: str,
                            days_back: int = 7) -> List[Dict]:
         """
-        Scan PubMed for new NCT-linked publications.
-
-        Note: This is a mock implementation. Real implementation would
-        call PubMed E-utilities API.
+        Scan PubMed for new NCT-linked publications using E-utilities API.
 
         Returns:
             List of {nct_id, pubmed_id, title, date} dicts
         """
-        # Mock implementation
-        return []
+        import requests
+        import xml.etree.ElementTree as ET
+        import time
+
+        results = []
+
+        # Build search query
+        query = self.build_search_query(drug, condition, days_back)
+
+        try:
+            # Step 1: ESearch to get PMIDs
+            esearch_url = f"{self.base_url}/esearch.fcgi"
+            esearch_params = {
+                'db': 'pubmed',
+                'term': query,
+                'retmax': 500,
+                'retmode': 'json',
+                'usehistory': 'y'
+            }
+            if self.api_key:
+                esearch_params['api_key'] = self.api_key
+
+            response = requests.get(esearch_url, params=esearch_params, timeout=30)
+            response.raise_for_status()
+            search_data = response.json()
+
+            pmids = search_data.get('esearchresult', {}).get('idlist', [])
+            if not pmids:
+                return results
+
+            time.sleep(0.34)  # Rate limiting
+
+            # Step 2: EFetch to get details with DataBank info
+            efetch_url = f"{self.base_url}/efetch.fcgi"
+            efetch_params = {
+                'db': 'pubmed',
+                'id': ','.join(pmids[:100]),  # Limit batch size
+                'retmode': 'xml'
+            }
+            if self.api_key:
+                efetch_params['api_key'] = self.api_key
+
+            response = requests.get(efetch_url, params=efetch_params, timeout=60)
+            response.raise_for_status()
+
+            # Parse XML response
+            root = ET.fromstring(response.content)
+
+            for article in root.findall('.//PubmedArticle'):
+                pmid_elem = article.find('.//PMID')
+                pmid = pmid_elem.text if pmid_elem is not None else None
+
+                title_elem = article.find('.//ArticleTitle')
+                title = title_elem.text if title_elem is not None else ""
+
+                # Get publication date
+                pub_date_elem = article.find('.//PubDate')
+                pub_date = ""
+                if pub_date_elem is not None:
+                    year = pub_date_elem.find('Year')
+                    month = pub_date_elem.find('Month')
+                    if year is not None:
+                        pub_date = year.text
+                        if month is not None:
+                            pub_date = f"{year.text}-{month.text}"
+
+                # Extract NCT IDs from DataBankList
+                nct_ids = set()
+                for databank in article.findall('.//DataBank'):
+                    db_name = databank.find('DataBankName')
+                    if db_name is not None and 'ClinicalTrials.gov' in db_name.text:
+                        for acc in databank.findall('.//AccessionNumber'):
+                            if acc.text and self.NCT_PATTERN.match(acc.text):
+                                nct_ids.add(acc.text)
+
+                # Also check abstract for NCT IDs
+                abstract_elem = article.find('.//AbstractText')
+                if abstract_elem is not None and abstract_elem.text:
+                    nct_ids.update(self.NCT_PATTERN.findall(abstract_elem.text))
+
+                # Add results for each NCT ID found
+                for nct_id in nct_ids:
+                    results.append({
+                        'nct_id': nct_id,
+                        'pubmed_id': pmid,
+                        'title': title,
+                        'date': pub_date
+                    })
+
+        except requests.RequestException as e:
+            print(f"PubMed API error: {e}")
+        except ET.ParseError as e:
+            print(f"XML parse error: {e}")
+
+        return results
 
 
 class GoldStandardManager:
@@ -612,9 +702,13 @@ class ContinuousUpdatePipeline:
         """
         Run a full validation cycle and record recall.
 
-        Note: This is a simplified implementation. Full implementation
-        would execute actual CT.gov searches and compare to gold standard.
+        Executes CT.gov searches and compares to gold standard.
         """
+        import requests
+        import time
+
+        CTGOV_API_BASE = "https://clinicaltrials.gov/api/v2/studies"
+
         results = {
             'timestamp': datetime.now().isoformat(),
             'drugs_validated': 0,
@@ -630,22 +724,64 @@ class ContinuousUpdatePipeline:
             if not gold_ncts:
                 continue
 
-            # Mock validation (real implementation would search CT.gov)
-            mock_recall = 0.75 + (hash(drug) % 20) / 100  # Simulate variation
+            # Execute real CT.gov search
+            try:
+                params = {
+                    'query.intr': drug,
+                    'filter.overallStatus': 'COMPLETED',
+                    'format': 'json',
+                    'pageSize': 100,
+                    'fields': 'NCTId'
+                }
 
-            self.recall_tracker.record_recall(
-                drug=drug,
-                therapeutic_area=area,
-                recall=mock_recall,
-                gold_standard_size=len(gold_ncts)
-            )
+                found_ncts = set()
+                page_token = None
 
-            results['by_drug'][drug] = {
-                'recall': mock_recall,
-                'gold_standard_size': len(gold_ncts)
-            }
-            total_recall += mock_recall
-            results['drugs_validated'] += 1
+                for _ in range(10):  # Max 10 pages (1000 results)
+                    if page_token:
+                        params['pageToken'] = page_token
+
+                    response = requests.get(CTGOV_API_BASE, params=params, timeout=30)
+                    response.raise_for_status()
+                    data = response.json()
+
+                    for study in data.get('studies', []):
+                        nct_id = study.get('protocolSection', {}).get('identificationModule', {}).get('nctId')
+                        if nct_id:
+                            found_ncts.add(nct_id)
+
+                    page_token = data.get('nextPageToken')
+                    if not page_token:
+                        break
+
+                    time.sleep(0.2)  # Rate limiting
+
+                # Calculate recall
+                true_positives = found_ncts & gold_ncts
+                recall = len(true_positives) / len(gold_ncts) if gold_ncts else 0.0
+
+                self.recall_tracker.record_recall(
+                    drug=drug,
+                    therapeutic_area=area,
+                    recall=recall,
+                    gold_standard_size=len(gold_ncts)
+                )
+
+                results['by_drug'][drug] = {
+                    'recall': recall,
+                    'gold_standard_size': len(gold_ncts),
+                    'found': len(found_ncts),
+                    'true_positives': len(true_positives)
+                }
+                total_recall += recall
+                results['drugs_validated'] += 1
+
+            except requests.RequestException as e:
+                print(f"CT.gov API error for {drug}: {e}")
+                results['by_drug'][drug] = {
+                    'error': str(e),
+                    'gold_standard_size': len(gold_ncts)
+                }
 
         if results['drugs_validated'] > 0:
             results['average_recall'] = total_recall / results['drugs_validated']
