@@ -1,0 +1,1177 @@
+{
+  "validation_date": "2026-01-18T13:39:47.445668",
+  "sample_size": 200,
+  "statistics": {
+    "total_tested": 200,
+    "found": 198,
+    "not_found": 2,
+    "errors": 0,
+    "recall_rate": 99.0,
+    "miss_rate": 1.0
+  },
+  "found_nct_ids": [
+    "NCT03101800",
+    "NCT02910245",
+    "NCT02288130",
+    "NCT01873378",
+    "NCT00996801",
+    "NCT00532337",
+    "NCT00518531",
+    "NCT00404820",
+    "NCT00377819",
+    "NCT00896532",
+    "NCT00666627",
+    "NCT01631214",
+    "NCT00293813",
+    "NCT01033383",
+    "NCT01346774",
+    "NCT00280592",
+    "NCT00596635",
+    "NCT01691430",
+    "NCT01776021",
+    "NCT00638170",
+    "NCT00128128",
+    "NCT00965562",
+    "NCT00536198",
+    "NCT01844999",
+    "NCT01492257",
+    "NCT00829478",
+    "NCT01415375",
+    "NCT01083550",
+    "NCT00765869",
+    "NCT00743951",
+    "NCT02216747",
+    "NCT00308321",
+    "NCT04235426",
+    "NCT01225068",
+    "NCT00427635",
+    "NCT01349270",
+    "NCT01236079",
+    "NCT01648946",
+    "NCT02099669",
+    "NCT00071032",
+    "NCT01167582",
+    "NCT02981407",
+    "NCT04506125",
+    "NCT00350220",
+    "NCT01484886",
+    "NCT00126334",
+    "NCT01502215",
+    "NCT02086773",
+    "NCT02648113",
+    "NCT03309579",
+    "NCT02963883",
+    "NCT03407573",
+    "NCT02203292",
+    "NCT01102010",
+    "NCT01021631",
+    "NCT01485315",
+    "NCT00202371",
+    "NCT00651573",
+    "NCT00566709",
+    "NCT01345643",
+    "NCT01597232",
+    "NCT02042898",
+    "NCT01484639",
+    "NCT02972593",
+    "NCT02465125",
+    "NCT00906295",
+    "NCT01079247",
+    "NCT00335023",
+    "NCT00313716",
+    "NCT00937053",
+    "NCT00470444",
+    "NCT02968654",
+    "NCT01237639",
+    "NCT03260478",
+    "NCT00414713",
+    "NCT00944112",
+    "NCT01116479",
+    "NCT02761564",
+    "NCT00226122",
+    "NCT01078753",
+    "NCT02459717",
+    "NCT04451096",
+    "NCT03166007",
+    "NCT03031977",
+    "NCT04367571",
+    "NCT03377322",
+    "NCT04500743",
+    "NCT01559480",
+    "NCT01716442",
+    "NCT02132195",
+    "NCT01092962",
+    "NCT02818738",
+    "NCT01268033",
+    "NCT02394119",
+    "NCT04494438",
+    "NCT04402580",
+    "NCT02438982",
+    "NCT00506584",
+    "NCT01534481",
+    "NCT01686477",
+    "NCT01421992",
+    "NCT02144324",
+    "NCT01613118",
+    "NCT03493685",
+    "NCT00814255",
+    "NCT00135811",
+    "NCT02394106",
+    "NCT00067990",
+    "NCT00933231",
+    "NCT00270153",
+    "NCT00502242",
+    "NCT02644395",
+    "NCT01602861",
+    "NCT02446548",
+    "NCT00294515",
+    "NCT00227370",
+    "NCT00497796",
+    "NCT01773382",
+    "NCT01225445",
+    "NCT00862693",
+    "NCT02942381",
+    "NCT00793585",
+    "NCT00870493",
+    "NCT00426348",
+    "NCT01526265",
+    "NCT03163056",
+    "NCT00643149",
+    "NCT01492608",
+    "NCT01116726",
+    "NCT00397150",
+    "NCT00635453",
+    "NCT00175318",
+    "NCT02098031",
+    "NCT00798226",
+    "NCT02937194",
+    "NCT01119612",
+    "NCT02221752",
+    "NCT02846597",
+    "NCT03518762",
+    "NCT01255826",
+    "NCT02139800",
+    "NCT02083705",
+    "NCT02550639",
+    "NCT01552369",
+    "NCT00372229",
+    "NCT01461850",
+    "NCT01359202",
+    "NCT00810888",
+    "NCT00128050",
+    "NCT02625948",
+    "NCT01566786",
+    "NCT00426803",
+    "NCT01702636",
+    "NCT02866838",
+    "NCT00928915",
+    "NCT02666703",
+    "NCT01573143",
+    "NCT00553605",
+    "NCT01908062",
+    "NCT03275350",
+    "NCT02110264",
+    "NCT01556425",
+    "NCT00678418",
+    "NCT00218426",
+    "NCT01101815",
+    "NCT01180647",
+    "NCT00781898",
+    "NCT00204243",
+    "NCT01843023",
+    "NCT01389167",
+    "NCT01246401",
+    "NCT00577408",
+    "NCT01717963",
+    "NCT02032433",
+    "NCT01999946",
+    "NCT01994395",
+    "NCT02053233",
+    "NCT02843828",
+    "NCT00975156",
+    "NCT02471248",
+    "NCT02620306",
+    "NCT00494715",
+    "NCT00419835",
+    "NCT00340678",
+    "NCT00422084",
+    "NCT00765453",
+    "NCT02504437",
+    "NCT01167751",
+    "NCT00984178",
+    "NCT00979758",
+    "NCT04421274",
+    "NCT03405701",
+    "NCT03463772",
+    "NCT02524444",
+    "NCT02527005",
+    "NCT04158713",
+    "NCT00970879",
+    "NCT00811421"
+  ],
+  "not_found_nct_ids": [
+    "NCT005031133",
+    "NCT00220329"
+  ],
+  "by_category": {
+    "gastroenterology": [
+      "NCT01484886",
+      "NCT00414713",
+      "NCT02910245",
+      "NCT03101800"
+    ],
+    "other": [
+      "NCT01167751",
+      "NCT01686477",
+      "NCT01345643",
+      "NCT00071032",
+      "NCT04494438",
+      "NCT00896532",
+      "NCT00218426",
+      "NCT02972593",
+      "NCT00678418",
+      "NCT03407573",
+      "NCT02648113",
+      "NCT01092962",
+      "NCT00308321",
+      "NCT01773382",
+      "NCT00810888",
+      "NCT02625948",
+      "NCT01167582",
+      "NCT03275350",
+      "NCT01225445",
+      "NCT01237639",
+      "NCT01873378",
+      "NCT01116479",
+      "NCT00862693",
+      "NCT01716442",
+      "NCT02937194",
+      "NCT00793585",
+      "NCT01691430",
+      "NCT00313716",
+      "NCT00518531",
+      "NCT00404820",
+      "NCT00135811",
+      "NCT01648946",
+      "NCT03463772",
+      "NCT02099669",
+      "NCT00944112",
+      "NCT01492608",
+      "NCT00419835",
+      "NCT01101815",
+      "NCT02221752",
+      "NCT00765453",
+      "NCT01349270",
+      "NCT02968654",
+      "NCT02942381",
+      "NCT00928915",
+      "NCT00340678",
+      "NCT00426348",
+      "NCT02144324",
+      "NCT00984178",
+      "NCT00422084",
+      "NCT00566709",
+      "NCT01843023",
+      "NCT01717963",
+      "NCT00067990",
+      "NCT01102010",
+      "NCT01556425",
+      "NCT02394106",
+      "NCT00175318",
+      "NCT04451096",
+      "NCT04367571",
+      "NCT00126334",
+      "NCT01246401",
+      "NCT01631214",
+      "NCT02465125",
+      "NCT00280592",
+      "NCT00377819",
+      "NCT04500743",
+      "NCT02504437",
+      "NCT02527005",
+      "NCT00965562",
+      "NCT04506125",
+      "NCT01908062",
+      "NCT04421274",
+      "NCT01033383",
+      "NCT03405701",
+      "NCT00979758",
+      "NCT01597232",
+      "NCT03309579",
+      "NCT00811421",
+      "NCT02288130",
+      "NCT02866838",
+      "NCT02761564",
+      "NCT02843828",
+      "NCT00293813",
+      "NCT00335023",
+      "NCT03163056",
+      "NCT00870493",
+      "NCT01702636",
+      "NCT02446548",
+      "NCT00906295",
+      "NCT00798226",
+      "NCT00666627",
+      "NCT02110264",
+      "NCT00128050",
+      "NCT00427635",
+      "NCT01119612",
+      "NCT01389167",
+      "NCT01485315",
+      "NCT04235426",
+      "NCT02459717",
+      "NCT00226122",
+      "NCT02438982",
+      "NCT00996801",
+      "NCT00202371",
+      "NCT00536198",
+      "NCT02032433",
+      "NCT00781898",
+      "NCT00651573",
+      "NCT01180647",
+      "NCT01559480",
+      "NCT01566786",
+      "NCT01225068",
+      "NCT02098031",
+      "NCT01573143",
+      "NCT02394119",
+      "NCT02981407",
+      "NCT02203292",
+      "NCT01999946",
+      "NCT01502215",
+      "NCT00643149",
+      "NCT02139800",
+      "NCT00204243",
+      "NCT01421992",
+      "NCT00532337",
+      "NCT03260478",
+      "NCT01236079",
+      "NCT01079247",
+      "NCT01526265",
+      "NCT00577408",
+      "NCT01078753",
+      "NCT00426803",
+      "NCT04402580",
+      "NCT00397150",
+      "NCT00414713",
+      "NCT02132195",
+      "NCT02818738",
+      "NCT00553605",
+      "NCT01776021",
+      "NCT00937053",
+      "NCT02216747"
+    ],
+    "infectious": [
+      "NCT02527005",
+      "NCT01346774",
+      "NCT00596635",
+      "NCT02524444",
+      "NCT00497796",
+      "NCT00811421",
+      "NCT03275350",
+      "NCT00128128",
+      "NCT00294515",
+      "NCT00970879",
+      "NCT00372229",
+      "NCT04158713",
+      "NCT02550639",
+      "NCT01552369",
+      "NCT01246401",
+      "NCT00227370",
+      "NCT00280592",
+      "NCT00638170",
+      "NCT01776021",
+      "NCT01101815"
+    ],
+    "neurology": [
+      "NCT03377322",
+      "NCT04451096",
+      "NCT03166007",
+      "NCT00280592"
+    ],
+    "oncology": [
+      "NCT01461850",
+      "NCT01116479",
+      "NCT00765869",
+      "NCT02086773",
+      "NCT01083550",
+      "NCT01415375",
+      "NCT01844999"
+    ],
+    "rheumatology": [
+      "NCT00743951",
+      "NCT01492257"
+    ],
+    "cardiology": [
+      "NCT02963883",
+      "NCT02644395",
+      "NCT00071032",
+      "NCT01484639",
+      "NCT03407573",
+      "NCT00470444",
+      "NCT02471248",
+      "NCT01359202",
+      "NCT03031977",
+      "NCT01573143",
+      "NCT00979758",
+      "NCT02625948",
+      "NCT02053233",
+      "NCT01167582",
+      "NCT02761564",
+      "NCT02843828",
+      "NCT01484886",
+      "NCT01021631",
+      "NCT01702636",
+      "NCT00350220",
+      "NCT01994395",
+      "NCT00975156",
+      "NCT00829478",
+      "NCT00414713",
+      "NCT02042898"
+    ],
+    "nephrology": [
+      "NCT02644395",
+      "NCT00502242",
+      "NCT02620306",
+      "NCT03407573",
+      "NCT02550639",
+      "NCT00270153",
+      "NCT00933231",
+      "NCT00067990",
+      "NCT01602861"
+    ],
+    "respiratory": [
+      "NCT02846597",
+      "NCT02761564",
+      "NCT02666703",
+      "NCT01255826",
+      "NCT00798226"
+    ],
+    "obstetrics": [
+      "NCT04500743",
+      "NCT00811421",
+      "NCT00970879"
+    ],
+    "pediatrics": [
+      "NCT02098031",
+      "NCT02083705",
+      "NCT01116726",
+      "NCT00506584",
+      "NCT03518762",
+      "NCT01534481",
+      "NCT00635453",
+      "NCT01268033"
+    ],
+    "endocrinology": [
+      "NCT01686477",
+      "NCT00494715"
+    ],
+    "psychiatry": [
+      "NCT00814255",
+      "NCT01613118",
+      "NCT03493685"
+    ]
+  },
+  "by_status": {
+    "UNKNOWN": 18,
+    "COMPLETED": 173,
+    "WITHDRAWN": 1,
+    "TERMINATED": 4,
+    "ACTIVE_NOT_RECRUITING": 2
+  },
+  "by_phase": {
+    "PHASE3": 65,
+    "PHASE4": 24,
+    "NA": 64,
+    "PHASE2": 46,
+    "PHASE1": 11,
+    "EARLY_PHASE1": 1
+  },
+  "by_study_type": {
+    "INTERVENTIONAL": 198
+  },
+  "detailed_results": [
+    {
+      "found": true,
+      "nct_id": "NCT03101800",
+      "title": "Beneficial and Harmful Effects of Azathioprine and Allopurinol Versus Standard Azathioprine Therapy for Patients With Ulcerative Colitis",
+      "status": "UNKNOWN",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Colitis, Ulcerative",
+        "Colitis Ulcerative Exacerbation"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT02910245",
+      "title": "Mercaptopurine Therapy in Ulcerative Colitis",
+      "status": "UNKNOWN",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Colitis, Ulcerative"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT02288130",
+      "title": "Ulipristal vs. GnRHa Prior to Laparoscopic Myomectomy",
+      "status": "UNKNOWN",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE4"
+      ],
+      "conditions": [
+        "Fibroids"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01873378",
+      "title": "GnRH Agonist Pretreatment in Hysteroscopic Myomectomy",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Uterine Myoma"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00996801",
+      "title": "MK-5442 in the Treatment of Osteoporosis in Postmenopausal Women Previously Treated With an Oral Bisphosphonate (MK-5442-012)",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Osteoporosis",
+        "Postmenopausal Osteoporosis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00532337",
+      "title": "Controlled Study of ONO-5334 in Postmenopausal Women With Osteopenia or Osteoporosis",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Osteoporosis",
+        "Osteopenia"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00518531",
+      "title": "Denosumab Adherence Preference Satisfaction Study",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Osteoporosis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00404820",
+      "title": "Safety/Efficacy of Zoledronic Acid and Alendronate on Bone Metabolism in Postmenopausal Women With Osteoporosis",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Osteoporosis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00377819",
+      "title": "Study of Transitioning From Alendronate to Denosumab",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Postmenopausal Osteoporosis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00896532",
+      "title": "Romosozumab (AMG 785) in Postmenopausal Women With Low Bone Mineral Density",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Low Bone Mineral Density",
+        "Postmenopausal Osteoporosis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00666627",
+      "title": "Bisphosphonate Action on the Appendicular Skeleton: Evidence for Differential Effects",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Post-menopausal Osteoporosis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01631214",
+      "title": "Study to Determine the Efficacy and Safety of Romosozumab in the Treatment of Postmenopausal Women With Osteoporosis",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Postmenopausal Women With Osteoporosis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00293813",
+      "title": "A Multicenter, Randomized Placebo Controlled Pilot MicroCT Study to Estimate the Effect of Treatment With Denosumab (AMG 162) and Alendronate Sodium in Postmenopausal Women With Low Bone Mineral Density",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Postmenopausal Osteoporosis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01033383",
+      "title": "Dosing Study of Cranberry Capsules for the Prevention of Bacteriuria in Nursing Home Residents",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE1"
+      ],
+      "conditions": [
+        "Bacteriuria"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01346774",
+      "title": "Preventing Urinary Tract Infection Post-Surgery",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Urinary Tract Infection"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00280592",
+      "title": "Cranberry for Prevention of Urinary Tract Infections in Multiple Sclerosis Patients",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Multiple Sclerosis",
+        "Urinary Tract Infections",
+        "Bladder Dysfunction"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00596635",
+      "title": "Cranberry for UTI Prevention in Residents of Long Term Care Facilities",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Urinary Tract Infection"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01691430",
+      "title": "A Trial of Cranberry Capsules for Urinary Tract Infection Prevention in Nursing Home Residents",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Bacteriuria"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01776021",
+      "title": "Effects of a Cranberry Beverage on Women With Recent History of Urinary Tract Infections",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Urinary Tract Infections",
+        "Infection",
+        "Urologic Diseases"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00638170",
+      "title": "Cranberry Juice in the Prevention of Urinary Tract Infections in Children",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Urinary Tract Infections"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00128128",
+      "title": "Cranberry Juice for the Prevention of Recurrent Urinary Tract Infections",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Urinary Tract Infections"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00965562",
+      "title": "Comparison of Fluoxetine, Calcium and Placebo for the Treatment of Moderate to Severe Premenstrual Syndrome (PMS)",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Premenstrual Syndrome"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00536198",
+      "title": "Evaluating the Effectiveness of Sertraline in Treating Women With Premenstrual Dysphoric Disorder",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE4"
+      ],
+      "conditions": [
+        "Premenstrual Dysphoric Disorder"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01844999",
+      "title": "Personal Patient Profile - Prostate (P3P) II: Effectiveness-Implementation Trial in Diverse Health Care Networks",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Prostate Cancer"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01492257",
+      "title": "Shared Decision Making in Patients With Osteoarthritis of the Hip and Knee",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Hip Osteoarthritis",
+        "Knee Osteoarthritis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00829478",
+      "title": "Improving the Quality of Care for Atrial Fibrillation by Promoting Patient-Centered Decision Making",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE1"
+      ],
+      "conditions": [
+        "Atrial Fibrillation"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01415375",
+      "title": "Prostate Cancer Education in African American Men",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "conditions": [
+        "Prostate Cancer Screening Decision"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01083550",
+      "title": "Decision Making on Radioactive Iodine Treatment for Papillary Thyroid Cancer",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2",
+        "PHASE3"
+      ],
+      "conditions": [
+        "Thyroid Cancer"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00765869",
+      "title": "Randomised Controlled Trial of a Literacy Sensitive Decision Aid for Bowel Cancer Screening",
+      "status": "UNKNOWN",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Colorectal Neoplasms"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00743951",
+      "title": "Feasibility Study: Effect of Patient Decision Aids for Total Joint Replacement on Surgical Referrals",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Osteoarthritis"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT02216747",
+      "title": "Low Dose Steroids in the Treatment of Nephrotic Syndrome Relapse",
+      "status": "UNKNOWN",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE4"
+      ],
+      "conditions": [
+        "Glomerular Disease"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00308321",
+      "title": "Long Term Tapering or Standard Steroids for Nephrotic Syndrome",
+      "status": "UNKNOWN",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE4"
+      ],
+      "conditions": [
+        "Nephrotic Syndrome"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT04235426",
+      "title": "Platelet Rich Plasma Injection Versus Surgical and Medical Treatment of Mild-moderate Carpel Tunnel Syndrome.",
+      "status": "UNKNOWN",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE1"
+      ],
+      "conditions": [
+        "Carpal Tunnel"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01225068",
+      "title": "Effect of Milnacipran in Chronic Neuropathic Low Back Pain",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Low Back Pain"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00427635",
+      "title": "Efficacy and Safety of Esomeprazole Once Daily for the Treatment of GERD in Neonatal Patients",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "GERD"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01349270",
+      "title": "Randomized Open-label Trial to Compare Efficacy and Tolerance of Corticosteroids and IVIg",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Demyelinating Polyneuropathy"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01236079",
+      "title": "Cessation Service Use and Effectiveness for Hospitalized Smokers",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Smoking"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01648946",
+      "title": "Transfusion Requirements in Critically Ill Oncologic Patient",
+      "status": "UNKNOWN",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Anemia"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT02099669",
+      "title": "Red Blood Cell Transfusion Thresholds and QOL in MDS",
+      "status": "UNKNOWN",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Myelodysplastic Syndromes (MDS)",
+        "Quality of Life",
+        "Red Blood Cell (RBC) Transfusions"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00071032",
+      "title": "Safety and Effectiveness of Two Blood Transfusion Strategies in Surgical Patients With Cardiovascular Disease",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Anemia",
+        "Hematologic Diseases",
+        "Cardiovascular Diseases",
+        "Heart Diseases",
+        "Myocardial Infarction",
+        "Thromboembolism",
+        "Pneumonia",
+        "Cerebrovascular Accident"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01167582",
+      "title": "Myocardial Ischemia and Transfusion Pilot",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Myocardial Infarction",
+        "Unstable Angina",
+        "Coronary Artery Disease"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT02981407",
+      "title": "Myocardial Ischemia and Transfusion",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Myocardial Infarction",
+        "Anemia"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT04506125",
+      "title": "Liberal Versus Restrictive Transfusion Threshold in Oncologic surgerY",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Oncologic Complications",
+        "Anemia"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00350220",
+      "title": "Transfusion Strategies in Pediatric Cardiothoracic Surgery",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE2"
+      ],
+      "conditions": [
+        "Congenital Heart Disease"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01484886",
+      "title": "Restrictive Versus Liberal Transfusion Protocol in Infants Undergoing Cardiac Surgery",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Impaired Oxygen Delivery",
+        "Congenital Heart Disease"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT00126334",
+      "title": "Conservative Versus Liberal Red Cell Transfusion in Myocardial Infarction Trial: The CRIT Pilot",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE4"
+      ],
+      "conditions": [
+        "Myocardial Infarction",
+        "Anemia"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT01502215",
+      "title": "Transfusion Requirements in Surgical Oncologic Patient",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE3"
+      ],
+      "conditions": [
+        "Red Blood Cells Transfusion",
+        "Oncologic Surgery"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT02086773",
+      "title": "Red Cell Transfusion Goals in Patients With Acute Leukemias",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "PHASE1"
+      ],
+      "conditions": [
+        "Acute Lymphoblastic Leukemia",
+        "Acute Lymphocytic Leukemia (ALL)",
+        "Acute Myelogenous Leukemia (AML)",
+        "Acute Promyelocytic Leukemia (APL)"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT02648113",
+      "title": "Cost-effectiveness and Cost-utility of Liberal vs Restrictive Red Blood Cell Transfusion Strategies in Patients With Acute Myocardial Infarction and Anaemia.",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Myocardial Infarction",
+        "Anemia",
+        "Blood Transfusion"
+      ]
+    },
+    {
+      "found": true,
+      "nct_id": "NCT03309579",
+      "title": "SAHaRA: A Randomized Controlled Trial",
+      "status": "COMPLETED",
+      "study_type": "INTERVENTIONAL",
+      "phases": [
+        "NA"
+      ],
+      "conditions": [
+        "Subarachnoid Hemorrhage, Aneurysmal"
+      ]
+    }
+  ]
+}

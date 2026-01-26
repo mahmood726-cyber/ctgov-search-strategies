@@ -3,10 +3,12 @@
 RIS Export Module for CT.gov Studies
 
 Provides export functionality for ClinicalTrials.gov study data to various
-reference manager formats:
+reference manager formats and systematic review tools:
 - RIS format (EndNote, Zotero, Mendeley compatible)
 - CSV with full metadata
 - EndNote XML format
+- Covidence CSV format (for systematic review screening)
+- Rayyan CSV format (for collaborative screening)
 
 Usage:
     from ris_export import RISExporter
@@ -19,10 +21,14 @@ Usage:
     exporter.export_ris(result.studies, "diabetes_studies.ris")
     exporter.export_csv(result.studies, "diabetes_studies.csv")
     exporter.export_endnote_xml(result.studies, "diabetes_studies.xml")
+    exporter.export_covidence(result.studies, "diabetes_covidence.csv")
+    exporter.export_rayyan(result.studies, "diabetes_rayyan.csv")
 
 CLI Usage:
     python ris_export.py --condition "diabetes" --output studies.ris
     python ris_export.py --condition "diabetes" --format csv --output studies.csv
+    python ris_export.py --condition "diabetes" --format covidence --output studies_covidence.csv
+    python ris_export.py --condition "diabetes" --format rayyan --output studies_rayyan.csv
     python ris_export.py --nct NCT03702452 NCT00400712 --format xml --output studies.xml
 """
 
@@ -491,6 +497,248 @@ class RISExporter:
 
         return len(studies)
 
+    def export_covidence(
+        self, studies: List[Dict[str, Any]], filepath: str
+    ) -> int:
+        """
+        Export studies to Covidence-compatible CSV format.
+
+        Covidence is a systematic review tool that requires specific CSV columns
+        for import. This format includes deduplication hints and all required fields.
+
+        Args:
+            studies: List of CT.gov study dictionaries.
+            filepath: Output file path.
+
+        Returns:
+            Number of studies exported.
+
+        Note:
+            Covidence CSV requires these columns:
+            - Title, Abstract, Authors, Year, Journal/Source
+            - URL, DOI (if available), Keywords
+            - Notes (for additional metadata)
+        """
+        if not studies:
+            return 0
+
+        # Covidence-required field names
+        fieldnames = [
+            "Title",
+            "Abstract",
+            "Authors",
+            "Year",
+            "Source",
+            "URL",
+            "DOI",
+            "Keywords",
+            "Notes",
+            "NCT_ID",
+            "Study_Type",
+            "Phase",
+            "Status",
+            "Enrollment",
+            "Dedup_Key"  # Custom field for deduplication
+        ]
+
+        with open(filepath, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for study in studies:
+                row = self._study_to_covidence_row(study)
+                writer.writerow(row)
+
+        return len(studies)
+
+    def _study_to_covidence_row(self, study: Dict[str, Any]) -> Dict[str, str]:
+        """Convert a CT.gov study to Covidence CSV row."""
+        protocol = study.get("protocolSection", {})
+        identification = protocol.get("identificationModule", {})
+        description = protocol.get("descriptionModule", {})
+        status_module = protocol.get("statusModule", {})
+        design_module = protocol.get("designModule", {})
+        sponsor_module = protocol.get("sponsorCollaboratorsModule", {})
+        conditions_module = protocol.get("conditionsModule", {})
+
+        nct_id = identification.get("nctId", "")
+        brief_title = identification.get("briefTitle", "")
+        year = extract_year(study)
+
+        # Build deduplication key (NCT ID + title hash for matching)
+        import hashlib
+        title_hash = hashlib.md5(brief_title.lower().encode()).hexdigest()[:8]
+        dedup_key = f"{nct_id}_{title_hash}" if nct_id else title_hash
+
+        # Format authors (sponsors and collaborators)
+        authors = []
+        if sponsor_module.get("leadSponsor", {}).get("name"):
+            authors.append(sponsor_module["leadSponsor"]["name"])
+        for collab in sponsor_module.get("collaborators", []):
+            if collab.get("name"):
+                authors.append(collab["name"])
+
+        # Get conditions as keywords
+        conditions = conditions_module.get("conditions", [])
+        interventions = get_interventions(study)
+        keywords = conditions + [f"{t}: {n}" for t, n in interventions]
+
+        # Build notes with metadata
+        notes_parts = []
+        if status_module.get("overallStatus"):
+            notes_parts.append(f"Status: {status_module['overallStatus']}")
+        phases = design_module.get("phases", [])
+        if phases:
+            notes_parts.append(f"Phase: {', '.join(phases)}")
+        enrollment = design_module.get("enrollmentInfo", {}).get("count")
+        if enrollment:
+            notes_parts.append(f"Enrollment: {enrollment}")
+
+        return {
+            "Title": brief_title,
+            "Abstract": description.get("briefSummary", ""),
+            "Authors": "; ".join(authors),
+            "Year": year,
+            "Source": "ClinicalTrials.gov",
+            "URL": f"https://clinicaltrials.gov/study/{nct_id}" if nct_id else "",
+            "DOI": "",  # CT.gov doesn't have DOIs
+            "Keywords": "; ".join(keywords),
+            "Notes": " | ".join(notes_parts),
+            "NCT_ID": nct_id,
+            "Study_Type": design_module.get("studyType", ""),
+            "Phase": "; ".join(phases) if phases else "",
+            "Status": status_module.get("overallStatus", ""),
+            "Enrollment": str(enrollment) if enrollment else "",
+            "Dedup_Key": dedup_key
+        }
+
+    def export_rayyan(
+        self, studies: List[Dict[str, Any]], filepath: str,
+        labels: Optional[List[str]] = None
+    ) -> int:
+        """
+        Export studies to Rayyan-compatible CSV format.
+
+        Rayyan is a collaborative systematic review screening tool that
+        supports CSV imports with specific columns and collaboration labels.
+
+        Args:
+            studies: List of CT.gov study dictionaries.
+            filepath: Output file path.
+            labels: Optional list of labels to add (e.g., ["RCT", "Interventional"])
+
+        Returns:
+            Number of studies exported.
+
+        Note:
+            Rayyan CSV supports:
+            - key, title, authors, year, journal
+            - abstract, url, notes, labels
+            - Custom fields for metadata
+        """
+        if not studies:
+            return 0
+
+        # Rayyan field names
+        fieldnames = [
+            "key",
+            "title",
+            "authors",
+            "year",
+            "journal",
+            "abstract",
+            "url",
+            "notes",
+            "labels",
+            "nct_id",
+            "conditions",
+            "interventions",
+            "phase",
+            "status",
+            "enrollment",
+            "mesh_terms"
+        ]
+
+        with open(filepath, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=fieldnames)
+            writer.writeheader()
+
+            for study in studies:
+                row = self._study_to_rayyan_row(study, labels)
+                writer.writerow(row)
+
+        return len(studies)
+
+    def _study_to_rayyan_row(
+        self, study: Dict[str, Any], labels: Optional[List[str]] = None
+    ) -> Dict[str, str]:
+        """Convert a CT.gov study to Rayyan CSV row."""
+        protocol = study.get("protocolSection", {})
+        identification = protocol.get("identificationModule", {})
+        description = protocol.get("descriptionModule", {})
+        status_module = protocol.get("statusModule", {})
+        design_module = protocol.get("designModule", {})
+        sponsor_module = protocol.get("sponsorCollaboratorsModule", {})
+        conditions_module = protocol.get("conditionsModule", {})
+        derived_section = study.get("derivedSection", {})
+
+        nct_id = identification.get("nctId", "")
+        year = extract_year(study)
+
+        # Format authors
+        authors = []
+        if sponsor_module.get("leadSponsor", {}).get("name"):
+            authors.append(sponsor_module["leadSponsor"]["name"])
+
+        # Get conditions and interventions
+        conditions = conditions_module.get("conditions", [])
+        interventions = get_interventions(study)
+        intervention_str = "; ".join([f"{t}: {n}" for t, n in interventions])
+
+        # Auto-generate labels based on study characteristics
+        auto_labels = labels or []
+        study_type = design_module.get("studyType", "")
+        allocation = design_module.get("designInfo", {}).get("allocation", "")
+
+        if study_type == "INTERVENTIONAL":
+            auto_labels = auto_labels + ["Interventional"]
+        if allocation == "RANDOMIZED":
+            auto_labels = auto_labels + ["RCT"]
+        phases = design_module.get("phases", [])
+        if "PHASE3" in phases or "PHASE4" in phases:
+            auto_labels = auto_labels + ["Phase3/4"]
+
+        # Get MeSH terms if available
+        mesh_terms = derived_section.get("conditionBrowseModule", {}).get("meshes", [])
+        mesh_str = "; ".join([m.get("term", "") for m in mesh_terms if m.get("term")])
+
+        # Build notes
+        notes_parts = []
+        if status_module.get("overallStatus"):
+            notes_parts.append(f"Status: {status_module['overallStatus']}")
+        enrollment = design_module.get("enrollmentInfo", {}).get("count")
+        if enrollment:
+            notes_parts.append(f"N={enrollment}")
+
+        return {
+            "key": nct_id,
+            "title": identification.get("briefTitle", ""),
+            "authors": "; ".join(authors),
+            "year": year,
+            "journal": "ClinicalTrials.gov",
+            "abstract": description.get("briefSummary", ""),
+            "url": f"https://clinicaltrials.gov/study/{nct_id}" if nct_id else "",
+            "notes": " | ".join(notes_parts),
+            "labels": ", ".join(list(set(auto_labels))),
+            "nct_id": nct_id,
+            "conditions": "; ".join(conditions),
+            "interventions": intervention_str,
+            "phase": "; ".join(phases) if phases else "",
+            "status": status_module.get("overallStatus", ""),
+            "enrollment": str(enrollment) if enrollment else "",
+            "mesh_terms": mesh_str
+        }
+
     def export_ris_string(self, studies: List[Dict[str, Any]]) -> str:
         """
         Convert studies to RIS format string (without saving to file).
@@ -550,9 +798,9 @@ Examples:
     parser.add_argument(
         "--format", "-f",
         type=str,
-        choices=["ris", "csv", "xml"],
+        choices=["ris", "csv", "xml", "covidence", "rayyan"],
         default="ris",
-        help="Output format (default: ris)",
+        help="Output format (default: ris). Use 'covidence' or 'rayyan' for SR tools.",
     )
     parser.add_argument(
         "--output", "-o",
@@ -610,6 +858,10 @@ Examples:
             count = exporter.export_csv(studies, args.output)
         elif args.format == "xml":
             count = exporter.export_endnote_xml(studies, args.output)
+        elif args.format == "covidence":
+            count = exporter.export_covidence(studies, args.output)
+        elif args.format == "rayyan":
+            count = exporter.export_rayyan(studies, args.output)
         else:
             print(f"Unknown format: {args.format}", file=sys.stderr)
             return 1

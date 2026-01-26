@@ -1,0 +1,1806 @@
+{
+  "overall": {
+    "recall": 0.8485244189083312,
+    "ci_95": [
+      0.8368196386360406,
+      0.859530557521296
+    ],
+    "tp": 3249,
+    "fn": 580,
+    "gold": 3829
+  },
+  "by_drug": [
+    {
+      "drug": "semaglutide",
+      "condition": "diabetes OR obesity",
+      "gold": 109,
+      "found": 1764,
+      "tp": 103,
+      "fn": 6,
+      "recall": 0.944954128440367,
+      "baseline_recall": 0.9174311926605505,
+      "improvement": 2.752293577981646,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 632,
+            "unique": 632
+          },
+          "S2_AREA": {
+            "total": 667,
+            "unique": 38
+          },
+          "S3_Variants": {
+            "total": 173,
+            "unique": 2
+          },
+          "S4_Class": {
+            "total": 316,
+            "unique": 283
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1008,
+            "unique": 805
+          },
+          "S7_Freetext": {
+            "total": 654,
+            "unique": 4
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 234,
+            "unique": 0
+          }
+        },
+        "total": 1764
+      }
+    },
+    {
+      "drug": "liraglutide",
+      "condition": "diabetes OR obesity",
+      "gold": 117,
+      "found": 1741,
+      "tp": 107,
+      "fn": 10,
+      "recall": 0.9145299145299145,
+      "baseline_recall": 0.8461538461538461,
+      "improvement": 6.8376068376068355,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 505,
+            "unique": 505
+          },
+          "S2_AREA": {
+            "total": 566,
+            "unique": 61
+          },
+          "S3_Variants": {
+            "total": 530,
+            "unique": 5
+          },
+          "S4_Class": {
+            "total": 316,
+            "unique": 279
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1008,
+            "unique": 891
+          },
+          "S7_Freetext": {
+            "total": 530,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 145,
+            "unique": 0
+          }
+        },
+        "total": 1741
+      }
+    },
+    {
+      "drug": "empagliflozin",
+      "condition": "diabetes OR heart failure",
+      "gold": 103,
+      "found": 2510,
+      "tp": 87,
+      "fn": 16,
+      "recall": 0.8446601941747572,
+      "baseline_recall": 0.8446601941747572,
+      "improvement": 0.0,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 581,
+            "unique": 581
+          },
+          "S2_AREA": {
+            "total": 637,
+            "unique": 56
+          },
+          "S3_Variants": {
+            "total": 599,
+            "unique": 3
+          },
+          "S4_Class": {
+            "total": 158,
+            "unique": 102
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1874,
+            "unique": 1768
+          },
+          "S7_Freetext": {
+            "total": 599,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 214,
+            "unique": 0
+          }
+        },
+        "total": 2510
+      }
+    },
+    {
+      "drug": "dapagliflozin",
+      "condition": "diabetes OR heart failure",
+      "gold": 112,
+      "found": 2718,
+      "tp": 96,
+      "fn": 16,
+      "recall": 0.8571428571428571,
+      "baseline_recall": 0.8392857142857143,
+      "improvement": 1.7857142857142794,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 700,
+            "unique": 700
+          },
+          "S2_AREA": {
+            "total": 733,
+            "unique": 39
+          },
+          "S3_Variants": {
+            "total": 726,
+            "unique": 11
+          },
+          "S4_Class": {
+            "total": 116,
+            "unique": 65
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1903
+          },
+          "S7_Freetext": {
+            "total": 718,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 224,
+            "unique": 0
+          }
+        },
+        "total": 2718
+      }
+    },
+    {
+      "drug": "sitagliptin",
+      "condition": "diabetes",
+      "gold": 110,
+      "found": 2584,
+      "tp": 92,
+      "fn": 18,
+      "recall": 0.8363636363636363,
+      "baseline_recall": 0.8,
+      "improvement": 3.6363636363636265,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 549,
+            "unique": 549
+          },
+          "S2_AREA": {
+            "total": 578,
+            "unique": 29
+          },
+          "S3_Variants": {
+            "total": 564,
+            "unique": 4
+          },
+          "S4_Class": {
+            "total": 105,
+            "unique": 76
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1926
+          },
+          "S7_Freetext": {
+            "total": 562,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 125,
+            "unique": 0
+          }
+        },
+        "total": 2584
+      }
+    },
+    {
+      "drug": "metformin",
+      "condition": "diabetes",
+      "gold": 115,
+      "found": 3624,
+      "tp": 88,
+      "fn": 27,
+      "recall": 0.7652173913043478,
+      "baseline_recall": 0.6695652173913044,
+      "improvement": 9.565217391304348,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 2991,
+            "unique": 2991
+          },
+          "S2_AREA": {
+            "total": 3543,
+            "unique": 560
+          },
+          "S3_Variants": {
+            "total": 2991,
+            "unique": 0
+          },
+          "S4_Class": {
+            "total": 10,
+            "unique": 8
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 0,
+            "unique": 0
+          },
+          "S7_Freetext": {
+            "total": 3318,
+            "unique": 65
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 3001,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 820,
+            "unique": 0
+          }
+        },
+        "total": 3624
+      }
+    },
+    {
+      "drug": "insulin",
+      "condition": "diabetes",
+      "gold": 144,
+      "found": 17870,
+      "tp": 99,
+      "fn": 45,
+      "recall": 0.6875,
+      "baseline_recall": 0.2569444444444444,
+      "improvement": 43.05555555555556,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 5000,
+            "unique": 5000
+          },
+          "S2_AREA": {
+            "total": 15628,
+            "unique": 10648
+          },
+          "S3_Variants": {
+            "total": 6514,
+            "unique": 12
+          },
+          "S4_Class": {
+            "total": 96,
+            "unique": 0
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 0,
+            "unique": 0
+          },
+          "S7_Freetext": {
+            "total": 6025,
+            "unique": 792
+          },
+          "S8_Insulin": {
+            "total": 5646,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 5201,
+            "unique": 1418
+          }
+        },
+        "total": 17870
+      }
+    },
+    {
+      "drug": "pembrolizumab",
+      "condition": "cancer",
+      "gold": 270,
+      "found": 5249,
+      "tp": 235,
+      "fn": 35,
+      "recall": 0.8703703703703703,
+      "baseline_recall": 0.8666666666666667,
+      "improvement": 0.37037037037036535,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 2790,
+            "unique": 2790
+          },
+          "S2_AREA": {
+            "total": 3083,
+            "unique": 294
+          },
+          "S3_Variants": {
+            "total": 2915,
+            "unique": 13
+          },
+          "S4_Class": {
+            "total": 469,
+            "unique": 377
+          },
+          "S5_Combos": {
+            "total": 167,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1775
+          },
+          "S7_Freetext": {
+            "total": 2915,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 883,
+            "unique": 0
+          }
+        },
+        "total": 5249
+      }
+    },
+    {
+      "drug": "nivolumab",
+      "condition": "cancer",
+      "gold": 266,
+      "found": 3642,
+      "tp": 237,
+      "fn": 29,
+      "recall": 0.8909774436090225,
+      "baseline_recall": 0.868421052631579,
+      "improvement": 2.2556390977443552,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 1944,
+            "unique": 1944
+          },
+          "S2_AREA": {
+            "total": 2193,
+            "unique": 261
+          },
+          "S3_Variants": {
+            "total": 2064,
+            "unique": 12
+          },
+          "S4_Class": {
+            "total": 469,
+            "unique": 407
+          },
+          "S5_Combos": {
+            "total": 409,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1223,
+            "unique": 1018
+          },
+          "S7_Freetext": {
+            "total": 2063,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 614,
+            "unique": 0
+          }
+        },
+        "total": 3642
+      }
+    },
+    {
+      "drug": "atezolizumab",
+      "condition": "cancer",
+      "gold": 197,
+      "found": 2784,
+      "tp": 177,
+      "fn": 20,
+      "recall": 0.8984771573604061,
+      "baseline_recall": 0.883248730964467,
+      "improvement": 1.5228426395939132,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 973,
+            "unique": 973
+          },
+          "S2_AREA": {
+            "total": 1100,
+            "unique": 129
+          },
+          "S3_Variants": {
+            "total": 1035,
+            "unique": 9
+          },
+          "S4_Class": {
+            "total": 919,
+            "unique": 131
+          },
+          "S5_Combos": {
+            "total": 123,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1698,
+            "unique": 1542
+          },
+          "S7_Freetext": {
+            "total": 1035,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 320,
+            "unique": 0
+          }
+        },
+        "total": 2784
+      }
+    },
+    {
+      "drug": "trastuzumab",
+      "condition": "breast cancer",
+      "gold": 211,
+      "found": 3513,
+      "tp": 177,
+      "fn": 34,
+      "recall": 0.8388625592417062,
+      "baseline_recall": 0.7914691943127962,
+      "improvement": 4.739336492891,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 1603,
+            "unique": 1603
+          },
+          "S2_AREA": {
+            "total": 1843,
+            "unique": 269
+          },
+          "S3_Variants": {
+            "total": 1636,
+            "unique": 27
+          },
+          "S4_Class": {
+            "total": 26,
+            "unique": 10
+          },
+          "S5_Combos": {
+            "total": 317,
+            "unique": 6
+          },
+          "S6_Sponsor": {
+            "total": 1698,
+            "unique": 1596
+          },
+          "S7_Freetext": {
+            "total": 1717,
+            "unique": 2
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 440,
+            "unique": 0
+          }
+        },
+        "total": 3513
+      }
+    },
+    {
+      "drug": "bevacizumab",
+      "condition": "cancer",
+      "gold": 193,
+      "found": 5865,
+      "tp": 154,
+      "fn": 39,
+      "recall": 0.7979274611398963,
+      "baseline_recall": 0.7461139896373057,
+      "improvement": 5.181347150259064,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 3195,
+            "unique": 3195
+          },
+          "S2_AREA": {
+            "total": 3650,
+            "unique": 477
+          },
+          "S3_Variants": {
+            "total": 3850,
+            "unique": 599
+          },
+          "S4_Class": {
+            "total": 80,
+            "unique": 12
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1698,
+            "unique": 1552
+          },
+          "S7_Freetext": {
+            "total": 3416,
+            "unique": 30
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 863,
+            "unique": 0
+          }
+        },
+        "total": 5865
+      }
+    },
+    {
+      "drug": "rituximab",
+      "condition": "lymphoma",
+      "gold": 216,
+      "found": 4836,
+      "tp": 188,
+      "fn": 28,
+      "recall": 0.8703703703703703,
+      "baseline_recall": 0.8240740740740741,
+      "improvement": 4.629629629629628,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 2706,
+            "unique": 2706
+          },
+          "S2_AREA": {
+            "total": 3169,
+            "unique": 466
+          },
+          "S3_Variants": {
+            "total": 2908,
+            "unique": 44
+          },
+          "S4_Class": {
+            "total": 48,
+            "unique": 22
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1698,
+            "unique": 1598
+          },
+          "S7_Freetext": {
+            "total": 2908,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 832,
+            "unique": 0
+          }
+        },
+        "total": 4836
+      }
+    },
+    {
+      "drug": "adalimumab",
+      "condition": "arthritis",
+      "gold": 173,
+      "found": 1754,
+      "tp": 135,
+      "fn": 38,
+      "recall": 0.7803468208092486,
+      "baseline_recall": 0.7167630057803468,
+      "improvement": 6.358381502890175,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 775,
+            "unique": 775
+          },
+          "S2_AREA": {
+            "total": 915,
+            "unique": 140
+          },
+          "S3_Variants": {
+            "total": 777,
+            "unique": 2
+          },
+          "S4_Class": {
+            "total": 88,
+            "unique": 43
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 833,
+            "unique": 771
+          },
+          "S7_Freetext": {
+            "total": 855,
+            "unique": 23
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 314,
+            "unique": 0
+          }
+        },
+        "total": 1754
+      }
+    },
+    {
+      "drug": "etanercept",
+      "condition": "arthritis",
+      "gold": 92,
+      "found": 1634,
+      "tp": 73,
+      "fn": 19,
+      "recall": 0.7934782608695652,
+      "baseline_recall": 0.782608695652174,
+      "improvement": 1.0869565217391242,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 507,
+            "unique": 507
+          },
+          "S2_AREA": {
+            "total": 619,
+            "unique": 113
+          },
+          "S3_Variants": {
+            "total": 627,
+            "unique": 76
+          },
+          "S4_Class": {
+            "total": 91,
+            "unique": 53
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 932,
+            "unique": 885
+          },
+          "S7_Freetext": {
+            "total": 565,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 193,
+            "unique": 0
+          }
+        },
+        "total": 1634
+      }
+    },
+    {
+      "drug": "infliximab",
+      "condition": "arthritis OR crohn",
+      "gold": 72,
+      "found": 2698,
+      "tp": 57,
+      "fn": 15,
+      "recall": 0.7916666666666666,
+      "baseline_recall": 0.7361111111111112,
+      "improvement": 5.5555555555555465,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 605,
+            "unique": 605
+          },
+          "S2_AREA": {
+            "total": 842,
+            "unique": 238
+          },
+          "S3_Variants": {
+            "total": 1091,
+            "unique": 396
+          },
+          "S4_Class": {
+            "total": 88,
+            "unique": 50
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1422,
+            "unique": 1409
+          },
+          "S7_Freetext": {
+            "total": 728,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 238,
+            "unique": 0
+          }
+        },
+        "total": 2698
+      }
+    },
+    {
+      "drug": "tocilizumab",
+      "condition": "arthritis",
+      "gold": 74,
+      "found": 2330,
+      "tp": 67,
+      "fn": 7,
+      "recall": 0.9054054054054054,
+      "baseline_recall": 0.8783783783783784,
+      "improvement": 2.7027027027026973,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 592,
+            "unique": 592
+          },
+          "S2_AREA": {
+            "total": 726,
+            "unique": 142
+          },
+          "S3_Variants": {
+            "total": 592,
+            "unique": 0
+          },
+          "S4_Class": {
+            "total": 28,
+            "unique": 22
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1698,
+            "unique": 1549
+          },
+          "S7_Freetext": {
+            "total": 671,
+            "unique": 25
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 239,
+            "unique": 0
+          }
+        },
+        "total": 2330
+      }
+    },
+    {
+      "drug": "secukinumab",
+      "condition": "psoriasis",
+      "gold": 57,
+      "found": 2198,
+      "tp": 48,
+      "fn": 9,
+      "recall": 0.8421052631578947,
+      "baseline_recall": 0.8421052631578947,
+      "improvement": 0.0,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 252,
+            "unique": 252
+          },
+          "S2_AREA": {
+            "total": 248,
+            "unique": 17
+          },
+          "S3_Variants": {
+            "total": 254,
+            "unique": 1
+          },
+          "S4_Class": {
+            "total": 4,
+            "unique": 4
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1922
+          },
+          "S7_Freetext": {
+            "total": 260,
+            "unique": 2
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 107,
+            "unique": 0
+          }
+        },
+        "total": 2198
+      }
+    },
+    {
+      "drug": "escitalopram",
+      "condition": "depression",
+      "gold": 72,
+      "found": 1077,
+      "tp": 62,
+      "fn": 10,
+      "recall": 0.8611111111111112,
+      "baseline_recall": 0.8472222222222222,
+      "improvement": 1.388888888888895,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 713,
+            "unique": 713
+          },
+          "S2_AREA": {
+            "total": 788,
+            "unique": 76
+          },
+          "S3_Variants": {
+            "total": 731,
+            "unique": 7
+          },
+          "S4_Class": {
+            "total": 98,
+            "unique": 62
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 229,
+            "unique": 219
+          },
+          "S7_Freetext": {
+            "total": 741,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 244,
+            "unique": 0
+          }
+        },
+        "total": 1077
+      }
+    },
+    {
+      "drug": "sertraline",
+      "condition": "depression",
+      "gold": 58,
+      "found": 2588,
+      "tp": 49,
+      "fn": 9,
+      "recall": 0.8448275862068966,
+      "baseline_recall": 0.8448275862068966,
+      "improvement": 0.0,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 429,
+            "unique": 429
+          },
+          "S2_AREA": {
+            "total": 522,
+            "unique": 93
+          },
+          "S3_Variants": {
+            "total": 429,
+            "unique": 0
+          },
+          "S4_Class": {
+            "total": 98,
+            "unique": 62
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1998
+          },
+          "S7_Freetext": {
+            "total": 461,
+            "unique": 6
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 153,
+            "unique": 0
+          }
+        },
+        "total": 2588
+      }
+    },
+    {
+      "drug": "duloxetine",
+      "condition": "depression OR pain",
+      "gold": 92,
+      "found": 2457,
+      "tp": 80,
+      "fn": 12,
+      "recall": 0.8695652173913043,
+      "baseline_recall": 0.8695652173913043,
+      "improvement": 0.0,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 438,
+            "unique": 438
+          },
+          "S2_AREA": {
+            "total": 526,
+            "unique": 88
+          },
+          "S3_Variants": {
+            "total": 471,
+            "unique": 10
+          },
+          "S4_Class": {
+            "total": 23,
+            "unique": 16
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1996,
+            "unique": 1905
+          },
+          "S7_Freetext": {
+            "total": 471,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 201,
+            "unique": 0
+          }
+        },
+        "total": 2457
+      }
+    },
+    {
+      "drug": "quetiapine",
+      "condition": "schizophrenia",
+      "gold": 43,
+      "found": 2523,
+      "tp": 34,
+      "fn": 9,
+      "recall": 0.7906976744186046,
+      "baseline_recall": 0.7906976744186046,
+      "improvement": 0.0,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 483,
+            "unique": 483
+          },
+          "S2_AREA": {
+            "total": 572,
+            "unique": 89
+          },
+          "S3_Variants": {
+            "total": 400,
+            "unique": 1
+          },
+          "S4_Class": {
+            "total": 15,
+            "unique": 6
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1935
+          },
+          "S7_Freetext": {
+            "total": 520,
+            "unique": 9
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 150,
+            "unique": 0
+          }
+        },
+        "total": 2523
+      }
+    },
+    {
+      "drug": "atorvastatin",
+      "condition": "cardiovascular",
+      "gold": 112,
+      "found": 3391,
+      "tp": 95,
+      "fn": 17,
+      "recall": 0.8482142857142857,
+      "baseline_recall": 0.8214285714285714,
+      "improvement": 2.67857142857143,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 1145,
+            "unique": 1145
+          },
+          "S2_AREA": {
+            "total": 1262,
+            "unique": 120
+          },
+          "S3_Variants": {
+            "total": 1197,
+            "unique": 7
+          },
+          "S4_Class": {
+            "total": 238,
+            "unique": 135
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1984
+          },
+          "S7_Freetext": {
+            "total": 1197,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 333,
+            "unique": 0
+          }
+        },
+        "total": 3391
+      }
+    },
+    {
+      "drug": "rosuvastatin",
+      "condition": "cardiovascular",
+      "gold": 80,
+      "found": 3020,
+      "tp": 67,
+      "fn": 13,
+      "recall": 0.8375,
+      "baseline_recall": 0.825,
+      "improvement": 1.2500000000000067,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 856,
+            "unique": 856
+          },
+          "S2_AREA": {
+            "total": 915,
+            "unique": 60
+          },
+          "S3_Variants": {
+            "total": 889,
+            "unique": 8
+          },
+          "S4_Class": {
+            "total": 238,
+            "unique": 168
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1928
+          },
+          "S7_Freetext": {
+            "total": 889,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 185,
+            "unique": 0
+          }
+        },
+        "total": 3020
+      }
+    },
+    {
+      "drug": "apixaban",
+      "condition": "atrial fibrillation",
+      "gold": 35,
+      "found": 1779,
+      "tp": 30,
+      "fn": 5,
+      "recall": 0.8571428571428571,
+      "baseline_recall": 0.7714285714285715,
+      "improvement": 8.571428571428562,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 450,
+            "unique": 450
+          },
+          "S2_AREA": {
+            "total": 539,
+            "unique": 92
+          },
+          "S3_Variants": {
+            "total": 167,
+            "unique": 1
+          },
+          "S4_Class": {
+            "total": 60,
+            "unique": 32
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1223,
+            "unique": 1192
+          },
+          "S7_Freetext": {
+            "total": 508,
+            "unique": 12
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 232,
+            "unique": 0
+          }
+        },
+        "total": 1779
+      }
+    },
+    {
+      "drug": "rivaroxaban",
+      "condition": "atrial fibrillation",
+      "gold": 47,
+      "found": 1898,
+      "tp": 38,
+      "fn": 9,
+      "recall": 0.8085106382978723,
+      "baseline_recall": 0.7659574468085106,
+      "improvement": 4.255319148936165,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 662,
+            "unique": 662
+          },
+          "S2_AREA": {
+            "total": 769,
+            "unique": 108
+          },
+          "S3_Variants": {
+            "total": 722,
+            "unique": 14
+          },
+          "S4_Class": {
+            "total": 60,
+            "unique": 26
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1135,
+            "unique": 1088
+          },
+          "S7_Freetext": {
+            "total": 722,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 323,
+            "unique": 0
+          }
+        },
+        "total": 1898
+      }
+    },
+    {
+      "drug": "tiotropium",
+      "condition": "COPD",
+      "gold": 124,
+      "found": 2240,
+      "tp": 111,
+      "fn": 13,
+      "recall": 0.8951612903225806,
+      "baseline_recall": 0.8951612903225806,
+      "improvement": 0.0,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 427,
+            "unique": 427
+          },
+          "S2_AREA": {
+            "total": 451,
+            "unique": 24
+          },
+          "S3_Variants": {
+            "total": 430,
+            "unique": 3
+          },
+          "S4_Class": {
+            "total": 58,
+            "unique": 45
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 1874,
+            "unique": 1737
+          },
+          "S7_Freetext": {
+            "total": 442,
+            "unique": 4
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 137,
+            "unique": 0
+          }
+        },
+        "total": 2240
+      }
+    },
+    {
+      "drug": "fluticasone",
+      "condition": "asthma",
+      "gold": 146,
+      "found": 2833,
+      "tp": 126,
+      "fn": 20,
+      "recall": 0.863013698630137,
+      "baseline_recall": 0.8287671232876712,
+      "improvement": 3.424657534246578,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 823,
+            "unique": 823
+          },
+          "S2_AREA": {
+            "total": 885,
+            "unique": 74
+          },
+          "S3_Variants": {
+            "total": 826,
+            "unique": 3
+          },
+          "S4_Class": {
+            "total": 97,
+            "unique": 61
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1858
+          },
+          "S7_Freetext": {
+            "total": 866,
+            "unique": 14
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 295,
+            "unique": 0
+          }
+        },
+        "total": 2833
+      }
+    },
+    {
+      "drug": "omalizumab",
+      "condition": "asthma",
+      "gold": 54,
+      "found": 2277,
+      "tp": 47,
+      "fn": 7,
+      "recall": 0.8703703703703703,
+      "baseline_recall": 0.8333333333333334,
+      "improvement": 3.703703703703698,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 250,
+            "unique": 250
+          },
+          "S2_AREA": {
+            "total": 287,
+            "unique": 37
+          },
+          "S3_Variants": {
+            "total": 281,
+            "unique": 18
+          },
+          "S4_Class": {
+            "total": 3,
+            "unique": 0
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 2000,
+            "unique": 1972
+          },
+          "S7_Freetext": {
+            "total": 267,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 101,
+            "unique": 0
+          }
+        },
+        "total": 2277
+      }
+    },
+    {
+      "drug": "sofosbuvir",
+      "condition": "hepatitis C",
+      "gold": 134,
+      "found": 1161,
+      "tp": 119,
+      "fn": 15,
+      "recall": 0.8880597014925373,
+      "baseline_recall": 0.8582089552238806,
+      "improvement": 2.985074626865669,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 419,
+            "unique": 419
+          },
+          "S2_AREA": {
+            "total": 450,
+            "unique": 38
+          },
+          "S3_Variants": {
+            "total": 420,
+            "unique": 1
+          },
+          "S4_Class": {
+            "total": 147,
+            "unique": 129
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 664,
+            "unique": 569
+          },
+          "S7_Freetext": {
+            "total": 443,
+            "unique": 5
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 105,
+            "unique": 0
+          }
+        },
+        "total": 1161
+      }
+    },
+    {
+      "drug": "tenofovir",
+      "condition": "HIV",
+      "gold": 169,
+      "found": 2265,
+      "tp": 148,
+      "fn": 21,
+      "recall": 0.8757396449704142,
+      "baseline_recall": 0.7988165680473372,
+      "improvement": 7.692307692307699,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 1337,
+            "unique": 1337
+          },
+          "S2_AREA": {
+            "total": 1525,
+            "unique": 217
+          },
+          "S3_Variants": {
+            "total": 1638,
+            "unique": 173
+          },
+          "S4_Class": {
+            "total": 24,
+            "unique": 13
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 664,
+            "unique": 525
+          },
+          "S7_Freetext": {
+            "total": 1539,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 498,
+            "unique": 0
+          }
+        },
+        "total": 2265
+      }
+    },
+    {
+      "drug": "remdesivir",
+      "condition": "COVID",
+      "gold": 32,
+      "found": 967,
+      "tp": 23,
+      "fn": 9,
+      "recall": 0.71875,
+      "baseline_recall": 0.65625,
+      "improvement": 6.25,
+      "metadata": {
+        "strategies": {
+          "S1_Basic": {
+            "total": 129,
+            "unique": 129
+          },
+          "S2_AREA": {
+            "total": 240,
+            "unique": 111
+          },
+          "S3_Variants": {
+            "total": 168,
+            "unique": 7
+          },
+          "S4_Class": {
+            "total": 68,
+            "unique": 64
+          },
+          "S5_Combos": {
+            "total": 0,
+            "unique": 0
+          },
+          "S6_Sponsor": {
+            "total": 664,
+            "unique": 656
+          },
+          "S7_Freetext": {
+            "total": 168,
+            "unique": 0
+          },
+          "S8_Insulin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S9_Metformin": {
+            "total": 0,
+            "unique": 0
+          },
+          "S10_Elig": {
+            "total": 88,
+            "unique": 0
+          }
+        },
+        "total": 967
+      }
+    }
+  ]
+}

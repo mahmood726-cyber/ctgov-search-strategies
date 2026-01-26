@@ -1,0 +1,228 @@
+{
+  "overall": {
+    "recall": 0.8502943650126157,
+    "ci_95": [
+      0.8288874617768661,
+      0.8694449907465872
+    ],
+    "tp": 1011,
+    "fn": 178,
+    "gold": 1189
+  },
+  "by_drug": [
+    {
+      "drug": "semaglutide",
+      "condition": "diabetes OR obesity",
+      "gold": 109,
+      "found": 1474,
+      "tp": 103,
+      "fn": 6,
+      "recall": 0.944954128440367,
+      "baseline_recall": 0.9174311926605505,
+      "improvement": 2.752293577981646,
+      "metadata": {
+        "s1_basic": 632,
+        "s2_area": 663,
+        "s2_unique": 37,
+        "s3_codes": 173,
+        "s3_unique": 2,
+        "s5_sponsor": 1000,
+        "s5_unique": 803,
+        "total": 1474
+      }
+    },
+    {
+      "drug": "empagliflozin",
+      "condition": "diabetes OR heart failure",
+      "gold": 79,
+      "found": 1581,
+      "tp": 69,
+      "fn": 10,
+      "recall": 0.8734177215189873,
+      "baseline_recall": 0.8734177215189873,
+      "improvement": 0.0,
+      "metadata": {
+        "s1_basic": 581,
+        "s2_area": 623,
+        "s2_unique": 54,
+        "s3_codes": 581,
+        "s3_unique": 0,
+        "s5_sponsor": 1000,
+        "s5_unique": 946,
+        "total": 1581
+      }
+    },
+    {
+      "drug": "pembrolizumab",
+      "condition": "cancer",
+      "gold": 200,
+      "found": 5566,
+      "tp": 176,
+      "fn": 24,
+      "recall": 0.88,
+      "baseline_recall": 0.875,
+      "improvement": 0.5000000000000004,
+      "metadata": {
+        "s1_basic": 2790,
+        "s2_area": 3052,
+        "s2_unique": 289,
+        "s3_codes": 3180,
+        "s3_unique": 1598,
+        "s4_combo": 33,
+        "s4_unique": 0,
+        "s5_sponsor": 1000,
+        "s5_unique": 889,
+        "total": 5566
+      }
+    },
+    {
+      "drug": "nivolumab",
+      "condition": "cancer",
+      "gold": 200,
+      "found": 4067,
+      "tp": 185,
+      "fn": 15,
+      "recall": 0.925,
+      "baseline_recall": 0.895,
+      "improvement": 3.0000000000000027,
+      "metadata": {
+        "s1_basic": 1944,
+        "s2_area": 2166,
+        "s2_unique": 260,
+        "s3_codes": 2610,
+        "s3_unique": 1023,
+        "s4_combo": 77,
+        "s4_unique": 0,
+        "s5_sponsor": 1000,
+        "s5_unique": 840,
+        "total": 4067
+      }
+    },
+    {
+      "drug": "adalimumab",
+      "condition": "arthritis",
+      "gold": 160,
+      "found": 2155,
+      "tp": 131,
+      "fn": 29,
+      "recall": 0.81875,
+      "baseline_recall": 0.70625,
+      "improvement": 11.249999999999993,
+      "metadata": {
+        "s1_basic": 775,
+        "s2_area": 889,
+        "s2_unique": 138,
+        "s3_codes": 1287,
+        "s3_unique": 477,
+        "s5_sponsor": 833,
+        "s5_unique": 765,
+        "total": 2155
+      }
+    },
+    {
+      "drug": "escitalopram",
+      "condition": "depression",
+      "gold": 49,
+      "found": 788,
+      "tp": 43,
+      "fn": 6,
+      "recall": 0.8775510204081632,
+      "baseline_recall": 0.8775510204081632,
+      "improvement": 0.0,
+      "metadata": {
+        "s1_basic": 713,
+        "s2_area": 774,
+        "s2_unique": 75,
+        "s3_codes": 713,
+        "s3_unique": 0,
+        "s5_sponsor": 0,
+        "s5_unique": 0,
+        "total": 788
+      }
+    },
+    {
+      "drug": "metformin",
+      "condition": "diabetes",
+      "gold": 82,
+      "found": 3524,
+      "tp": 62,
+      "fn": 20,
+      "recall": 0.7560975609756098,
+      "baseline_recall": 0.6585365853658537,
+      "improvement": 9.756097560975608,
+      "metadata": {
+        "s1_basic": 2991,
+        "s2_area": 3500,
+        "s2_unique": 533,
+        "s3_codes": 1455,
+        "s3_unique": 0,
+        "s5_sponsor": 0,
+        "s5_unique": 0,
+        "total": 3524
+      }
+    },
+    {
+      "drug": "insulin",
+      "condition": "diabetes",
+      "gold": 107,
+      "found": 16462,
+      "tp": 66,
+      "fn": 41,
+      "recall": 0.616822429906542,
+      "baseline_recall": 0.45794392523364486,
+      "improvement": 15.887850467289717,
+      "metadata": {
+        "s1_basic": 7849,
+        "s2_area": 16411,
+        "s2_unique": 8603,
+        "s3_codes": 1491,
+        "s3_unique": 10,
+        "s5_sponsor": 0,
+        "s5_unique": 0,
+        "total": 16462
+      }
+    },
+    {
+      "drug": "atorvastatin",
+      "condition": "cardiovascular",
+      "gold": 84,
+      "found": 1261,
+      "tp": 70,
+      "fn": 14,
+      "recall": 0.8333333333333334,
+      "baseline_recall": 0.8095238095238095,
+      "improvement": 2.3809523809523836,
+      "metadata": {
+        "s1_basic": 1145,
+        "s2_area": 1243,
+        "s2_unique": 116,
+        "s3_codes": 1121,
+        "s3_unique": 0,
+        "s5_sponsor": 0,
+        "s5_unique": 0,
+        "total": 1261
+      }
+    },
+    {
+      "drug": "tiotropium",
+      "condition": "COPD",
+      "gold": 119,
+      "found": 451,
+      "tp": 106,
+      "fn": 13,
+      "recall": 0.8907563025210085,
+      "baseline_recall": 0.8907563025210085,
+      "improvement": 0.0,
+      "metadata": {
+        "s1_basic": 427,
+        "s2_area": 449,
+        "s2_unique": 24,
+        "s3_codes": 427,
+        "s3_unique": 0,
+        "s5_sponsor": 0,
+        "s5_unique": 0,
+        "total": 451
+      }
+    }
+  ]
+}

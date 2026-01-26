@@ -1,12 +1,22 @@
-# CT.gov Search Strategies - Python Dependencies
-# Install with: pip install -r requirements.txt
+# CT.gov Trial Registry Integrity Suite v4.2
+# Python dependencies
 
-# HTTP client for API requests (CT.gov, PubMed, Europe PMC, WHO ICTRP)
+# Core HTTP requests
 requests>=2.28.0
 
-# PostgreSQL adapter for AACT database connections
-# Using -binary for easier installation (no compilation required)
+# Data handling
+pandas>=1.5.0
+
+# HTML parsing for multi-registry search
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# PostgreSQL for AACT database (optional)
 psycopg2-binary>=2.9.0
 
-# Dev dependencies (for type checking)
-# types-requests>=2.32.0  # mypy type stubs for requests
+# Statistical functions (optional, for Clopper-Pearson CI)
+# scipy>=1.10.0
+
+# Development/testing
+# pytest>=7.0.0
+# black>=23.0.0

@@ -16,12 +16,15 @@ Based on Cochrane Handbook guidance and systematic review methodology.
 from __future__ import annotations
 
 import csv
+import json
 import math
+import random
 from dataclasses import dataclass, field
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Set, Tuple, TypedDict, Union
 
 from scipy import stats
+import numpy as np
 
 
 class ScreeningBurdenDict(TypedDict, total=False):
@@ -1173,6 +1176,933 @@ def create_roc_data(
         'points': points,
         'auc_estimates': auc_estimates
     }
+
+
+# =============================================================================
+# ROC CURVE VISUALIZATION MODULE
+# =============================================================================
+
+@dataclass
+class ROCPoint:
+    """
+    A point on the ROC curve representing a specific threshold or strategy.
+
+    Attributes:
+        fpr: False Positive Rate (1 - specificity)
+        tpr: True Positive Rate (sensitivity)
+        threshold: The threshold/strategy identifier
+        label: Human-readable label for the point
+    """
+    fpr: float  # False Positive Rate (1 - specificity)
+    tpr: float  # True Positive Rate (sensitivity)
+    threshold: str = ""
+    label: str = ""
+
+    @property
+    def specificity(self) -> float:
+        """Calculate specificity (1 - FPR)."""
+        return 1 - self.fpr
+
+    @property
+    def sensitivity(self) -> float:
+        """Alias for TPR."""
+        return self.tpr
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            'fpr': self.fpr,
+            'tpr': self.tpr,
+            'specificity': self.specificity,
+            'sensitivity': self.sensitivity,
+            'threshold': self.threshold,
+            'label': self.label
+        }
+
+
+@dataclass
+class ROCCurve:
+    """
+    ROC curve representation with AUC calculation and confidence intervals.
+
+    Attributes:
+        points: List of ROCPoint objects (sorted by FPR)
+        name: Name of the curve/strategy
+        auc: Area Under the Curve
+        auc_ci_lower: Lower bound of AUC confidence interval
+        auc_ci_upper: Upper bound of AUC confidence interval
+        confidence_level: Confidence level for CI (default 0.95)
+    """
+    points: List[ROCPoint] = field(default_factory=list)
+    name: str = ""
+    auc: float = 0.0
+    auc_ci_lower: float = 0.0
+    auc_ci_upper: float = 0.0
+    confidence_level: float = 0.95
+
+    def __post_init__(self):
+        """Sort points by FPR after initialization."""
+        self.points.sort(key=lambda p: (p.fpr, -p.tpr))
+
+    def calculate_auc_trapezoidal(self) -> float:
+        """
+        Calculate AUC using trapezoidal integration.
+
+        Returns:
+            AUC value between 0 and 1
+        """
+        if len(self.points) < 2:
+            return 0.5
+
+        # Sort points by FPR
+        sorted_points = sorted(self.points, key=lambda p: (p.fpr, -p.tpr))
+
+        # Trapezoidal integration
+        auc = 0.0
+        for i in range(1, len(sorted_points)):
+            # Width of trapezoid
+            dx = sorted_points[i].fpr - sorted_points[i-1].fpr
+            # Average height
+            avg_height = (sorted_points[i].tpr + sorted_points[i-1].tpr) / 2
+            auc += dx * avg_height
+
+        return auc
+
+    def calculate_auc_with_ci(
+        self,
+        n_positive: int,
+        n_negative: int,
+        n_bootstrap: int = 1000,
+        confidence: float = 0.95
+    ) -> Tuple[float, float, float]:
+        """
+        Calculate AUC with confidence interval using bootstrap method.
+
+        Args:
+            n_positive: Number of positive cases (relevant studies)
+            n_negative: Number of negative cases (irrelevant studies)
+            n_bootstrap: Number of bootstrap iterations
+            confidence: Confidence level
+
+        Returns:
+            Tuple of (AUC, CI_lower, CI_upper)
+        """
+        auc = self.calculate_auc_trapezoidal()
+
+        if n_positive == 0 or n_negative == 0 or len(self.points) < 2:
+            return auc, 0.0, 1.0
+
+        # DeLong variance estimation (simplified)
+        # Standard error approximation
+        q1 = auc / (2 - auc)
+        q2 = 2 * auc * auc / (1 + auc)
+
+        se = math.sqrt(
+            (auc * (1 - auc) +
+             (n_positive - 1) * (q1 - auc * auc) +
+             (n_negative - 1) * (q2 - auc * auc)) /
+            (n_positive * n_negative)
+        )
+
+        # Z-score for confidence interval
+        z = stats.norm.ppf(1 - (1 - confidence) / 2)
+
+        ci_lower = max(0, auc - z * se)
+        ci_upper = min(1, auc + z * se)
+
+        return auc, ci_lower, ci_upper
+
+    def youden_index(self) -> Tuple[float, ROCPoint]:
+        """
+        Calculate Youden's J statistic to find optimal threshold.
+
+        Youden's J = Sensitivity + Specificity - 1 = TPR - FPR
+
+        Returns:
+            Tuple of (max J value, optimal ROCPoint)
+        """
+        if not self.points:
+            return 0.0, ROCPoint(0.5, 0.5)
+
+        best_j = -1
+        best_point = self.points[0]
+
+        for point in self.points:
+            j = point.tpr - point.fpr  # Youden's J
+            if j > best_j:
+                best_j = j
+                best_point = point
+
+        return best_j, best_point
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary representation."""
+        return {
+            'name': self.name,
+            'auc': self.auc,
+            'auc_ci_lower': self.auc_ci_lower,
+            'auc_ci_upper': self.auc_ci_upper,
+            'confidence_level': self.confidence_level,
+            'points': [p.to_dict() for p in self.points]
+        }
+
+
+class ROCVisualizer:
+    """
+    Generate ROC curve visualizations in various formats.
+
+    Supports:
+    - SVG output for static plots
+    - Interactive HTML with hover tooltips
+    - JSON data export for external plotting
+    - Multi-curve comparison plots
+
+    Example:
+        >>> visualizer = ROCVisualizer()
+        >>> svg = visualizer.generate_svg([curve1, curve2])
+        >>> html = visualizer.generate_interactive_html([curve1, curve2])
+    """
+
+    # Default colors for multiple curves
+    COLORS = [
+        '#1f77b4',  # Blue
+        '#ff7f0e',  # Orange
+        '#2ca02c',  # Green
+        '#d62728',  # Red
+        '#9467bd',  # Purple
+        '#8c564b',  # Brown
+        '#e377c2',  # Pink
+        '#7f7f7f',  # Gray
+        '#bcbd22',  # Yellow-green
+        '#17becf',  # Cyan
+    ]
+
+    def __init__(
+        self,
+        width: int = 600,
+        height: int = 600,
+        margin: int = 60,
+        font_family: str = "Arial, sans-serif"
+    ):
+        """
+        Initialize ROC visualizer.
+
+        Args:
+            width: Plot width in pixels
+            height: Plot height in pixels
+            margin: Margin around plot area
+            font_family: Font for labels and text
+        """
+        self.width = width
+        self.height = height
+        self.margin = margin
+        self.font_family = font_family
+        self.plot_width = width - 2 * margin
+        self.plot_height = height - 2 * margin
+
+    def _scale_x(self, fpr: float) -> float:
+        """Convert FPR (0-1) to x coordinate."""
+        return self.margin + fpr * self.plot_width
+
+    def _scale_y(self, tpr: float) -> float:
+        """Convert TPR (0-1) to y coordinate (inverted for SVG)."""
+        return self.margin + (1 - tpr) * self.plot_height
+
+    def generate_svg(
+        self,
+        curves: List[ROCCurve],
+        title: str = "ROC Curve Analysis",
+        show_diagonal: bool = True,
+        show_legend: bool = True,
+        show_auc: bool = True,
+        show_optimal_point: bool = True
+    ) -> str:
+        """
+        Generate SVG representation of ROC curves.
+
+        Args:
+            curves: List of ROCCurve objects to plot
+            title: Plot title
+            show_diagonal: Show diagonal reference line (random classifier)
+            show_legend: Show legend with curve names and AUC
+            show_auc: Include AUC in legend
+            show_optimal_point: Mark optimal point (max Youden's J)
+
+        Returns:
+            SVG string
+        """
+        svg_parts = []
+
+        # SVG header
+        svg_parts.append(f'''<svg xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 {self.width} {self.height}"
+            width="{self.width}" height="{self.height}">
+            <style>
+                .axis {{ stroke: #333; stroke-width: 1; }}
+                .axis-label {{ font-family: {self.font_family}; font-size: 14px; fill: #333; }}
+                .title {{ font-family: {self.font_family}; font-size: 16px; font-weight: bold; fill: #333; }}
+                .grid {{ stroke: #ddd; stroke-width: 0.5; stroke-dasharray: 2,2; }}
+                .diagonal {{ stroke: #999; stroke-width: 1; stroke-dasharray: 5,5; }}
+                .curve {{ fill: none; stroke-width: 2; }}
+                .point {{ fill-opacity: 0.8; }}
+                .legend {{ font-family: {self.font_family}; font-size: 12px; }}
+                .optimal-point {{ fill: #ff0000; stroke: #000; stroke-width: 1; }}
+            </style>
+            <rect width="{self.width}" height="{self.height}" fill="white"/>
+        ''')
+
+        # Title
+        svg_parts.append(f'''
+            <text x="{self.width/2}" y="{self.margin/2}"
+                class="title" text-anchor="middle">{title}</text>
+        ''')
+
+        # Grid lines
+        for i in range(11):
+            val = i / 10
+            x = self._scale_x(val)
+            y = self._scale_y(val)
+            # Vertical grid
+            svg_parts.append(f'''<line x1="{x}" y1="{self.margin}"
+                x2="{x}" y2="{self.height - self.margin}" class="grid"/>''')
+            # Horizontal grid
+            svg_parts.append(f'''<line x1="{self.margin}" y1="{y}"
+                x2="{self.width - self.margin}" y2="{y}" class="grid"/>''')
+
+        # Axes
+        # X-axis
+        svg_parts.append(f'''
+            <line x1="{self.margin}" y1="{self.height - self.margin}"
+                x2="{self.width - self.margin}" y2="{self.height - self.margin}" class="axis"/>
+        ''')
+        # Y-axis
+        svg_parts.append(f'''
+            <line x1="{self.margin}" y1="{self.margin}"
+                x2="{self.margin}" y2="{self.height - self.margin}" class="axis"/>
+        ''')
+
+        # Axis labels
+        svg_parts.append(f'''
+            <text x="{self.width/2}" y="{self.height - 15}"
+                class="axis-label" text-anchor="middle">False Positive Rate (1 - Specificity)</text>
+            <text x="{15}" y="{self.height/2}"
+                class="axis-label" text-anchor="middle"
+                transform="rotate(-90, 15, {self.height/2})">True Positive Rate (Sensitivity)</text>
+        ''')
+
+        # Axis tick labels
+        for i in range(11):
+            val = i / 10
+            x = self._scale_x(val)
+            y = self._scale_y(val)
+            # X-axis ticks
+            svg_parts.append(f'''
+                <text x="{x}" y="{self.height - self.margin + 20}"
+                    class="axis-label" text-anchor="middle" font-size="10">{val:.1f}</text>
+            ''')
+            # Y-axis ticks
+            svg_parts.append(f'''
+                <text x="{self.margin - 10}" y="{y + 4}"
+                    class="axis-label" text-anchor="end" font-size="10">{val:.1f}</text>
+            ''')
+
+        # Diagonal line (random classifier)
+        if show_diagonal:
+            svg_parts.append(f'''
+                <line x1="{self._scale_x(0)}" y1="{self._scale_y(0)}"
+                    x2="{self._scale_x(1)}" y2="{self._scale_y(1)}" class="diagonal"/>
+            ''')
+
+        # Plot curves
+        for idx, curve in enumerate(curves):
+            color = self.COLORS[idx % len(self.COLORS)]
+
+            if curve.points:
+                # Build path
+                points_str = " ".join([
+                    f"L{self._scale_x(p.fpr)},{self._scale_y(p.tpr)}"
+                    for p in curve.points
+                ])
+                # Replace first L with M
+                if points_str:
+                    points_str = "M" + points_str[1:]
+
+                svg_parts.append(f'''
+                    <path d="{points_str}" class="curve" stroke="{color}"/>
+                ''')
+
+                # Plot individual points
+                for point in curve.points:
+                    if point.threshold and point.threshold not in ('origin', 'chance'):
+                        x = self._scale_x(point.fpr)
+                        y = self._scale_y(point.tpr)
+                        svg_parts.append(f'''
+                            <circle cx="{x}" cy="{y}" r="5"
+                                fill="{color}" class="point">
+                                <title>{point.label or point.threshold}:
+Sensitivity={point.tpr:.3f},
+Specificity={point.specificity:.3f}</title>
+                            </circle>
+                        ''')
+
+                # Mark optimal point
+                if show_optimal_point and curve.points:
+                    _, optimal = curve.youden_index()
+                    x = self._scale_x(optimal.fpr)
+                    y = self._scale_y(optimal.tpr)
+                    svg_parts.append(f'''
+                        <circle cx="{x}" cy="{y}" r="8" class="optimal-point">
+                            <title>Optimal: Youden's J = {optimal.tpr - optimal.fpr:.3f}</title>
+                        </circle>
+                    ''')
+
+        # Legend
+        if show_legend:
+            legend_x = self.width - self.margin - 150
+            legend_y = self.margin + 20
+
+            svg_parts.append(f'''
+                <rect x="{legend_x - 10}" y="{legend_y - 15}"
+                    width="160" height="{len(curves) * 25 + 20}"
+                    fill="white" stroke="#ccc" stroke-width="1"/>
+            ''')
+
+            for idx, curve in enumerate(curves):
+                color = self.COLORS[idx % len(self.COLORS)]
+                y_pos = legend_y + idx * 25
+
+                svg_parts.append(f'''
+                    <line x1="{legend_x}" y1="{y_pos}"
+                        x2="{legend_x + 20}" y2="{y_pos}"
+                        stroke="{color}" stroke-width="2"/>
+                ''')
+
+                auc_text = f" (AUC={curve.auc:.3f})" if show_auc and curve.auc > 0 else ""
+                svg_parts.append(f'''
+                    <text x="{legend_x + 30}" y="{y_pos + 4}"
+                        class="legend">{curve.name}{auc_text}</text>
+                ''')
+
+        svg_parts.append('</svg>')
+        return '\n'.join(svg_parts)
+
+    def generate_interactive_html(
+        self,
+        curves: List[ROCCurve],
+        title: str = "Interactive ROC Curve Analysis",
+        include_data_table: bool = True
+    ) -> str:
+        """
+        Generate interactive HTML with hover tooltips and data table.
+
+        Args:
+            curves: List of ROCCurve objects to plot
+            title: Page title
+            include_data_table: Include sortable data table below chart
+
+        Returns:
+            Complete HTML document string
+        """
+        # Prepare data for JavaScript
+        curves_data = [curve.to_dict() for curve in curves]
+
+        html = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        body {{
+            font-family: {self.font_family};
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }}
+        h1 {{
+            color: #333;
+            text-align: center;
+        }}
+        .chart-container {{
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }}
+        #roc-chart {{
+            width: 100%;
+            max-width: {self.width}px;
+            margin: 0 auto;
+            display: block;
+        }}
+        .tooltip {{
+            position: absolute;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            max-width: 250px;
+        }}
+        .metrics-table {{
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+        }}
+        .metrics-table th, .metrics-table td {{
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }}
+        .metrics-table th {{
+            background: #f8f8f8;
+            cursor: pointer;
+        }}
+        .metrics-table th:hover {{
+            background: #e8e8e8;
+        }}
+        .metrics-table tr:hover {{
+            background: #f5f5f5;
+        }}
+        .auc-badge {{
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }}
+        .auc-excellent {{ background: #28a745; color: white; }}
+        .auc-good {{ background: #17a2b8; color: white; }}
+        .auc-fair {{ background: #ffc107; color: black; }}
+        .auc-poor {{ background: #dc3545; color: white; }}
+        .legend-item {{
+            display: inline-flex;
+            align-items: center;
+            margin-right: 20px;
+            margin-bottom: 10px;
+        }}
+        .legend-color {{
+            width: 20px;
+            height: 4px;
+            margin-right: 8px;
+        }}
+        .controls {{
+            margin-bottom: 15px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }}
+        .controls label {{
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }}
+    </style>
+</head>
+<body>
+    <h1>{title}</h1>
+
+    <div class="chart-container">
+        <div class="controls">
+            <label><input type="checkbox" id="show-diagonal" checked> Show diagonal (random)</label>
+            <label><input type="checkbox" id="show-points" checked> Show strategy points</label>
+            <label><input type="checkbox" id="show-optimal" checked> Highlight optimal point</label>
+        </div>
+
+        <div id="legend" style="margin-bottom: 15px;"></div>
+
+        <div style="position: relative;">
+            <svg id="roc-chart" viewBox="0 0 {self.width} {self.height}"></svg>
+            <div id="tooltip" class="tooltip" style="display: none;"></div>
+        </div>
+    </div>
+
+    {'<div class="chart-container"><h2>Strategy Metrics</h2><table class="metrics-table" id="metrics-table"></table></div>' if include_data_table else ''}
+
+    <script>
+    const curvesData = {json.dumps(curves_data)};
+    const colors = {json.dumps(self.COLORS)};
+    const width = {self.width};
+    const height = {self.height};
+    const margin = {self.margin};
+    const plotWidth = width - 2 * margin;
+    const plotHeight = height - 2 * margin;
+
+    function scaleX(fpr) {{
+        return margin + fpr * plotWidth;
+    }}
+
+    function scaleY(tpr) {{
+        return margin + (1 - tpr) * plotHeight;
+    }}
+
+    function getAucClass(auc) {{
+        if (auc >= 0.9) return 'auc-excellent';
+        if (auc >= 0.8) return 'auc-good';
+        if (auc >= 0.7) return 'auc-fair';
+        return 'auc-poor';
+    }}
+
+    function drawChart() {{
+        const svg = document.getElementById('roc-chart');
+        const showDiagonal = document.getElementById('show-diagonal').checked;
+        const showPoints = document.getElementById('show-points').checked;
+        const showOptimal = document.getElementById('show-optimal').checked;
+
+        let html = `
+            <style>
+                .grid {{ stroke: #ddd; stroke-width: 0.5; stroke-dasharray: 2,2; }}
+                .axis {{ stroke: #333; stroke-width: 1; }}
+                .diagonal {{ stroke: #999; stroke-width: 1; stroke-dasharray: 5,5; }}
+                .curve {{ fill: none; stroke-width: 2; }}
+                .point {{ cursor: pointer; transition: r 0.2s; }}
+                .point:hover {{ r: 8; }}
+            </style>
+            <rect width="${{width}}" height="${{height}}" fill="white"/>
+        `;
+
+        // Grid
+        for (let i = 0; i <= 10; i++) {{
+            const val = i / 10;
+            const x = scaleX(val);
+            const y = scaleY(val);
+            html += `<line x1="${{x}}" y1="${{margin}}" x2="${{x}}" y2="${{height - margin}}" class="grid"/>`;
+            html += `<line x1="${{margin}}" y1="${{y}}" x2="${{width - margin}}" y2="${{y}}" class="grid"/>`;
+        }}
+
+        // Axes
+        html += `<line x1="${{margin}}" y1="${{height - margin}}" x2="${{width - margin}}" y2="${{height - margin}}" class="axis"/>`;
+        html += `<line x1="${{margin}}" y1="${{margin}}" x2="${{margin}}" y2="${{height - margin}}" class="axis"/>`;
+
+        // Axis labels
+        html += `<text x="${{width/2}}" y="${{height - 15}}" text-anchor="middle" font-size="14">False Positive Rate (1 - Specificity)</text>`;
+        html += `<text x="15" y="${{height/2}}" text-anchor="middle" font-size="14" transform="rotate(-90, 15, ${{height/2}})">True Positive Rate (Sensitivity)</text>`;
+
+        // Tick labels
+        for (let i = 0; i <= 10; i++) {{
+            const val = i / 10;
+            html += `<text x="${{scaleX(val)}}" y="${{height - margin + 20}}" text-anchor="middle" font-size="10">${{val.toFixed(1)}}</text>`;
+            html += `<text x="${{margin - 10}}" y="${{scaleY(val) + 4}}" text-anchor="end" font-size="10">${{val.toFixed(1)}}</text>`;
+        }}
+
+        // Diagonal
+        if (showDiagonal) {{
+            html += `<line x1="${{scaleX(0)}}" y1="${{scaleY(0)}}" x2="${{scaleX(1)}}" y2="${{scaleY(1)}}" class="diagonal"/>`;
+        }}
+
+        // Curves
+        curvesData.forEach((curve, idx) => {{
+            const color = colors[idx % colors.length];
+            const points = curve.points || [];
+
+            if (points.length > 0) {{
+                const pathData = points.map((p, i) =>
+                    `${{i === 0 ? 'M' : 'L'}}${{scaleX(p.fpr)}},${{scaleY(p.tpr)}}`
+                ).join(' ');
+                html += `<path d="${{pathData}}" class="curve" stroke="${{color}}"/>`;
+
+                // Points
+                if (showPoints) {{
+                    points.forEach((p, pIdx) => {{
+                        if (p.threshold && p.threshold !== 'origin' && p.threshold !== 'chance') {{
+                            html += `<circle cx="${{scaleX(p.fpr)}}" cy="${{scaleY(p.tpr)}}" r="5"
+                                fill="${{color}}" class="point"
+                                data-curve="${{idx}}" data-point="${{pIdx}}"/>`;
+                        }}
+                    }});
+                }}
+
+                // Optimal point
+                if (showOptimal && points.length > 0) {{
+                    let bestJ = -1;
+                    let bestPoint = points[0];
+                    points.forEach(p => {{
+                        const j = p.tpr - p.fpr;
+                        if (j > bestJ) {{
+                            bestJ = j;
+                            bestPoint = p;
+                        }}
+                    }});
+                    html += `<circle cx="${{scaleX(bestPoint.fpr)}}" cy="${{scaleY(bestPoint.tpr)}}"
+                        r="8" fill="none" stroke="${{color}}" stroke-width="3" stroke-dasharray="3,3"/>`;
+                }}
+            }}
+        }});
+
+        svg.innerHTML = html;
+
+        // Add event listeners for tooltips
+        const tooltip = document.getElementById('tooltip');
+        document.querySelectorAll('.point').forEach(point => {{
+            point.addEventListener('mouseenter', (e) => {{
+                const curveIdx = parseInt(e.target.dataset.curve);
+                const pointIdx = parseInt(e.target.dataset.point);
+                const curve = curvesData[curveIdx];
+                const p = curve.points[pointIdx];
+
+                tooltip.innerHTML = `
+                    <strong>${{curve.name}}</strong><br>
+                    Strategy: ${{p.threshold || p.label}}<br>
+                    Sensitivity: ${{(p.tpr * 100).toFixed(1)}}%<br>
+                    Specificity: ${{((1 - p.fpr) * 100).toFixed(1)}}%<br>
+                    1 - Specificity: ${{(p.fpr * 100).toFixed(1)}}%<br>
+                    Youden's J: ${{(p.tpr - p.fpr).toFixed(3)}}
+                `;
+                tooltip.style.display = 'block';
+                tooltip.style.left = (e.pageX + 10) + 'px';
+                tooltip.style.top = (e.pageY - 10) + 'px';
+            }});
+
+            point.addEventListener('mouseleave', () => {{
+                tooltip.style.display = 'none';
+            }});
+        }});
+    }}
+
+    function drawLegend() {{
+        const legend = document.getElementById('legend');
+        let html = '';
+        curvesData.forEach((curve, idx) => {{
+            const color = colors[idx % colors.length];
+            const aucText = curve.auc > 0 ? ` (AUC = ${{curve.auc.toFixed(3)}})` : '';
+            html += `<div class="legend-item">
+                <div class="legend-color" style="background: ${{color}}"></div>
+                <span>${{curve.name}}${{aucText}}</span>
+            </div>`;
+        }});
+        legend.innerHTML = html;
+    }}
+
+    function drawTable() {{
+        const table = document.getElementById('metrics-table');
+        if (!table) return;
+
+        let html = `
+            <thead>
+                <tr>
+                    <th onclick="sortTable(0)">Strategy</th>
+                    <th onclick="sortTable(1)">AUC</th>
+                    <th onclick="sortTable(2)">AUC CI</th>
+                    <th onclick="sortTable(3)">Best Sensitivity</th>
+                    <th onclick="sortTable(4)">Best Specificity</th>
+                    <th onclick="sortTable(5)">Youden's J</th>
+                </tr>
+            </thead>
+            <tbody>
+        `;
+
+        curvesData.forEach(curve => {{
+            const points = curve.points || [];
+            let bestSens = 0, bestSpec = 0, bestJ = -1;
+
+            points.forEach(p => {{
+                if (p.tpr > bestSens) bestSens = p.tpr;
+                const spec = 1 - p.fpr;
+                if (spec > bestSpec) bestSpec = spec;
+                const j = p.tpr - p.fpr;
+                if (j > bestJ) bestJ = j;
+            }});
+
+            const ciText = curve.auc_ci_lower && curve.auc_ci_upper
+                ? `(${{curve.auc_ci_lower.toFixed(3)}} - ${{curve.auc_ci_upper.toFixed(3)}})`
+                : 'N/A';
+
+            html += `
+                <tr>
+                    <td>${{curve.name}}</td>
+                    <td><span class="auc-badge ${{getAucClass(curve.auc)}}">${{curve.auc.toFixed(3)}}</span></td>
+                    <td>${{ciText}}</td>
+                    <td>${{(bestSens * 100).toFixed(1)}}%</td>
+                    <td>${{(bestSpec * 100).toFixed(1)}}%</td>
+                    <td>${{bestJ.toFixed(3)}}</td>
+                </tr>
+            `;
+        }});
+
+        html += '</tbody>';
+        table.innerHTML = html;
+    }}
+
+    let sortDirection = {{}};
+    function sortTable(colIndex) {{
+        const table = document.getElementById('metrics-table');
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+
+        sortDirection[colIndex] = !sortDirection[colIndex];
+
+        rows.sort((a, b) => {{
+            let aVal = a.cells[colIndex].textContent;
+            let bVal = b.cells[colIndex].textContent;
+
+            // Try numeric sort
+            const aNum = parseFloat(aVal.replace(/[^0-9.-]/g, ''));
+            const bNum = parseFloat(bVal.replace(/[^0-9.-]/g, ''));
+
+            if (!isNaN(aNum) && !isNaN(bNum)) {{
+                return sortDirection[colIndex] ? aNum - bNum : bNum - aNum;
+            }}
+
+            // Fall back to string sort
+            return sortDirection[colIndex]
+                ? aVal.localeCompare(bVal)
+                : bVal.localeCompare(aVal);
+        }});
+
+        rows.forEach(row => tbody.appendChild(row));
+    }}
+
+    // Event listeners for controls
+    document.getElementById('show-diagonal').addEventListener('change', drawChart);
+    document.getElementById('show-points').addEventListener('change', drawChart);
+    document.getElementById('show-optimal').addEventListener('change', drawChart);
+
+    // Initial draw
+    drawChart();
+    drawLegend();
+    drawTable();
+    </script>
+</body>
+</html>'''
+        return html
+
+    def export_json(self, curves: List[ROCCurve]) -> str:
+        """
+        Export ROC data as JSON for external plotting tools.
+
+        Args:
+            curves: List of ROCCurve objects
+
+        Returns:
+            JSON string
+        """
+        data = {
+            'curves': [curve.to_dict() for curve in curves],
+            'generated': datetime.now().isoformat(),
+            'chart_config': {
+                'width': self.width,
+                'height': self.height,
+                'margin': self.margin
+            }
+        }
+        return json.dumps(data, indent=2)
+
+
+def create_roc_curves_from_strategies(
+    strategies_results: List[StrategyResult],
+    known_ncts: Set[str],
+    total_database_size: int,
+    group_name: str = "Search Strategies"
+) -> ROCCurve:
+    """
+    Create ROC curve from multiple search strategy results.
+
+    Each strategy becomes a point on the curve, representing a different
+    sensitivity-specificity trade-off.
+
+    Args:
+        strategies_results: List of StrategyResult objects
+        known_ncts: Set of known relevant NCT IDs (gold standard)
+        total_database_size: Total records in database
+        group_name: Name for the curve
+
+    Returns:
+        ROCCurve object with points for each strategy
+
+    Example:
+        >>> curve = create_roc_curves_from_strategies(results, known_ncts, 10000)
+        >>> visualizer = ROCVisualizer()
+        >>> html = visualizer.generate_interactive_html([curve])
+    """
+    points = [ROCPoint(fpr=0, tpr=0, threshold='origin', label='Origin')]
+
+    for result in strategies_results:
+        # Calculate confusion matrix
+        if result.nct_ids_found:
+            found_set = {nct.upper().strip() for nct in result.nct_ids_found if nct}
+            known_set = {nct.upper().strip() for nct in known_ncts if nct}
+            found_relevant = len(found_set & known_set)
+        else:
+            found_relevant = result.relevant_found
+
+        tp = found_relevant
+        fp = result.total_retrieved - tp
+        fn = len(known_ncts) - tp
+        tn = max(0, total_database_size - (tp + fp + fn))
+
+        # Calculate rates
+        sensitivity = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+        specificity = tn / (tn + fp) if (tn + fp) > 0 else 0.0
+        fpr = 1 - specificity
+
+        points.append(ROCPoint(
+            fpr=fpr,
+            tpr=sensitivity,
+            threshold=result.strategy_id,
+            label=result.strategy_name
+        ))
+
+    points.append(ROCPoint(fpr=1, tpr=1, threshold='chance', label='Random'))
+
+    # Create curve
+    curve = ROCCurve(points=points, name=group_name)
+    curve.auc = curve.calculate_auc_trapezoidal()
+
+    # Calculate AUC CI
+    n_positive = len(known_ncts)
+    n_negative = total_database_size - n_positive
+    _, ci_lower, ci_upper = curve.calculate_auc_with_ci(n_positive, n_negative)
+    curve.auc_ci_lower = ci_lower
+    curve.auc_ci_upper = ci_upper
+
+    return curve
+
+
+def save_roc_visualization(
+    curves: List[ROCCurve],
+    output_path: str,
+    format: str = 'html',
+    **kwargs
+) -> str:
+    """
+    Save ROC visualization to file.
+
+    Args:
+        curves: List of ROCCurve objects
+        output_path: Output file path (without extension)
+        format: Output format ('html', 'svg', 'json')
+        **kwargs: Additional arguments passed to visualization methods
+
+    Returns:
+        Path to saved file
+
+    Example:
+        >>> save_roc_visualization([curve], 'output/roc_analysis', format='html')
+    """
+    visualizer = ROCVisualizer()
+
+    if format == 'html':
+        content = visualizer.generate_interactive_html(curves, **kwargs)
+        ext = '.html'
+    elif format == 'svg':
+        content = visualizer.generate_svg(curves, **kwargs)
+        ext = '.svg'
+    elif format == 'json':
+        content = visualizer.export_json(curves)
+        ext = '.json'
+    else:
+        raise ValueError(f"Unsupported format: {format}")
+
+    filepath = output_path if output_path.endswith(ext) else output_path + ext
+
+    with open(filepath, 'w', encoding='utf-8') as f:
+        f.write(content)
+
+    return filepath
 
 
 if __name__ == "__main__":
