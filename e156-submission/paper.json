@@ -1,0 +1,96 @@
+{
+  "title": "CT.gov Search Strategy Tool: Systematic Review Search Validation with 99 Percent API Recall",
+  "slug": "ctgov-search-strategies",
+  "author": "Mahmood Ahmad",
+  "date": "2026-03-26",
+  "body": "Can automated search strategies for ClinicalTrials.gov achieve high recall against a large Cochrane reference standard of indexed trial registrations? We assembled 1,736 unique NCT identifiers from twelve Cochrane systematic review categories spanning cardiovascular, oncology, and metabolic therapeutic areas as ground truth for validation. The toolkit implements ten strategies with Boolean optimization, fifty-plus spelling variants, PICO-based query generation, quality assessment informed by PRESS 2015 guidelines, and seven-database translation covering PubMed, Embase, Cochrane, Web of Science, CINAHL, and PsycINFO. Validation against the reference set demonstrated 99 percent API recall with Wilson score confidence intervals confirming robust retrieval across all twelve therapeutic categories. Strategy-specific benchmarking with ROC visualization confirmed that condition-plus-intervention queries consistently outperformed keyword-only approaches across disease areas. Systematic registry searching with validated strategies approaches near-complete recall for registered interventional studies using the ClinicalTrials.gov API directly. The limitation of API recall testing is that it measures retrieval of known registrations not true search sensitivity requiring prospective human screening.",
+  "word_count": 156,
+  "sentence_count": 7,
+  "sentences": [
+    {
+      "role": "Question",
+      "text": "Can automated search strategies for ClinicalTrials.gov achieve high recall against a large Cochrane reference standard of indexed trial registrations?"
+    },
+    {
+      "role": "Dataset",
+      "text": "We assembled 1,736 unique NCT identifiers from twelve Cochrane systematic review categories spanning cardiovascular, oncology, and metabolic therapeutic areas as ground truth for validation."
+    },
+    {
+      "role": "Method",
+      "text": "The toolkit implements ten strategies with Boolean optimization, fifty-plus spelling variants, PICO-based query generation, quality assessment informed by PRESS 2015 guidelines, and seven-database translation covering PubMed, Embase, Cochrane, Web of Science, CINAHL, and PsycINFO."
+    },
+    {
+      "role": "Primary result",
+      "text": "Validation against the reference set demonstrated 99 percent API recall with Wilson score confidence intervals confirming robust retrieval across all twelve therapeutic categories."
+    },
+    {
+      "role": "Robustness",
+      "text": "Strategy-specific benchmarking with ROC visualization confirmed that condition-plus-intervention queries consistently outperformed keyword-only approaches across disease areas."
+    },
+    {
+      "role": "Interpretation",
+      "text": "Systematic registry searching with validated strategies approaches near-complete recall for registered interventional studies using the ClinicalTrials.gov API directly."
+    },
+    {
+      "role": "Boundary",
+      "text": "The limitation of API recall testing is that it measures retrieval of known registrations not true search sensitivity requiring prospective human screening."
+    }
+  ],
+  "notes": {
+    "app": "CT.gov Search Strategy Tool v5.1.0",
+    "data": "1,736 Cochrane NCT IDs across 12 medical categories",
+    "code": "https://github.com/mahmood726-cyber/ctgov-search-strategies",
+    "doi": "",
+    "version": "5.1.0",
+    "date": "2026-03-26",
+    "validation": "DRAFT"
+  },
+  "type": "methods",
+  "primary_estimand": "API recall",
+  "validation": {
+    "status": "fail",
+    "checks": [
+      {
+        "name": "single paragraph",
+        "ok": true,
+        "detail": "Body must not contain blank-line paragraph breaks."
+      },
+      {
+        "name": "sentence count",
+        "ok": true,
+        "detail": "Found 7 sentences."
+      },
+      {
+        "name": "word count",
+        "ok": true,
+        "detail": "Found 156 words."
+      },
+      {
+        "name": "no headings",
+        "ok": true,
+        "detail": "No markdown headings allowed in body."
+      },
+      {
+        "name": "no links",
+        "ok": true,
+        "detail": "No links or DOI links allowed in body."
+      },
+      {
+        "name": "result sentence has interval",
+        "ok": false,
+        "detail": "Sentence 4 should include a confidence interval."
+      },
+      {
+        "name": "result sentence has estimand",
+        "ok": false,
+        "detail": "Sentence 4 should name an effect measure or test metric."
+      },
+      {
+        "name": "boundary sentence present",
+        "ok": true,
+        "detail": "Sentence 7 should express a limitation, harm, or scope boundary."
+      }
+    ]
+  },
+  "schema": "e156-v0.2"
+}

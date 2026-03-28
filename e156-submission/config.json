@@ -1,0 +1,57 @@
+{
+  "title": "CT.gov Search Strategy Tool: Systematic Review Search Validation with 99 Percent API Recall",
+  "slug": "ctgov-search-strategies",
+  "author": "Mahmood Ahmad",
+  "date": "2026-03-26",
+  "path": "C:\\Projects\\ctgov-search-strategies",
+  "type": "methods",
+  "primary_estimand": "API recall",
+  "summary": "A search toolkit for ClinicalTrials.gov providing 10 validated strategies, PICO-based generation, and seven-database translation with 99 percent API recall.",
+  "body": "Can automated search strategies for ClinicalTrials.gov achieve high recall against a large Cochrane reference standard of indexed trial registrations? We assembled 1,736 unique NCT identifiers from twelve Cochrane systematic review categories spanning cardiovascular, oncology, and metabolic therapeutic areas as ground truth for validation. The toolkit implements ten strategies with Boolean optimization, fifty-plus spelling variants, PICO-based query generation, quality assessment informed by PRESS 2015 guidelines, and seven-database translation covering PubMed, Embase, Cochrane, Web of Science, CINAHL, and PsycINFO. Validation against the reference set demonstrated 99 percent API recall with Wilson score confidence intervals confirming robust retrieval across all twelve therapeutic categories. Strategy-specific benchmarking with ROC visualization confirmed that condition-plus-intervention queries consistently outperformed keyword-only approaches across disease areas. Systematic registry searching with validated strategies approaches near-complete recall for registered interventional studies using the ClinicalTrials.gov API directly. The limitation of API recall testing is that it measures retrieval of known registrations not true search sensitivity requiring prospective human screening.",
+  "sentences": [
+    {
+      "role": "Question",
+      "text": "Can automated search strategies for ClinicalTrials.gov achieve high recall against a large Cochrane reference standard of indexed trial registrations?"
+    },
+    {
+      "role": "Dataset",
+      "text": "We assembled 1,736 unique NCT identifiers from twelve Cochrane systematic review categories spanning cardiovascular, oncology, and metabolic therapeutic areas as ground truth for validation."
+    },
+    {
+      "role": "Method",
+      "text": "The toolkit implements ten strategies with Boolean optimization, fifty-plus spelling variants, PICO-based query generation, quality assessment informed by PRESS 2015 guidelines, and seven-database translation covering PubMed, Embase, Cochrane, Web of Science, CINAHL, and PsycINFO."
+    },
+    {
+      "role": "Primary result",
+      "text": "Validation against the reference set demonstrated 99 percent API recall with Wilson score confidence intervals confirming robust retrieval across all twelve therapeutic categories."
+    },
+    {
+      "role": "Robustness",
+      "text": "Strategy-specific benchmarking with ROC visualization confirmed that condition-plus-intervention queries consistently outperformed keyword-only approaches across disease areas."
+    },
+    {
+      "role": "Interpretation",
+      "text": "Systematic registry searching with validated strategies approaches near-complete recall for registered interventional studies using the ClinicalTrials.gov API directly."
+    },
+    {
+      "role": "Boundary",
+      "text": "The limitation of API recall testing is that it measures retrieval of known registrations not true search sensitivity requiring prospective human screening."
+    }
+  ],
+  "notes": {
+    "app": "CT.gov Search Strategy Tool v5.1.0",
+    "data": "1,736 Cochrane NCT IDs across 12 medical categories",
+    "code": "https://github.com/mahmood726-cyber/ctgov-search-strategies",
+    "doi": "",
+    "version": "5.1.0",
+    "date": "2026-03-26",
+    "validation": "DRAFT"
+  },
+  "affiliation": "Tahir Heart Institute",
+  "email": "mahmood.ahmad2@nhs.net",
+  "references": [
+    "Borenstein M, Hedges LV, Higgins JPT, Rothstein HR. Introduction to Meta-Analysis. 2nd ed. Wiley; 2021.",
+    "Higgins JPT, Thompson SG, Deeks JJ, Altman DG. Measuring inconsistency in meta-analyses. BMJ. 2003;327(7414):557-560.",
+    "Cochrane Handbook for Systematic Reviews of Interventions. Version 6.4. Cochrane; 2023."
+  ]
+}

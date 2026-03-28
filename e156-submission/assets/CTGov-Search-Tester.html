@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT.gov Search Strategy Tester</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #00d4ff;
+            font-size: 2em;
+        }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        @media (max-width: 1000px) { .grid { grid-template-columns: 1fr; } }
+
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 12px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card h2 {
+            color: #00d4ff;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            border-bottom: 1px solid rgba(0,212,255,0.3);
+            padding-bottom: 10px;
+        }
+
+        .form-group { margin-bottom: 15px; }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            background: rgba(0,0,0,0.3);
+            color: #fff;
+            font-size: 14px;
+        }
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #00d4ff;
+        }
+        textarea { min-height: 80px; resize: vertical; }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #00d4ff, #0099cc);
+            color: #000;
+        }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 4px 15px rgba(0,212,255,0.4); }
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            margin-left: 10px;
+        }
+        .btn-secondary:hover { background: rgba(255,255,255,0.2); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .strategies {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .strategy-btn {
+            padding: 10px;
+            background: rgba(0,212,255,0.1);
+            border: 1px solid rgba(0,212,255,0.3);
+            border-radius: 6px;
+            color: #00d4ff;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85em;
+        }
+        .strategy-btn:hover, .strategy-btn.active {
+            background: rgba(0,212,255,0.3);
+            border-color: #00d4ff;
+        }
+
+        #results {
+            max-height: 500px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+        .result-item {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+            border-left: 3px solid #00d4ff;
+        }
+        .result-item h4 {
+            color: #00d4ff;
+            margin-bottom: 5px;
+            font-size: 0.95em;
+        }
+        .result-item p { color: #aaa; font-size: 0.85em; margin: 3px 0; }
+        .result-item .nct-id {
+            font-family: monospace;
+            background: rgba(0,212,255,0.2);
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.8em;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+        .stat-box {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .stat-box .value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        .stat-box .label { color: #aaa; font-size: 0.8em; }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #00d4ff;
+        }
+        .loading::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        .comparison-table th, .comparison-table td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .comparison-table th { color: #00d4ff; }
+        .comparison-table tr:hover { background: rgba(0,212,255,0.1); }
+
+        .cochrane-info {
+            background: rgba(0,100,150,0.2);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+        }
+        .cochrane-info h3 { color: #00d4ff; margin-bottom: 10px; }
+
+        #log {
+            background: #000;
+            color: #0f0;
+            font-family: monospace;
+            font-size: 12px;
+            padding: 10px;
+            border-radius: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>CT.gov Search Strategy Tester</h1>
+
+        <div class="grid">
+            <!-- Left Panel: Search Configuration -->
+            <div class="card">
+                <h2>Search Configuration</h2>
+
+                <div class="form-group">
+                    <label>Condition / Disease</label>
+                    <input type="text" id="condition" placeholder="e.g., hypertension, diabetes, cancer">
+                </div>
+
+                <div class="form-group">
+                    <label>Intervention / Treatment</label>
+                    <input type="text" id="intervention" placeholder="e.g., aspirin, surgery, exercise">
+                </div>
+
+                <div class="form-group">
+                    <label>Full Text Search Term</label>
+                    <input type="text" id="term" placeholder="e.g., randomized controlled trial mortality">
+                </div>
+
+                <div class="form-group">
+                    <label>Title Keywords</label>
+                    <input type="text" id="title" placeholder="Search in study titles">
+                </div>
+
+                <div class="form-group">
+                    <label>Outcome Measure</label>
+                    <input type="text" id="outcome" placeholder="e.g., mortality, blood pressure">
+                </div>
+
+                <div class="form-group">
+                    <label>Study Status</label>
+                    <select id="status">
+                        <option value="">All Statuses</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="RECRUITING">Recruiting</option>
+                        <option value="ACTIVE_NOT_RECRUITING">Active, Not Recruiting</option>
+                        <option value="TERMINATED">Terminated</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Phase</label>
+                    <select id="phase">
+                        <option value="">All Phases</option>
+                        <option value="PHASE3">Phase 3</option>
+                        <option value="PHASE4">Phase 4</option>
+                        <option value="PHASE2">Phase 2</option>
+                        <option value="PHASE1">Phase 1</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>Results per Page</label>
+                    <select id="pageSize">
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                        <option value="100" selected>100</option>
+                        <option value="200">200</option>
+                    </select>
+                </div>
+
+                <div style="margin-top: 20px;">
+                    <button class="btn btn-primary" onclick="runSearch()">Search CT.gov</button>
+                    <button class="btn btn-secondary" onclick="clearForm()">Clear</button>
+                </div>
+            </div>
+
+            <!-- Right Panel: Results -->
+            <div class="card">
+                <h2>Search Results</h2>
+
+                <div class="stats">
+                    <div class="stat-box">
+                        <div class="value" id="totalCount">-</div>
+                        <div class="label">Total Found</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="returnedCount">-</div>
+                        <div class="label">Returned</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="searchTime">-</div>
+                        <div class="label">Time (ms)</div>
+                    </div>
+                    <div class="stat-box">
+                        <div class="value" id="interventionalCount">-</div>
+                        <div class="label">RCTs</div>
+                    </div>
+                </div>
+
+                <div id="results">
+                    <p style="color: #666; text-align: center; padding: 40px;">
+                        Enter search criteria and click "Search CT.gov"
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strategy Comparison Section -->
+        <div class="card" style="margin-top: 20px;">
+            <h2>Pre-defined Search Strategies</h2>
+            <p style="color: #aaa; margin-bottom: 15px; font-size: 0.9em;">
+                Click a strategy to test it with your current condition/intervention inputs
+            </p>
+
+            <div class="strategies">
+                <button class="strategy-btn" onclick="runStrategy('conditionOnly')">
+                    Condition Only
+                </button>
+                <button class="strategy-btn" onclick="runStrategy('conditionCompleted')">
+                    Condition + Completed
+                </button>
+                <button class="strategy-btn" onclick="runStrategy('conditionIntervention')">
+                    Condition + Intervention
+                </button>
+                <button class="strategy-btn" onclick="runStrategy('fullText')">
+                    Full Text Search
+                </button>
+                <button class="strategy-btn" onclick="runStrategy('conditionOutcome')">
+                    Condition + Outcome
+                </button>
+                <button class="strategy-btn" onclick="runStrategy('broadSearch')">
+                    Broad OR Search
+                </button>
+                <button class="strategy-btn" onclick="runStrategy('narrowSearch')">
+                    Narrow AND Search
+                </button>
+                <button class="strategy-btn" onclick="compareAllStrategies()">
+                    Compare All Strategies
+                </button>
+            </div>
+
+            <div id="comparison-results"></div>
+        </div>
+
+        <!-- Log Panel -->
+        <div class="card" style="margin-top: 20px;">
+            <h2>API Log</h2>
+            <div id="log"></div>
+        </div>
+    </div>
+
+    <script src="scripts/ctgov_search.js"></script>
+    <script>
+        const WORKER_URL = 'https://restless-term-5510.mahmood726.workers.dev/';
+        const CTGOV_API = 'https://clinicaltrials.gov/api/v2/studies';
+
+        function log(msg) {
+            const logEl = document.getElementById('log');
+            const time = new Date().toLocaleTimeString();
+            logEl.innerHTML += `[${time}] ${msg}\n`;
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function getSearchParams() {
+            return {
+                condition: document.getElementById('condition').value.trim(),
+                intervention: document.getElementById('intervention').value.trim(),
+                term: document.getElementById('term').value.trim(),
+                title: document.getElementById('title').value.trim(),
+                outcome: document.getElementById('outcome').value.trim(),
+                status: document.getElementById('status').value,
+                phase: document.getElementById('phase').value,
+                pageSize: document.getElementById('pageSize').value,
+                studyType: 'INTERVENTIONAL'
+            };
+        }
+
+        function buildSearchUrl(params) {
+            const url = new URL(CTGOV_API);
+            if (params.condition) url.searchParams.set('query.cond', params.condition);
+            if (params.intervention) url.searchParams.set('query.intr', params.intervention);
+            if (params.term) url.searchParams.set('query.term', params.term);
+            if (params.title) url.searchParams.set('query.titles', params.title);
+            if (params.outcome) url.searchParams.set('query.outc', params.outcome);
+            if (params.studyType) url.searchParams.set('filter.studyType', params.studyType);
+            if (params.status) url.searchParams.set('filter.overallStatus', params.status);
+            if (params.phase) url.searchParams.set('filter.phase', params.phase);
+            url.searchParams.set('pageSize', params.pageSize || 100);
+            return url.toString();
+        }
+
+        async function runSearch() {
+            const params = getSearchParams();
+            const resultsDiv = document.getElementById('results');
+
+            // Validate at least one search term
+            if (!params.condition && !params.intervention && !params.term && !params.title) {
+                alert('Please enter at least one search criterion');
+                return;
+            }
+
+            resultsDiv.innerHTML = '<div class="loading">Searching CT.gov</div>';
+            log(`Starting search: condition="${params.condition}", intervention="${params.intervention}"`);
+
+            const startTime = Date.now();
+            const ctgovUrl = buildSearchUrl(params);
+            const proxyUrl = `${WORKER_URL}?url=${encodeURIComponent(ctgovUrl)}`;
+
+            log(`API URL: ${ctgovUrl}`);
+
+            try {
+                const response = await fetch(proxyUrl);
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                const duration = Date.now() - startTime;
+
+                log(`Response received in ${duration}ms, total: ${data.totalCount || 0}`);
+
+                displayResults(data, duration);
+            } catch (error) {
+                log(`ERROR: ${error.message}`);
+                resultsDiv.innerHTML = `<p style="color: #f44;">Error: ${error.message}</p>`;
+            }
+        }
+
+        function displayResults(data, duration) {
+            const studies = data.studies || [];
+            const totalCount = data.totalCount || 0;
+
+            document.getElementById('totalCount').textContent = totalCount.toLocaleString();
+            document.getElementById('returnedCount').textContent = studies.length;
+            document.getElementById('searchTime').textContent = duration;
+
+            const interventionalCount = studies.filter(s =>
+                s.protocolSection?.designModule?.studyType === 'INTERVENTIONAL'
+            ).length;
+            document.getElementById('interventionalCount').textContent = interventionalCount;
+
+            const resultsDiv = document.getElementById('results');
+
+            if (studies.length === 0) {
+                resultsDiv.innerHTML = '<p style="color: #aaa; text-align: center;">No studies found</p>';
+                return;
+            }
+
+            let html = '';
+            studies.forEach(study => {
+                const id = study.protocolSection?.identificationModule;
+                const status = study.protocolSection?.statusModule;
+                const design = study.protocolSection?.designModule;
+                const conditions = study.protocolSection?.conditionsModule?.conditions || [];
+
+                html += `
+                    <div class="result-item">
+                        <h4>${id?.briefTitle || 'Untitled'}</h4>
+                        <p>
+                            <span class="nct-id">${id?.nctId || 'N/A'}</span>
+                            Status: ${status?.overallStatus || 'Unknown'}
+                            | Type: ${design?.studyType || 'Unknown'}
+                            ${design?.phases?.length ? '| Phase: ' + design.phases.join(', ') : ''}
+                        </p>
+                        <p>Conditions: ${conditions.slice(0, 3).join(', ') || 'N/A'}</p>
+                    </div>
+                `;
+            });
+
+            resultsDiv.innerHTML = html;
+        }
+
+        async function runStrategy(strategyName) {
+            const condition = document.getElementById('condition').value.trim();
+            const intervention = document.getElementById('intervention').value.trim();
+            const term = document.getElementById('term').value.trim();
+            const outcome = document.getElementById('outcome').value.trim();
+
+            let params = { studyType: 'INTERVENTIONAL', pageSize: 100 };
+
+            switch(strategyName) {
+                case 'conditionOnly':
+                    if (!condition) { alert('Enter a condition'); return; }
+                    params.condition = condition;
+                    break;
+                case 'conditionCompleted':
+                    if (!condition) { alert('Enter a condition'); return; }
+                    params.condition = condition;
+                    params.status = 'COMPLETED';
+                    break;
+                case 'conditionIntervention':
+                    if (!condition || !intervention) { alert('Enter condition and intervention'); return; }
+                    params.condition = condition;
+                    params.intervention = intervention;
+                    break;
+                case 'fullText':
+                    const searchTerm = term || `${condition} ${intervention}`.trim();
+                    if (!searchTerm) { alert('Enter a search term'); return; }
+                    params.term = searchTerm;
+                    break;
+                case 'conditionOutcome':
+                    if (!condition || !outcome) { alert('Enter condition and outcome'); return; }
+                    params.condition = condition;
+                    params.outcome = outcome;
+                    break;
+                case 'broadSearch':
+                    const terms = [condition, intervention, outcome].filter(t => t);
+                    if (terms.length < 2) { alert('Enter at least 2 terms'); return; }
+                    params.term = terms.join(' OR ');
+                    break;
+                case 'narrowSearch':
+                    const narrowTerms = [condition, intervention].filter(t => t);
+                    if (narrowTerms.length < 2) { alert('Enter condition and intervention'); return; }
+                    params.term = narrowTerms.join(' AND ');
+                    break;
+            }
+
+            log(`Running strategy: ${strategyName}`);
+            const startTime = Date.now();
+            const ctgovUrl = buildSearchUrl(params);
+            const proxyUrl = `${WORKER_URL}?url=${encodeURIComponent(ctgovUrl)}`;
+
+            try {
+                const response = await fetch(proxyUrl);
+                const data = await response.json();
+                const duration = Date.now() - startTime;
+
+                log(`Strategy ${strategyName}: ${data.totalCount || 0} results in ${duration}ms`);
+                displayResults(data, duration);
+            } catch (error) {
+                log(`Strategy ${strategyName} ERROR: ${error.message}`);
+            }
+        }
+
+        async function compareAllStrategies() {
+            const condition = document.getElementById('condition').value.trim();
+            const intervention = document.getElementById('intervention').value.trim();
+
+            if (!condition) {
+                alert('Please enter at least a condition to compare strategies');
+                return;
+            }
+
+            const compDiv = document.getElementById('comparison-results');
+            compDiv.innerHTML = '<div class="loading">Running all strategies</div>';
+
+            const strategies = [
+                { name: 'Condition Only', params: { condition, studyType: 'INTERVENTIONAL' } },
+                { name: 'Condition + Completed', params: { condition, status: 'COMPLETED', studyType: 'INTERVENTIONAL' } },
+                { name: 'Full Text (condition)', params: { term: condition, studyType: 'INTERVENTIONAL' } }
+            ];
+
+            if (intervention) {
+                strategies.push(
+                    { name: 'Condition + Intervention', params: { condition, intervention, studyType: 'INTERVENTIONAL' } },
+                    { name: 'Narrow AND', params: { term: `${condition} AND ${intervention}`, studyType: 'INTERVENTIONAL' } },
+                    { name: 'Broad OR', params: { term: `${condition} OR ${intervention}`, studyType: 'INTERVENTIONAL' } }
+                );
+            }
+
+            const results = [];
+            for (const strat of strategies) {
+                try {
+                    const startTime = Date.now();
+                    const url = buildSearchUrl({ ...strat.params, pageSize: 100 });
+                    const response = await fetch(`${WORKER_URL}?url=${encodeURIComponent(url)}`);
+                    const data = await response.json();
+                    const duration = Date.now() - startTime;
+
+                    results.push({
+                        name: strat.name,
+                        total: data.totalCount || 0,
+                        returned: data.studies?.length || 0,
+                        time: duration
+                    });
+
+                    log(`Compared: ${strat.name} = ${data.totalCount || 0} results`);
+                } catch (e) {
+                    results.push({ name: strat.name, error: e.message });
+                }
+                await new Promise(r => setTimeout(r, 300)); // Rate limit
+            }
+
+            let html = '<table class="comparison-table"><tr><th>Strategy</th><th>Total Results</th><th>Time (ms)</th></tr>';
+            results.forEach(r => {
+                if (r.error) {
+                    html += `<tr><td>${r.name}</td><td colspan="2" style="color:#f44;">Error: ${r.error}</td></tr>`;
+                } else {
+                    html += `<tr><td>${r.name}</td><td>${r.total.toLocaleString()}</td><td>${r.time}</td></tr>`;
+                }
+            });
+            html += '</table>';
+
+            compDiv.innerHTML = html;
+        }
+
+        function clearForm() {
+            document.querySelectorAll('input, select').forEach(el => {
+                if (el.tagName === 'SELECT') {
+                    el.selectedIndex = 0;
+                } else {
+                    el.value = '';
+                }
+            });
+            document.getElementById('results').innerHTML = '<p style="color: #666; text-align: center; padding: 40px;">Enter search criteria and click "Search CT.gov"</p>';
+            document.getElementById('comparison-results').innerHTML = '';
+            document.getElementById('totalCount').textContent = '-';
+            document.getElementById('returnedCount').textContent = '-';
+            document.getElementById('searchTime').textContent = '-';
+            document.getElementById('interventionalCount').textContent = '-';
+        }
+
+        // Initialize
+        log('CT.gov Search Strategy Tester initialized');
+        log(`Worker URL: ${WORKER_URL}`);
+    </script>
+</body>
+</html>

@@ -1,0 +1,4151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Systematic Review Search Tool - Multi-Registry Edition</title>
+
+    <meta name="description" content="Comprehensive clinical trial and literature search tool with free public APIs: ClinicalTrials.gov, PubMed, EUCTR, ISRCTN, ANZCTR">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p { color: var(--text-secondary); font-size: 1.1rem; }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 12px 18px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px 8px 0 0;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.85rem;
+        }
+
+        .tab-btn:hover { background: var(--bg-input); color: var(--text-primary); }
+        .tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+        .tab-content {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-content.active { display: block; }
+
+        .form-group { margin-bottom: 20px; }
+        .form-group label { display: block; margin-bottom: 8px; font-weight: 500; color: var(--text-primary); }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: black; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-secondary { background: var(--bg-input); color: var(--text-primary); border: 1px solid var(--border); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .button-group { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .value { font-size: 1.8rem; font-weight: bold; color: var(--primary); }
+        .stat-card .label { color: var(--text-secondary); font-size: 0.85rem; }
+
+        .results-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .results-table th, .results-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); }
+        .results-table th { background: var(--bg-input); font-weight: 600; color: var(--text-primary); }
+        .results-table tr:hover { background: rgba(79, 70, 229, 0.1); }
+
+        .log-area {
+            background: #000;
+            color: #0f0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        .validation-panel {
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .validation-panel h3 { margin-bottom: 15px; color: var(--primary); }
+
+        .output-box {
+            background: #000;
+            color: #0f0;
+            font-family: 'Consolas', monospace;
+            padding: 15px;
+            border-radius: 8px;
+            white-space: pre-wrap;
+            font-size: 0.85rem;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .progress-bar {
+            height: 24px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--success));
+            transition: width 0.3s;
+        }
+
+        .registry-card {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 10px;
+        }
+
+        .registry-card.has-results { border-color: var(--success); }
+        .registry-card h4 { color: var(--primary); margin-bottom: 5px; }
+        .registry-card .count { font-size: 1.5rem; font-weight: bold; color: var(--success); }
+
+        .caveat-box {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+
+        .caveat-box i { color: var(--warning); margin-right: 8px; }
+
+        .info-box {
+            background: rgba(6, 182, 212, 0.1);
+            border: 1px solid var(--secondary);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+
+        .checkbox-group { display: flex; flex-wrap: wrap; gap: 15px; margin: 15px 0; }
+        .checkbox-group label { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; }
+
+        .grade-badge {
+            display: inline-block;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+
+        .grade-gold { background: linear-gradient(135deg, #ffd700, #ffb300); color: #000; }
+        .grade-silver { background: linear-gradient(135deg, #c0c0c0, #a0a0a0); color: #000; }
+        .grade-bronze { background: linear-gradient(135deg, #cd7f32, #b87333); color: #fff; }
+        .grade-needs-work { background: var(--danger); color: white; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 768px) {
+            .tabs { flex-direction: column; }
+            .tab-btn { border-radius: 8px; }
+            header h1 { font-size: 1.8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-search-plus"></i> Systematic Review Search Tool</h1>
+            <p>Multi-Registry Edition - Comprehensive RCT Search: CT.gov, PubMed, Europe PMC, EUCTR, ISRCTN, ANZCTR</p>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="picofinder"><i class="fas fa-bullseye"></i> PICO RCT Finder</button>
+            <button class="tab-btn" data-tab="search"><i class="fas fa-search"></i> CT.gov</button>
+            <button class="tab-btn" data-tab="pubmed"><i class="fas fa-book-medical"></i> PubMed</button>
+            <button class="tab-btn" data-tab="comprehensive"><i class="fas fa-layer-group"></i> Comprehensive</button>
+            <button class="tab-btn" data-tab="pico"><i class="fas fa-cubes"></i> PICO Generator</button>
+            <button class="tab-btn" data-tab="translator"><i class="fas fa-language"></i> Translator</button>
+            <button class="tab-btn" data-tab="press"><i class="fas fa-check-double"></i> PRESS</button>
+            <button class="tab-btn" data-tab="validate"><i class="fas fa-check-circle"></i> Validate</button>
+            <button class="tab-btn" data-tab="aact"><i class="fas fa-database"></i> AACT</button>
+            <button class="tab-btn" data-tab="mesh"><i class="fas fa-project-diagram"></i> MeSH</button>
+            <button class="tab-btn" data-tab="metrics"><i class="fas fa-chart-bar"></i> Metrics</button>
+            <button class="tab-btn" data-tab="export"><i class="fas fa-download"></i> Export</button>
+            <button class="tab-btn" data-tab="about"><i class="fas fa-info-circle"></i> About</button>
+        </div>
+
+        <!-- ======================= PICO RCT FINDER TAB ======================= -->
+        <div id="picofinder" class="tab-content active">
+            <h2><i class="fas fa-bullseye"></i> PICO RCT Finder</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Find RCTs in ClinicalTrials.gov/AACT matching your PICO criteria. Interactive term expansion with synonyms, spelling variants, and outcome suggestions.
+            </p>
+
+            <!-- Step indicator -->
+            <div class="step-indicator" style="display: flex; gap: 10px; margin-bottom: 25px;">
+                <div class="step-item active" id="step1Ind" style="flex:1; padding: 10px; background: var(--primary); border-radius: 8px; text-align: center;">
+                    <strong>1. Enter PICO</strong>
+                </div>
+                <div class="step-item" id="step2Ind" style="flex:1; padding: 10px; background: var(--bg-input); border-radius: 8px; text-align: center;">
+                    <strong>2. Refine Terms</strong>
+                </div>
+                <div class="step-item" id="step3Ind" style="flex:1; padding: 10px; background: var(--bg-input); border-radius: 8px; text-align: center;">
+                    <strong>3. Search</strong>
+                </div>
+                <div class="step-item" id="step4Ind" style="flex:1; padding: 10px; background: var(--bg-input); border-radius: 8px; text-align: center;">
+                    <strong>4. Results</strong>
+                </div>
+            </div>
+
+            <!-- STEP 1: Enter PICO -->
+            <div id="picoStep1" class="pico-step">
+                <div class="validation-panel">
+                    <h3><i class="fas fa-edit"></i> Step 1: Enter Your PICO Elements</h3>
+
+                    <div class="form-group">
+                        <label for="pf_population"><i class="fas fa-users" style="color: var(--primary);"></i> Population (P) - Who are the patients?</label>
+                        <input type="text" id="pf_population" placeholder="e.g., adults with type 2 diabetes, children with asthma, elderly with hypertension">
+                        <small style="color: var(--text-secondary);">Include age, condition, comorbidities if relevant</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pf_intervention"><i class="fas fa-pills" style="color: var(--success);"></i> Intervention (I) - What treatment/exposure?</label>
+                        <input type="text" id="pf_intervention" placeholder="e.g., metformin, cognitive behavioral therapy, laparoscopic surgery">
+                        <small style="color: var(--text-secondary);">Drug names, procedures, therapies, devices</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pf_comparator"><i class="fas fa-balance-scale" style="color: var(--warning);"></i> Comparator (C) - What is it compared to?</label>
+                        <input type="text" id="pf_comparator" placeholder="e.g., placebo, standard care, active comparator drug">
+                        <small style="color: var(--text-secondary);">Leave blank if any comparator is acceptable</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pf_outcome"><i class="fas fa-chart-line" style="color: var(--secondary);"></i> Outcome (O) - What are you measuring?</label>
+                        <input type="text" id="pf_outcome" placeholder="e.g., HbA1c, mortality, quality of life, hospitalization">
+                        <small style="color: var(--text-secondary);">Primary outcomes of interest</small>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pf_studyPhase">Study Phase (optional)</label>
+                            <select id="pf_studyPhase">
+                                <option value="">Any Phase</option>
+                                <option value="PHASE1">Phase 1</option>
+                                <option value="PHASE2">Phase 2</option>
+                                <option value="PHASE3">Phase 3</option>
+                                <option value="PHASE4">Phase 4</option>
+                                <option value="PHASE2,PHASE3">Phase 2/3</option>
+                                <option value="PHASE3,PHASE4">Phase 3/4</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pf_status">Study Status</label>
+                            <select id="pf_status">
+                                <option value="">Any Status</option>
+                                <option value="COMPLETED">Completed</option>
+                                <option value="RECRUITING,ACTIVE_NOT_RECRUITING">Active/Recruiting</option>
+                                <option value="COMPLETED,TERMINATED">Completed/Terminated</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="pf_dateFrom">Start Date From</label>
+                            <input type="number" id="pf_dateFrom" placeholder="e.g., 2015" min="1990" max="2026">
+                        </div>
+                    </div>
+
+                    <div class="button-group">
+                        <button class="btn btn-primary" onclick="picoExpandTerms()">
+                            <i class="fas fa-magic"></i> Expand Terms & Continue
+                        </button>
+                        <button class="btn btn-warning" onclick="loadPicoFinderExample()">
+                            <i class="fas fa-lightbulb"></i> Load Example
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 2: Refine Terms -->
+            <div id="picoStep2" class="pico-step hidden">
+                <div class="validation-panel">
+                    <h3><i class="fas fa-check-square"></i> Step 2: Review & Select Terms</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                        Select which synonyms, spelling variants, and related terms to include in your search. More terms = higher recall but more results to screen.
+                    </p>
+
+                    <!-- Population terms -->
+                    <div class="term-section" style="margin-bottom: 20px;">
+                        <h4 style="color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                            <i class="fas fa-users"></i> Population Terms
+                        </h4>
+                        <div id="pf_populationTerms" class="checkbox-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 10px;"></div>
+                    </div>
+
+                    <!-- Intervention terms -->
+                    <div class="term-section" style="margin-bottom: 20px;">
+                        <h4 style="color: var(--success); border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                            <i class="fas fa-pills"></i> Intervention Terms
+                        </h4>
+                        <div id="pf_interventionTerms" class="checkbox-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 10px;"></div>
+                    </div>
+
+                    <!-- Comparator terms -->
+                    <div class="term-section" style="margin-bottom: 20px;">
+                        <h4 style="color: var(--warning); border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                            <i class="fas fa-balance-scale"></i> Comparator Terms
+                        </h4>
+                        <div id="pf_comparatorTerms" class="checkbox-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 10px;"></div>
+                    </div>
+
+                    <!-- Outcome terms -->
+                    <div class="term-section" style="margin-bottom: 20px;">
+                        <h4 style="color: var(--secondary); border-bottom: 1px solid var(--border); padding-bottom: 8px;">
+                            <i class="fas fa-chart-line"></i> Outcome Terms
+                        </h4>
+                        <div id="pf_outcomeTerms" class="checkbox-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; margin-top: 10px;"></div>
+
+                        <div style="margin-top: 15px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Outcome Type Categories:</label>
+                            <div class="checkbox-group">
+                                <label><input type="checkbox" id="pf_outcomeEfficacy" checked> Efficacy/Effectiveness</label>
+                                <label><input type="checkbox" id="pf_outcomeSafety" checked> Safety/Adverse Events</label>
+                                <label><input type="checkbox" id="pf_outcomeQoL"> Quality of Life</label>
+                                <label><input type="checkbox" id="pf_outcomeMortality"> Mortality</label>
+                                <label><input type="checkbox" id="pf_outcomeBiomarker"> Biomarkers</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Add custom term -->
+                    <div class="form-row" style="margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border);">
+                        <div class="form-group" style="flex: 2;">
+                            <label>Add Custom Term</label>
+                            <input type="text" id="pf_customTerm" placeholder="Enter additional term to include">
+                        </div>
+                        <div class="form-group" style="flex: 1;">
+                            <label>Add To</label>
+                            <select id="pf_customTermType">
+                                <option value="population">Population</option>
+                                <option value="intervention">Intervention</option>
+                                <option value="comparator">Comparator</option>
+                                <option value="outcome">Outcome</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="flex: 0; align-self: flex-end;">
+                            <button class="btn btn-secondary" onclick="addCustomPicoTerm()">
+                                <i class="fas fa-plus"></i> Add
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="button-group" style="margin-top: 20px;">
+                        <button class="btn btn-secondary" onclick="picoGoToStep(1)">
+                            <i class="fas fa-arrow-left"></i> Back
+                        </button>
+                        <button class="btn btn-primary" onclick="picoRunSearch()">
+                            <i class="fas fa-search"></i> Search CT.gov & Generate AACT Query
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- STEP 3: Search Progress -->
+            <div id="picoStep3" class="pico-step hidden">
+                <div class="validation-panel">
+                    <h3><i class="fas fa-cog fa-spin"></i> Step 3: Searching...</h3>
+                    <div class="progress-bar" style="margin: 20px 0;">
+                        <div id="pf_progressBar" class="progress-fill" style="width: 0%;"></div>
+                    </div>
+                    <div id="pf_progressText" style="text-align: center; color: var(--text-secondary);">Initializing search...</div>
+                    <div class="log-area" id="pf_searchLog" style="margin-top: 15px; height: 150px;"></div>
+                </div>
+            </div>
+
+            <!-- STEP 4: Results -->
+            <div id="picoStep4" class="pico-step hidden">
+                <div class="validation-panel">
+                    <h3><i class="fas fa-check-circle" style="color: var(--success);"></i> Step 4: Results</h3>
+
+                    <!-- Summary stats -->
+                    <div class="results-summary" id="pf_resultsSummary" style="margin-bottom: 20px;"></div>
+
+                    <!-- Source breakdown -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-bottom: 20px;">
+                        <div class="registry-card" id="pf_ctgovCard">
+                            <h4><i class="fas fa-flask" style="color: var(--primary);"></i> ClinicalTrials.gov API</h4>
+                            <div class="count" id="pf_ctgovCount">0</div>
+                            <small style="color: var(--text-secondary);">Direct API results</small>
+                        </div>
+                        <div class="registry-card" id="pf_pubmedCard">
+                            <h4><i class="fas fa-book-medical" style="color: var(--success);"></i> PubMed Cross-Reference</h4>
+                            <div class="count" id="pf_pubmedCount">0</div>
+                            <small style="color: var(--text-secondary);">NCT IDs from literature</small>
+                        </div>
+                        <div class="registry-card" id="pf_aactCard">
+                            <h4><i class="fas fa-database" style="color: var(--warning);"></i> AACT SQL Query</h4>
+                            <div class="count" id="pf_aactStatus">Ready</div>
+                            <small style="color: var(--text-secondary);">For complete coverage</small>
+                        </div>
+                    </div>
+
+                    <!-- AACT SQL Query -->
+                    <div style="margin-bottom: 20px;">
+                        <h4><i class="fas fa-database"></i> AACT SQL Query (Copy and run in PostgreSQL)</h4>
+                        <div class="output-box" id="pf_aactSQL" style="max-height: 200px; font-size: 0.8rem;"></div>
+                        <button class="btn btn-secondary" style="margin-top: 10px;" onclick="copyAACTSQL()">
+                            <i class="fas fa-copy"></i> Copy SQL
+                        </button>
+                    </div>
+
+                    <!-- Results table -->
+                    <div style="margin-bottom: 20px;">
+                        <h4><i class="fas fa-list"></i> RCTs Found (<span id="pf_totalCount">0</span>)</h4>
+                        <div id="pf_resultsTable" style="max-height: 400px; overflow-y: auto;"></div>
+                    </div>
+
+                    <!-- Export options -->
+                    <div class="button-group">
+                        <button class="btn btn-secondary" onclick="picoGoToStep(2)">
+                            <i class="fas fa-arrow-left"></i> Refine Search
+                        </button>
+                        <button class="btn btn-success" onclick="exportPicoResults('csv')">
+                            <i class="fas fa-file-csv"></i> Export CSV
+                        </button>
+                        <button class="btn btn-primary" onclick="exportPicoResults('nct')">
+                            <i class="fas fa-download"></i> Export NCT IDs
+                        </button>
+                        <button class="btn btn-warning" onclick="picoStartNew()">
+                            <i class="fas fa-redo"></i> New Search
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="log-area" id="picoFinderLog" style="margin-top: 15px;"></div>
+        </div>
+
+        <!-- ======================= CT.GOV SEARCH TAB ======================= -->
+        <div id="search" class="tab-content">
+            <h2><i class="fas fa-flask"></i> Search ClinicalTrials.gov</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Free public API - No registration required
+            </p>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ctCondition">Condition/Disease</label>
+                    <input type="text" id="ctCondition" placeholder="e.g., diabetes, breast cancer">
+                </div>
+                <div class="form-group">
+                    <label for="ctIntervention">Intervention (optional)</label>
+                    <input type="text" id="ctIntervention" placeholder="e.g., metformin, chemotherapy">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="ctStudyType">Study Type</label>
+                    <select id="ctStudyType">
+                        <option value="">All Types</option>
+                        <option value="INTERVENTIONAL">Interventional</option>
+                        <option value="OBSERVATIONAL">Observational</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ctStatus">Status</label>
+                    <select id="ctStatus">
+                        <option value="">All Statuses</option>
+                        <option value="COMPLETED">Completed</option>
+                        <option value="RECRUITING">Recruiting</option>
+                        <option value="ACTIVE_NOT_RECRUITING">Active, Not Recruiting</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="ctPhase">Phase</label>
+                    <select id="ctPhase">
+                        <option value="">All Phases</option>
+                        <option value="PHASE3,PHASE4">Phase 3/4</option>
+                        <option value="PHASE2,PHASE3">Phase 2/3</option>
+                        <option value="PHASE1">Phase 1</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="ctSearchBtn" onclick="searchCTGov()">
+                    <i class="fas fa-search"></i> Search ClinicalTrials.gov
+                </button>
+                <button class="btn btn-secondary" onclick="clearCTResults()">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+
+            <div id="ctResults" class="hidden" style="margin-top: 20px;">
+                <div class="results-summary" id="ctSummary"></div>
+                <div id="ctTable"></div>
+            </div>
+
+            <div class="log-area" id="ctLog"></div>
+        </div>
+
+        <!-- ======================= PUBMED SEARCH TAB ======================= -->
+        <div id="pubmed" class="tab-content">
+            <h2><i class="fas fa-book-medical"></i> Search PubMed</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Free E-utilities API - API key optional (increases rate limit)
+            </p>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <strong>PubMed E-utilities:</strong> Free to use. Add your email for better rate limits.
+                Get an API key at <a href="https://www.ncbi.nlm.nih.gov/account/settings/" target="_blank" style="color: var(--secondary);">NCBI Account Settings</a> for 10 requests/sec (vs 3/sec without).
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pmQuery">Search Query</label>
+                    <input type="text" id="pmQuery" placeholder="e.g., diabetes AND metformin AND randomized controlled trial">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pmEmail">Your Email (recommended)</label>
+                    <input type="email" id="pmEmail" placeholder="your.email@example.com">
+                </div>
+                <div class="form-group">
+                    <label for="pmApiKey">API Key (optional)</label>
+                    <input type="text" id="pmApiKey" placeholder="Your NCBI API key (optional)">
+                </div>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pmMaxResults">Max Results</label>
+                    <input type="number" id="pmMaxResults" value="100" min="1" max="500">
+                </div>
+                <div class="form-group">
+                    <label for="pmDateFrom">Date From (optional)</label>
+                    <input type="text" id="pmDateFrom" placeholder="YYYY/MM/DD">
+                </div>
+                <div class="form-group">
+                    <label for="pmDateTo">Date To (optional)</label>
+                    <input type="text" id="pmDateTo" placeholder="YYYY/MM/DD">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="searchPubMed()">
+                    <i class="fas fa-search"></i> Search PubMed
+                </button>
+                <button class="btn btn-warning" onclick="loadPubMedExample()">
+                    <i class="fas fa-lightbulb"></i> Load Example
+                </button>
+            </div>
+
+            <div id="pmResults" class="hidden" style="margin-top: 20px;">
+                <div class="results-summary" id="pmSummary"></div>
+                <div id="pmTable"></div>
+            </div>
+
+            <div class="log-area" id="pmLog"></div>
+        </div>
+
+        <!-- ======================= MULTI-REGISTRY TAB ======================= -->
+        <div id="multiregistry" class="tab-content">
+            <h2><i class="fas fa-globe"></i> Multi-Registry Search</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Search multiple clinical trial registries simultaneously (all free public APIs)
+            </p>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <strong>Available Registries:</strong>
+                <ul style="margin: 10px 0 0 20px;">
+                    <li><strong>ClinicalTrials.gov</strong> - US registry, full API</li>
+                    <li><strong>EUCTR</strong> - EU Clinical Trials Register (web scraping)</li>
+                    <li><strong>ISRCTN</strong> - International Standard RCT Number registry</li>
+                    <li><strong>ANZCTR</strong> - Australia/New Zealand Clinical Trials</li>
+                </ul>
+            </div>
+
+            <div class="form-group">
+                <label for="mrQuery">Search Query</label>
+                <input type="text" id="mrQuery" placeholder="e.g., diabetes, breast cancer, COVID-19">
+            </div>
+
+            <div class="form-group">
+                <label>Select Registries to Search</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="mrCTGov" checked> ClinicalTrials.gov (Full API)</label>
+                    <label><input type="checkbox" id="mrEUCTR" checked> EUCTR - EU Trials</label>
+                    <label><input type="checkbox" id="mrISRCTN" checked> ISRCTN</label>
+                    <label><input type="checkbox" id="mrANZCTR" checked> ANZCTR</label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="searchMultiRegistry()">
+                    <i class="fas fa-globe"></i> Search All Selected Registries
+                </button>
+            </div>
+
+            <div id="mrProgress" class="hidden" style="margin-top: 20px;">
+                <h4>Search Progress</h4>
+                <div class="progress-bar">
+                    <div id="mrProgressBar" class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div id="mrProgressText">Searching...</div>
+            </div>
+
+            <div id="mrResults" class="hidden" style="margin-top: 20px;">
+                <h3>Registry Results</h3>
+                <div class="results-summary" id="mrSummary"></div>
+                <div id="mrRegistryCards"></div>
+                <div id="mrCombinedTable" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="log-area" id="mrLog"></div>
+        </div>
+
+        <!-- ======================= COMPREHENSIVE RCT SEARCH TAB ======================= -->
+        <div id="comprehensive" class="tab-content">
+            <h2><i class="fas fa-layer-group"></i> Comprehensive RCT Search</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Multi-source NCT ID discovery combining PubMed, Europe PMC, and ClinicalTrials.gov for maximum recall.
+            </p>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <strong>How it works:</strong> This search combines 4 data sources to find NCT IDs that might be missed by a single-source search:
+                <ol style="margin: 10px 0 0 20px;">
+                    <li><strong>PubMed Articles:</strong> Extracts NCT IDs from abstracts, AccessionNumbers, and ArticleIds</li>
+                    <li><strong>Europe PMC:</strong> Searches for NCT IDs in full-text articles</li>
+                    <li><strong>PubMed-CT.gov Linkage:</strong> Uses NCBI's direct database links</li>
+                    <li><strong>CT.gov API:</strong> Direct condition search</li>
+                </ol>
+            </div>
+
+            <div class="caveat-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Note:</strong> This comprehensive search improves recall from ~88% (CT.gov API alone) to higher levels by cross-referencing published literature. Results depend on how often trials cite their NCT IDs in publications.
+            </div>
+
+            <div class="form-group">
+                <label for="compCondition"><i class="fas fa-stethoscope"></i> Condition/Disease</label>
+                <input type="text" id="compCondition" placeholder="e.g., stroke, diabetes mellitus, breast cancer">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="compMaxPubMed">Max PubMed Articles</label>
+                    <input type="number" id="compMaxPubMed" value="500" min="100" max="2000">
+                </div>
+                <div class="form-group">
+                    <label for="compMaxEPMC">Max Europe PMC Results</label>
+                    <input type="number" id="compMaxEPMC" value="500" min="100" max="1000">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Data Sources to Search</label>
+                <div class="checkbox-group">
+                    <label><input type="checkbox" id="compPubMed" checked> PubMed Articles</label>
+                    <label><input type="checkbox" id="compEPMC" checked> Europe PMC</label>
+                    <label><input type="checkbox" id="compLinkage" checked> PubMed-CT.gov Linkage</label>
+                    <label><input type="checkbox" id="compCTGov" checked> CT.gov API Direct</label>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" id="compSearchBtn" onclick="runComprehensiveSearch()">
+                    <i class="fas fa-search-plus"></i> Run Comprehensive Search
+                </button>
+                <button class="btn btn-warning" onclick="loadCompExample()">
+                    <i class="fas fa-lightbulb"></i> Load Example
+                </button>
+                <button class="btn btn-secondary" onclick="clearCompResults()">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+
+            <div id="compProgress" class="hidden" style="margin-top: 20px;">
+                <h4>Search Progress</h4>
+                <div class="progress-bar">
+                    <div id="compProgressBar" class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div id="compProgressText">Starting comprehensive search...</div>
+            </div>
+
+            <div id="compResults" class="hidden" style="margin-top: 20px;">
+                <h3>Comprehensive Search Results</h3>
+                <div class="results-summary" id="compSummary"></div>
+
+                <h4 style="margin-top: 20px;">Source Breakdown</h4>
+                <div id="compSourceCards" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;"></div>
+
+                <h4 style="margin-top: 20px;">Unique NCT IDs Found (<span id="compUniqueCount">0</span>)</h4>
+                <div class="validation-panel">
+                    <div class="output-box" id="compNCTList" style="max-height: 300px;"></div>
+                </div>
+
+                <h4 style="margin-top: 20px;">NCT ID Source Matrix</h4>
+                <div id="compMatrix" style="max-height: 400px; overflow-y: auto;"></div>
+
+                <div class="button-group" style="margin-top: 15px;">
+                    <button class="btn btn-success" onclick="exportCompNCTs()">
+                        <i class="fas fa-download"></i> Export NCT IDs
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportCompMatrix()">
+                        <i class="fas fa-file-csv"></i> Export Source Matrix
+                    </button>
+                </div>
+            </div>
+
+            <div class="log-area" id="compLog"></div>
+        </div>
+
+        <!-- ======================= PICO GENERATOR TAB ======================= -->
+        <div id="pico" class="tab-content">
+            <h2><i class="fas fa-cubes"></i> PICO Search Generator</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Generate search strategies for ClinicalTrials.gov and PubMed from PICO elements.
+            </p>
+
+            <div class="caveat-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Limitation:</strong> Uses simple pattern matching. Always review and refine generated searches.
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="picoPopulation"><i class="fas fa-users"></i> Population (P)</label>
+                    <input type="text" id="picoPopulation" placeholder="e.g., adults with type 2 diabetes">
+                </div>
+                <div class="form-group">
+                    <label for="picoIntervention"><i class="fas fa-pills"></i> Intervention (I)</label>
+                    <input type="text" id="picoIntervention" placeholder="e.g., metformin">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="picoComparison"><i class="fas fa-balance-scale"></i> Comparison (C)</label>
+                    <input type="text" id="picoComparison" placeholder="e.g., placebo">
+                </div>
+                <div class="form-group">
+                    <label for="picoOutcome"><i class="fas fa-chart-line"></i> Outcome (O)</label>
+                    <input type="text" id="picoOutcome" placeholder="e.g., HbA1c, mortality">
+                </div>
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="picoStudyType">Study Type Filter</label>
+                    <select id="picoStudyType">
+                        <option value="">No filter</option>
+                        <option value="rct">RCT (Randomized Controlled Trials)</option>
+                        <option value="systematic_review">Systematic Reviews</option>
+                        <option value="observational">Observational Studies</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="picoDatabase">Target Database</label>
+                    <select id="picoDatabase">
+                        <option value="pubmed">PubMed</option>
+                        <option value="ctgov">ClinicalTrials.gov</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="generatePICOSearch()">
+                    <i class="fas fa-magic"></i> Generate Search Strategy
+                </button>
+                <button class="btn btn-warning" onclick="loadPICOExample()">
+                    <i class="fas fa-lightbulb"></i> Load Example
+                </button>
+            </div>
+
+            <div id="picoResults" class="hidden" style="margin-top: 20px;">
+                <h3><i class="fas fa-file-code"></i> Generated Search Strategy</h3>
+                <div class="output-box" id="picoOutput"></div>
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="copyToClipboard(document.getElementById('picoOutput').textContent)">
+                        <i class="fas fa-copy"></i> Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= TRANSLATOR TAB ======================= -->
+        <div id="translator" class="tab-content">
+            <h2><i class="fas fa-language"></i> Search Translator</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Translate search strategies between PubMed and ClinicalTrials.gov syntax.
+            </p>
+
+            <div class="caveat-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Note:</strong> Translations are approximate. Always verify syntax in the target database.
+            </div>
+
+            <div class="form-group">
+                <label for="sourceQuery">Source Search Query</label>
+                <textarea id="sourceQuery" rows="6" placeholder="Enter your search query here..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="sourceDatabase">Source Database</label>
+                    <select id="sourceDatabase">
+                        <option value="pubmed">PubMed</option>
+                        <option value="ctgov">ClinicalTrials.gov</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="targetDatabase">Target Database</label>
+                    <select id="targetDatabase">
+                        <option value="ctgov">ClinicalTrials.gov</option>
+                        <option value="pubmed">PubMed</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="translateQuery()">
+                    <i class="fas fa-exchange-alt"></i> Translate Query
+                </button>
+                <button class="btn btn-warning" onclick="loadTranslatorExample()">
+                    <i class="fas fa-lightbulb"></i> Load Example
+                </button>
+            </div>
+
+            <div id="translatorResults" class="hidden" style="margin-top: 20px;">
+                <h3><i class="fas fa-file-code"></i> Translated Query</h3>
+                <div class="output-box" id="translatedOutput"></div>
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="copyToClipboard(document.getElementById('translatedOutput').textContent)">
+                        <i class="fas fa-copy"></i> Copy to Clipboard
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ======================= PRESS VALIDATOR TAB ======================= -->
+        <div id="press" class="tab-content">
+            <h2><i class="fas fa-check-double"></i> PRESS 2015 Guidelines Validator</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Heuristic validation inspired by PRESS 2015 (Peer Review of Electronic Search Strategies).
+            </p>
+
+            <div class="caveat-box">
+                <i class="fas fa-exclamation-triangle"></i>
+                <strong>Important:</strong> This provides automated HEURISTIC scoring only.
+                It does NOT replace proper peer review by a librarian or information specialist.
+            </div>
+
+            <div class="form-group">
+                <label for="pressQuery">Search Query to Validate</label>
+                <textarea id="pressQuery" rows="6" placeholder="Paste your complete search strategy here..."></textarea>
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="pressDatabase">Target Database</label>
+                    <select id="pressDatabase">
+                        <option value="pubmed">PubMed</option>
+                        <option value="ctgov">ClinicalTrials.gov</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="pressPico">Key PICO terms (comma-separated)</label>
+                    <input type="text" id="pressPico" placeholder="e.g., diabetes, metformin, HbA1c">
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="validatePRESS()">
+                    <i class="fas fa-check-double"></i> Validate
+                </button>
+                <button class="btn btn-warning" onclick="loadPRESSExample()">
+                    <i class="fas fa-lightbulb"></i> Load Example
+                </button>
+            </div>
+
+            <div id="pressResults" class="hidden" style="margin-top: 20px;">
+                <div class="results-summary">
+                    <div class="stat-card">
+                        <div class="value" id="pressScore">0%</div>
+                        <div class="label">Heuristic Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div id="pressGrade" class="grade-badge">-</div>
+                        <div class="label" style="margin-top: 10px;">Grade</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" id="pressPassed">0/6</div>
+                        <div class="label">Elements Passed</div>
+                    </div>
+                </div>
+                <table class="results-table" id="pressTable">
+                    <thead><tr><th>PRESS Element</th><th>Score</th><th>Status</th><th>Issues</th></tr></thead>
+                    <tbody id="pressBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ======================= VALIDATE NCT TAB ======================= -->
+        <div id="validate" class="tab-content">
+            <h2><i class="fas fa-check-circle"></i> Validate NCT IDs</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Validate NCT IDs against ClinicalTrials.gov API.
+            </p>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <strong>API Recall vs Search Sensitivity:</strong> This tests whether known NCT IDs can be retrieved via the API.
+                This is NOT the same as search sensitivity (finding all relevant studies).
+            </div>
+
+            <div class="form-group">
+                <label for="nctInput">Enter NCT IDs (one per line or comma-separated)</label>
+                <textarea id="nctInput" rows="8" placeholder="NCT00000001&#10;NCT00000002&#10;NCT00000003"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="validateNCTs()">
+                    <i class="fas fa-check"></i> Validate NCT IDs
+                </button>
+                <button class="btn btn-warning" onclick="loadSampleNCTs()">
+                    <i class="fas fa-flask"></i> Load Sample Data
+                </button>
+            </div>
+
+            <div id="validateResults" class="hidden" style="margin-top: 20px;">
+                <div class="results-summary" id="validateSummary"></div>
+                <div id="validateTable"></div>
+            </div>
+
+            <div class="log-area" id="validateLog"></div>
+        </div>
+
+        <!-- ======================= AACT VALIDATION TAB ======================= -->
+        <div id="aact" class="tab-content">
+            <h2><i class="fas fa-database"></i> AACT Database Validation</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Validate NCT IDs with IndexedDB caching for faster re-validation. AACT provides 100% coverage of CT.gov data.
+            </p>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <strong>About AACT:</strong> The AACT database (aact-db.ctti-clinicaltrials.org) contains ALL ClinicalTrials.gov data with MeSH terms.
+                This tool validates via the CT.gov API and caches results locally for 24 hours.
+                <br><br>
+                <strong>For full AACT access:</strong> Register free at <a href="https://aact.ctti-clinicaltrials.org/users/sign_up" target="_blank" style="color: var(--secondary);">aact.ctti-clinicaltrials.org</a>
+            </div>
+
+            <div class="form-group">
+                <label for="aactNctInput">Enter NCT IDs (one per line, comma-separated, or paste from spreadsheet)</label>
+                <textarea id="aactNctInput" rows="8" placeholder="NCT00000001&#10;NCT00000002&#10;NCT00000003"></textarea>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="aactValidateBatch()">
+                    <i class="fas fa-check-double"></i> Validate Batch
+                </button>
+                <button class="btn btn-warning" onclick="aactLoadSample()">
+                    <i class="fas fa-flask"></i> Load Sample
+                </button>
+                <button class="btn btn-secondary" onclick="aactClearInput()">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+
+            <div id="aactProgress" class="hidden" style="margin-top: 20px;">
+                <h4>Validation Progress</h4>
+                <div class="progress-bar">
+                    <div id="aactProgressBar" class="progress-fill" style="width: 0%;"></div>
+                </div>
+                <div id="aactProgressText">0 / 0</div>
+            </div>
+
+            <div id="aactResults" class="hidden" style="margin-top: 20px;">
+                <h3>Validation Results</h3>
+                <div class="results-summary" id="aactSummary"></div>
+
+                <div class="button-group" style="margin: 15px 0;">
+                    <button class="btn btn-success" onclick="aactExportResults('csv')">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="aactExportResults('json')">
+                        <i class="fas fa-file-code"></i> Export JSON
+                    </button>
+                    <button class="btn btn-primary" onclick="aactExportResults('ris')">
+                        <i class="fas fa-file-alt"></i> Export RIS
+                    </button>
+                </div>
+
+                <div style="margin: 15px 0;">
+                    <input type="text" id="aactFilterInput" placeholder="Filter by NCT ID, title, status..."
+                           style="width: 300px;" oninput="aactFilterResults()">
+                    <select id="aactStatusFilter" onchange="aactFilterResults()" style="margin-left: 10px; padding: 8px;">
+                        <option value="">All Statuses</option>
+                        <option value="valid">Valid Only</option>
+                        <option value="invalid">Invalid Only</option>
+                    </select>
+                </div>
+
+                <div id="aactTable"></div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3><i class="fas fa-hdd"></i> Cache Management</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 10px;">
+                    Validated studies are cached locally (IndexedDB) for 24 hours.
+                </p>
+                <button class="btn btn-secondary" onclick="aactShowHistory()">
+                    <i class="fas fa-list"></i> Show Cached (<span id="aactCacheCount">0</span>)
+                </button>
+                <button class="btn btn-danger" onclick="aactClearCache()">
+                    <i class="fas fa-trash"></i> Clear Cache
+                </button>
+                <div id="aactHistory" class="hidden" style="margin-top: 15px;"></div>
+            </div>
+
+            <div class="log-area" id="aactLog"></div>
+        </div>
+
+        <!-- ======================= MESH EXPANSION TAB ======================= -->
+        <div id="mesh" class="tab-content">
+            <h2><i class="fas fa-project-diagram"></i> MeSH Term Expansion</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Expand medical terms using the NLM MeSH API to find synonyms and related concepts.
+            </p>
+
+            <div class="info-box">
+                <i class="fas fa-info-circle"></i>
+                <strong>MeSH (Medical Subject Headings):</strong> A controlled vocabulary thesaurus from the National Library of Medicine.
+                Use this to expand your search terms with synonyms, entry terms, and related concepts.
+            </div>
+
+            <div class="form-group">
+                <label for="meshTerm">Medical Term to Expand</label>
+                <input type="text" id="meshTerm" placeholder="e.g., diabetes mellitus, hypertension, breast cancer">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="meshMaxTerms">Max Terms to Return</label>
+                    <input type="number" id="meshMaxTerms" value="20" min="5" max="50">
+                </div>
+                <div class="form-group">
+                    <label for="meshIncludeChildren">Include Narrower Terms</label>
+                    <select id="meshIncludeChildren">
+                        <option value="true">Yes</option>
+                        <option value="false">No</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn btn-primary" onclick="expandMeSHTerm()">
+                    <i class="fas fa-expand-arrows-alt"></i> Expand Term
+                </button>
+                <button class="btn btn-warning" onclick="loadMeSHExample()">
+                    <i class="fas fa-lightbulb"></i> Load Example
+                </button>
+            </div>
+
+            <div id="meshResults" class="hidden" style="margin-top: 20px;">
+                <div class="results-summary" id="meshSummary"></div>
+
+                <div class="validation-panel">
+                    <h3><i class="fas fa-tags"></i> MeSH Terms Found</h3>
+                    <div id="meshTermsFound"></div>
+                </div>
+
+                <div class="validation-panel" style="margin-top: 15px;">
+                    <h3><i class="fas fa-list"></i> All Synonyms & Entry Terms</h3>
+                    <div id="meshSynonyms" class="output-box"></div>
+                </div>
+
+                <div class="validation-panel" style="margin-top: 15px;">
+                    <h3><i class="fas fa-search"></i> Generated Search Query</h3>
+                    <div id="meshQuery" class="output-box"></div>
+                    <div class="button-group" style="margin-top: 10px;">
+                        <button class="btn btn-success" onclick="copyToClipboard(document.getElementById('meshQuery').textContent)">
+                            <i class="fas fa-copy"></i> Copy Query
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="log-area" id="meshLog"></div>
+        </div>
+
+        <!-- ======================= METRICS TAB ======================= -->
+        <div id="metrics" class="tab-content">
+            <h2><i class="fas fa-chart-bar"></i> Metrics Calculator</h2>
+
+            <div class="validation-panel">
+                <h3>Wilson Score Confidence Intervals</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ciSuccesses">Successes</label>
+                        <input type="number" id="ciSuccesses" value="198" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="ciTotal">Total</label>
+                        <input type="number" id="ciTotal" value="200" min="1">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="calculateCI()">
+                    <i class="fas fa-calculator"></i> Calculate 95% CI
+                </button>
+                <div id="ciResult" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3>Full Metrics Calculator</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="metricTP">True Positives (TP)</label>
+                        <input type="number" id="metricTP" value="45" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="metricFP">False Positives (FP)</label>
+                        <input type="number" id="metricFP" value="955" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="metricFN">False Negatives (FN)</label>
+                        <input type="number" id="metricFN" value="5" min="0">
+                    </div>
+                </div>
+                <button class="btn btn-primary" onclick="calculateMetrics()">
+                    <i class="fas fa-calculator"></i> Calculate All Metrics
+                </button>
+                <div id="metricsResult" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- ======================= EXPORT TAB ======================= -->
+        <div id="export" class="tab-content">
+            <h2><i class="fas fa-download"></i> Export Study Data</h2>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="exportCondition">Condition</label>
+                    <input type="text" id="exportCondition" placeholder="e.g., diabetes">
+                </div>
+                <div class="form-group">
+                    <label for="exportLimit">Max Studies</label>
+                    <input type="number" id="exportLimit" value="100" min="1" max="500">
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="fetchForExport()">
+                <i class="fas fa-cloud-download-alt"></i> Fetch Studies from CT.gov
+            </button>
+
+            <div id="exportReady" class="hidden" style="margin-top: 20px;">
+                <h3>Export Options</h3>
+                <p id="exportCount" style="color: var(--text-secondary); margin-bottom: 15px;"></p>
+                <div class="button-group">
+                    <button class="btn btn-success" onclick="exportRIS()"><i class="fas fa-file-alt"></i> RIS</button>
+                    <button class="btn btn-warning" onclick="exportCSV()"><i class="fas fa-file-csv"></i> CSV</button>
+                    <button class="btn btn-secondary" onclick="exportJSON()"><i class="fas fa-file-code"></i> JSON</button>
+                </div>
+            </div>
+
+            <div class="log-area" id="exportLog"></div>
+        </div>
+
+        <!-- ======================= ABOUT TAB ======================= -->
+        <div id="about" class="tab-content">
+            <h2><i class="fas fa-info-circle"></i> About This Tool</h2>
+
+            <div class="validation-panel">
+                <h3>Free Public APIs Used</h3>
+                <table class="results-table">
+                    <thead><tr><th>Database</th><th>API</th><th>Key Required</th><th>Notes</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>ClinicalTrials.gov</strong></td><td>Full REST API</td><td>No</td><td>US clinical trials registry</td></tr>
+                        <tr><td><strong>PubMed</strong></td><td>E-utilities</td><td>Optional*</td><td>*API key increases rate limit to 10/sec</td></tr>
+                        <tr><td><strong>EUCTR</strong></td><td>Web Search</td><td>No</td><td>EU Clinical Trials Register</td></tr>
+                        <tr><td><strong>ISRCTN</strong></td><td>Search API</td><td>No</td><td>International RCT registry</td></tr>
+                        <tr><td><strong>ANZCTR</strong></td><td>Search API</td><td>No</td><td>Australia/NZ trials</td></tr>
+                        <tr><td><strong>NLM MeSH</strong></td><td>Lookup + SPARQL</td><td>No</td><td>Medical Subject Headings term expansion</td></tr>
+                        <tr><td><strong>Europe PMC</strong></td><td>REST API</td><td>No</td><td>European literature search (used in Comprehensive RCT)</td></tr>
+                        <tr><td><strong>AACT</strong></td><td>PostgreSQL</td><td>Free registration</td><td>Full CT.gov database with MeSH terms</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3>AACT Database Access</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    For 100% coverage of ClinicalTrials.gov data (including MeSH terms), register for free AACT access:
+                </p>
+                <ul style="margin-left: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                    <li><strong>Registration:</strong> <a href="https://aact.ctti-clinicaltrials.org/users/sign_up" target="_blank" style="color: var(--secondary);">aact.ctti-clinicaltrials.org</a></li>
+                    <li><strong>Host:</strong> aact-db.ctti-clinicaltrials.org</li>
+                    <li><strong>Port:</strong> 5432 (PostgreSQL)</li>
+                    <li><strong>Database:</strong> aact</li>
+                </ul>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3>Comprehensive RCT Search</h3>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                    The <strong>Comprehensive RCT</strong> tab combines 4 data sources to maximize recall:
+                </p>
+                <ol style="margin-left: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                    <li><strong>PubMed Articles:</strong> Extracts NCT IDs mentioned in abstracts, AccessionNumbers, and ArticleIds</li>
+                    <li><strong>Europe PMC:</strong> Searches European literature for NCT ID mentions</li>
+                    <li><strong>PubMed-CT.gov Linkage:</strong> Uses NCBI's elink to find direct database connections</li>
+                    <li><strong>CT.gov API:</strong> Direct condition-based search</li>
+                </ol>
+                <p style="color: var(--text-secondary); font-size: 0.9rem; margin-top: 10px;">
+                    This approach can improve recall from ~88% (CT.gov API alone) to higher levels for conditions where trials have published results.
+                </p>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3>Important Terminology</h3>
+                <table class="results-table">
+                    <thead><tr><th>Term</th><th>Definition</th></tr></thead>
+                    <tbody>
+                        <tr><td><strong>API Recall</strong></td><td>% of known IDs retrievable via API (validated at 99%)</td></tr>
+                        <tr><td><strong>Search Sensitivity</strong></td><td>% of ALL relevant studies found - requires human screening</td></tr>
+                        <tr><td><strong>PRESS 2015</strong></td><td>Qualitative peer review framework - heuristic scoring here</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3>References</h3>
+                <ul style="margin-left: 20px; color: var(--text-secondary); font-size: 0.9rem;">
+                    <li>McGowan J, et al. PRESS 2015 Guideline Statement. J Clin Epidemiol. 2016</li>
+                    <li>Lefebvre C, et al. Cochrane Handbook Chapter 4, v6.5, 2024</li>
+                    <li>NCBI E-utilities Documentation</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <script>
+// =============================================================================
+// API CONFIGURATION
+// =============================================================================
+const APIS = {
+    ctgov: 'https://clinicaltrials.gov/api/v2/studies',
+    pubmed: {
+        search: 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi',
+        fetch: 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi',
+        summary: 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi'
+    },
+    euctr: 'https://www.clinicaltrialsregister.eu/ctr-search/search',
+    isrctn: 'https://www.isrctn.com/api/query/search',
+    anzctr: 'https://www.anzctr.org.au/TrialSearch.aspx'
+};
+
+const CORS_PROXY = 'https://corsproxy.io/?';
+
+// Sample Cochrane NCT IDs
+const SAMPLE_NCTS = [
+    "NCT02963883", "NCT02644395", "NCT00071032", "NCT01484639", "NCT03407573",
+    "NCT01461850", "NCT01116479", "NCT00765869", "NCT02527005", "NCT01346774",
+    "NCT03377322", "NCT04451096", "NCT00814255", "NCT01613118", "NCT03493685"
+];
+
+// Medical abbreviations
+const ABBREVIATIONS = {
+    "T2DM": ["type 2 diabetes mellitus", "type 2 diabetes"],
+    "T1DM": ["type 1 diabetes mellitus", "type 1 diabetes"],
+    "MI": ["myocardial infarction", "heart attack"],
+    "CHF": ["congestive heart failure", "heart failure"],
+    "COPD": ["chronic obstructive pulmonary disease"],
+    "HTN": ["hypertension", "high blood pressure"],
+    "CAD": ["coronary artery disease"],
+    "DVT": ["deep vein thrombosis"],
+    "AF": ["atrial fibrillation"],
+    "RA": ["rheumatoid arthritis"],
+    "NSCLC": ["non-small cell lung cancer"],
+    "CRC": ["colorectal cancer"]
+};
+
+// Study type filters
+const STUDY_FILTERS = {
+    rct: {
+        pubmed: ["randomized controlled trial[pt]", "randomized[tiab]", "randomised[tiab]", "placebo[tiab]", "randomly[tiab]"],
+        ctgov: ['AREA[DesignAllocation] "Randomized"']
+    },
+    systematic_review: {
+        pubmed: ["systematic review[pt]", "meta-analysis[pt]", "systematic review[tiab]"]
+    },
+    observational: {
+        pubmed: ["cohort studies[mh]", "case-control studies[mh]", "observational study[pt]"],
+        ctgov: ['AREA[StudyType] "Observational"']
+    }
+};
+
+// Global state
+let currentStudies = [];
+let pubmedResults = [];
+let multiRegistryResults = {};
+
+// =============================================================================
+// UTILITY FUNCTIONS
+// =============================================================================
+function log(logId, message, type = 'info') {
+    const logArea = document.getElementById(logId);
+    if (!logArea) return;
+    const timestamp = new Date().toLocaleTimeString();
+    const color = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#0f0';
+    logArea.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+    logArea.scrollTop = logArea.scrollHeight;
+}
+
+function wilsonCI(successes, total) {
+    if (total === 0) return [0, 0];
+    const p = successes / total;
+    const z = 1.96;
+    const denominator = 1 + z * z / total;
+    const center = (p + z * z / (2 * total)) / denominator;
+    const margin = z * Math.sqrt((p * (1 - p) + z * z / (4 * total)) / total) / denominator;
+    return [Math.max(0, center - margin), Math.min(1, center + margin)];
+}
+
+function expandTerms(terms) {
+    const expanded = new Set(terms);
+    terms.forEach(term => {
+        const upper = term.toUpperCase();
+        if (ABBREVIATIONS[upper]) {
+            ABBREVIATIONS[upper].forEach(exp => expanded.add(exp));
+        }
+        if (term.length >= 5 && !term.includes(' ')) {
+            expanded.add(term + '*');
+        }
+    });
+    return Array.from(expanded);
+}
+
+function copyToClipboard(text) {
+    navigator.clipboard.writeText(text).then(() => alert('Copied!'));
+}
+
+// =============================================================================
+// TAB NAVIGATION
+// =============================================================================
+document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById(btn.dataset.tab).classList.add('active');
+    });
+});
+
+// =============================================================================
+// CLINICALTRIALS.GOV SEARCH
+// =============================================================================
+async function searchCTGov() {
+    const condition = document.getElementById('ctCondition').value.trim();
+    if (!condition) { alert('Please enter a condition'); return; }
+
+    const btn = document.getElementById('ctSearchBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+
+    try {
+        let url = `${APIS.ctgov}?query.cond=${encodeURIComponent(condition)}&pageSize=100`;
+
+        const studyType = document.getElementById('ctStudyType').value;
+        const status = document.getElementById('ctStatus').value;
+        const phase = document.getElementById('ctPhase').value;
+
+        if (studyType) url += `&filter.overallStatus=${status}`;
+        if (status) url += `&filter.overallStatus=${status}`;
+        if (phase) url += `&filter.phase=${phase}`;
+
+        log('ctLog', `Searching CT.gov for: ${condition}`);
+
+        const response = await fetch(url);
+        const data = await response.json();
+        currentStudies = data.studies || [];
+
+        log('ctLog', `Found ${data.totalCount || 0} studies`, 'success');
+        displayCTResults(data);
+    } catch (error) {
+        log('ctLog', `Error: ${error.message}`, 'error');
+    } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-search"></i> Search ClinicalTrials.gov';
+    }
+}
+
+function displayCTResults(data) {
+    document.getElementById('ctResults').classList.remove('hidden');
+    document.getElementById('ctSummary').innerHTML = `
+        <div class="stat-card"><div class="value">${data.totalCount?.toLocaleString() || 0}</div><div class="label">Total Studies</div></div>
+        <div class="stat-card"><div class="value">${currentStudies.length}</div><div class="label">Retrieved</div></div>
+    `;
+
+    let html = '<table class="results-table"><thead><tr><th>NCT ID</th><th>Title</th><th>Status</th><th>Phase</th></tr></thead><tbody>';
+    currentStudies.slice(0, 50).forEach(s => {
+        const ps = s.protocolSection || {};
+        const id = ps.identificationModule || {};
+        const st = ps.statusModule || {};
+        const d = ps.designModule || {};
+        html += `<tr>
+            <td><a href="https://clinicaltrials.gov/study/${id.nctId}" target="_blank">${id.nctId}</a></td>
+            <td>${(id.briefTitle || '').substring(0, 60)}...</td>
+            <td>${st.overallStatus || '-'}</td>
+            <td>${(d.phases || []).join(', ') || '-'}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('ctTable').innerHTML = html;
+}
+
+function clearCTResults() {
+    document.getElementById('ctResults').classList.add('hidden');
+    document.getElementById('ctLog').innerHTML = '';
+    currentStudies = [];
+}
+
+// =============================================================================
+// PUBMED SEARCH (E-utilities API)
+// =============================================================================
+async function searchPubMed() {
+    const query = document.getElementById('pmQuery').value.trim();
+    if (!query) { alert('Please enter a search query'); return; }
+
+    const email = document.getElementById('pmEmail').value.trim();
+    const apiKey = document.getElementById('pmApiKey').value.trim();
+    const maxResults = parseInt(document.getElementById('pmMaxResults').value) || 100;
+
+    log('pmLog', `Searching PubMed for: ${query}`);
+
+    try {
+        // Step 1: ESearch to get PMIDs
+        let searchUrl = `${APIS.pubmed.search}?db=pubmed&term=${encodeURIComponent(query)}&retmax=${maxResults}&retmode=json`;
+        if (email) searchUrl += `&email=${encodeURIComponent(email)}`;
+        if (apiKey) searchUrl += `&api_key=${apiKey}`;
+
+        const dateFrom = document.getElementById('pmDateFrom').value;
+        const dateTo = document.getElementById('pmDateTo').value;
+        if (dateFrom) searchUrl += `&mindate=${dateFrom}&datetype=pdat`;
+        if (dateTo) searchUrl += `&maxdate=${dateTo}`;
+
+        log('pmLog', 'Step 1: Searching for PMIDs...');
+        const searchResponse = await fetch(searchUrl);
+        const searchData = await searchResponse.json();
+
+        const pmids = searchData.esearchresult?.idlist || [];
+        const totalCount = parseInt(searchData.esearchresult?.count) || 0;
+
+        log('pmLog', `Found ${totalCount} total, retrieved ${pmids.length} PMIDs`, 'success');
+
+        if (pmids.length === 0) {
+            document.getElementById('pmResults').classList.remove('hidden');
+            document.getElementById('pmSummary').innerHTML = `
+                <div class="stat-card"><div class="value">0</div><div class="label">Results</div></div>
+            `;
+            document.getElementById('pmTable').innerHTML = '<p>No results found.</p>';
+            return;
+        }
+
+        // Step 2: ESummary to get article details
+        log('pmLog', 'Step 2: Fetching article details...');
+        let summaryUrl = `${APIS.pubmed.summary}?db=pubmed&id=${pmids.join(',')}&retmode=json`;
+        if (email) summaryUrl += `&email=${encodeURIComponent(email)}`;
+        if (apiKey) summaryUrl += `&api_key=${apiKey}`;
+
+        const summaryResponse = await fetch(summaryUrl);
+        const summaryData = await summaryResponse.json();
+
+        pubmedResults = [];
+        const results = summaryData.result || {};
+        pmids.forEach(pmid => {
+            if (results[pmid]) {
+                pubmedResults.push({
+                    pmid: pmid,
+                    title: results[pmid].title || '',
+                    authors: results[pmid].authors?.map(a => a.name).join(', ') || '',
+                    journal: results[pmid].fulljournalname || results[pmid].source || '',
+                    year: results[pmid].pubdate?.split(' ')[0] || '',
+                    doi: results[pmid].elocationid || ''
+                });
+            }
+        });
+
+        log('pmLog', `Retrieved details for ${pubmedResults.length} articles`, 'success');
+        displayPubMedResults(totalCount);
+
+    } catch (error) {
+        log('pmLog', `Error: ${error.message}`, 'error');
+    }
+}
+
+function displayPubMedResults(totalCount) {
+    document.getElementById('pmResults').classList.remove('hidden');
+    document.getElementById('pmSummary').innerHTML = `
+        <div class="stat-card"><div class="value">${totalCount.toLocaleString()}</div><div class="label">Total Results</div></div>
+        <div class="stat-card"><div class="value">${pubmedResults.length}</div><div class="label">Retrieved</div></div>
+    `;
+
+    let html = '<table class="results-table"><thead><tr><th>PMID</th><th>Title</th><th>Authors</th><th>Journal</th><th>Year</th></tr></thead><tbody>';
+    pubmedResults.slice(0, 50).forEach(r => {
+        html += `<tr>
+            <td><a href="https://pubmed.ncbi.nlm.nih.gov/${r.pmid}" target="_blank">${r.pmid}</a></td>
+            <td>${r.title.substring(0, 60)}${r.title.length > 60 ? '...' : ''}</td>
+            <td>${r.authors.substring(0, 30)}${r.authors.length > 30 ? '...' : ''}</td>
+            <td>${r.journal.substring(0, 25)}${r.journal.length > 25 ? '...' : ''}</td>
+            <td>${r.year}</td>
+        </tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('pmTable').innerHTML = html;
+}
+
+function loadPubMedExample() {
+    document.getElementById('pmQuery').value = 'diabetes[mesh] AND metformin[tiab] AND randomized controlled trial[pt]';
+}
+
+// =============================================================================
+// MULTI-REGISTRY SEARCH
+// =============================================================================
+async function searchMultiRegistry() {
+    const query = document.getElementById('mrQuery').value.trim();
+    if (!query) { alert('Please enter a search query'); return; }
+
+    multiRegistryResults = {};
+    const registries = [];
+
+    if (document.getElementById('mrCTGov').checked) registries.push('ctgov');
+    if (document.getElementById('mrEUCTR').checked) registries.push('euctr');
+    if (document.getElementById('mrISRCTN').checked) registries.push('isrctn');
+    if (document.getElementById('mrANZCTR').checked) registries.push('anzctr');
+
+    if (registries.length === 0) { alert('Please select at least one registry'); return; }
+
+    document.getElementById('mrProgress').classList.remove('hidden');
+    document.getElementById('mrResults').classList.add('hidden');
+
+    let completed = 0;
+    const total = registries.length;
+
+    for (const registry of registries) {
+        document.getElementById('mrProgressText').textContent = `Searching ${registry.toUpperCase()}...`;
+        document.getElementById('mrProgressBar').style.width = `${(completed / total) * 100}%`;
+
+        try {
+            const results = await searchRegistry(registry, query);
+            multiRegistryResults[registry] = results;
+            log('mrLog', `${registry.toUpperCase()}: Found ${results.count} results`, 'success');
+        } catch (error) {
+            log('mrLog', `${registry.toUpperCase()}: Error - ${error.message}`, 'error');
+            multiRegistryResults[registry] = { count: 0, studies: [], error: error.message };
+        }
+
+        completed++;
+        document.getElementById('mrProgressBar').style.width = `${(completed / total) * 100}%`;
+        await new Promise(r => setTimeout(r, 500)); // Rate limiting
+    }
+
+    document.getElementById('mrProgress').classList.add('hidden');
+    displayMultiRegistryResults();
+}
+
+async function searchRegistry(registry, query) {
+    switch (registry) {
+        case 'ctgov':
+            return await searchCTGovRegistry(query);
+        case 'euctr':
+            return await searchEUCTR(query);
+        case 'isrctn':
+            return await searchISRCTN(query);
+        case 'anzctr':
+            return await searchANZCTR(query);
+        default:
+            throw new Error('Unknown registry');
+    }
+}
+
+async function searchCTGovRegistry(query) {
+    const url = `${APIS.ctgov}?query.cond=${encodeURIComponent(query)}&pageSize=50&countTotal=true`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    return {
+        count: data.totalCount || 0,
+        studies: (data.studies || []).slice(0, 20).map(s => ({
+            id: s.protocolSection?.identificationModule?.nctId || '',
+            title: s.protocolSection?.identificationModule?.briefTitle || '',
+            status: s.protocolSection?.statusModule?.overallStatus || '',
+            registry: 'ClinicalTrials.gov',
+            url: `https://clinicaltrials.gov/study/${s.protocolSection?.identificationModule?.nctId}`
+        }))
+    };
+}
+
+async function searchEUCTR(query) {
+    // EUCTR doesn't have a public JSON API, so we provide link
+    log('mrLog', 'EUCTR: No direct API - providing search link');
+    return {
+        count: 'N/A',
+        studies: [],
+        searchUrl: `https://www.clinicaltrialsregister.eu/ctr-search/search?query=${encodeURIComponent(query)}`,
+        note: 'EUCTR requires manual search - click link below'
+    };
+}
+
+async function searchISRCTN(query) {
+    // ISRCTN has limited API
+    try {
+        const url = `${CORS_PROXY}${encodeURIComponent(`https://www.isrctn.com/search?q=${encodeURIComponent(query)}&format=json`)}`;
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            return {
+                count: 'N/A',
+                studies: [],
+                searchUrl: `https://www.isrctn.com/search?q=${encodeURIComponent(query)}`,
+                note: 'ISRCTN API limited - use search link'
+            };
+        }
+
+        const text = await response.text();
+        // Parse if valid JSON
+        try {
+            const data = JSON.parse(text);
+            return {
+                count: data.totalResults || 0,
+                studies: (data.results || []).slice(0, 10).map(r => ({
+                    id: r.isrctn || '',
+                    title: r.title || '',
+                    status: r.recruitmentStatus || '',
+                    registry: 'ISRCTN',
+                    url: `https://www.isrctn.com/${r.isrctn}`
+                }))
+            };
+        } catch {
+            return {
+                count: 'N/A',
+                studies: [],
+                searchUrl: `https://www.isrctn.com/search?q=${encodeURIComponent(query)}`,
+                note: 'ISRCTN API limited'
+            };
+        }
+    } catch (error) {
+        return {
+            count: 'N/A',
+            studies: [],
+            searchUrl: `https://www.isrctn.com/search?q=${encodeURIComponent(query)}`,
+            note: 'Use manual search'
+        };
+    }
+}
+
+async function searchANZCTR(query) {
+    // ANZCTR has limited API access
+    return {
+        count: 'N/A',
+        studies: [],
+        searchUrl: `https://www.anzctr.org.au/TrialSearch.aspx#&&conditionCode=&dateOfRegistrationFrom=&dateOfRegistrationTo=&interventionDescription=&interventionCodeOperator=OR&primarySponsorType=&countryRecruitment=&recruitmentCountryOperator=OR&recruitmentStatus=&searchTxt=${encodeURIComponent(query)}&isBasic=True`,
+        note: 'ANZCTR requires manual search - click link below'
+    };
+}
+
+function displayMultiRegistryResults() {
+    document.getElementById('mrResults').classList.remove('hidden');
+
+    let totalCount = 0;
+    let registriesSearched = 0;
+
+    let cardsHTML = '<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px;">';
+
+    Object.entries(multiRegistryResults).forEach(([registry, data]) => {
+        registriesSearched++;
+        const hasResults = typeof data.count === 'number' && data.count > 0;
+        if (hasResults) totalCount += data.count;
+
+        const registryNames = {
+            ctgov: 'ClinicalTrials.gov',
+            euctr: 'EU Clinical Trials',
+            isrctn: 'ISRCTN',
+            anzctr: 'ANZCTR'
+        };
+
+        cardsHTML += `
+            <div class="registry-card ${hasResults ? 'has-results' : ''}">
+                <h4>${registryNames[registry] || registry}</h4>
+                <div class="count">${data.count}</div>
+                ${data.searchUrl ? `<a href="${data.searchUrl}" target="_blank" style="color: var(--secondary);">Open Search <i class="fas fa-external-link-alt"></i></a>` : ''}
+                ${data.note ? `<p style="font-size: 0.8rem; color: var(--text-secondary);">${data.note}</p>` : ''}
+                ${data.error ? `<p style="font-size: 0.8rem; color: var(--danger);">${data.error}</p>` : ''}
+            </div>
+        `;
+    });
+
+    cardsHTML += '</div>';
+
+    document.getElementById('mrSummary').innerHTML = `
+        <div class="stat-card"><div class="value">${registriesSearched}</div><div class="label">Registries Searched</div></div>
+        <div class="stat-card"><div class="value">${totalCount > 0 ? totalCount.toLocaleString() : 'N/A'}</div><div class="label">Total Results</div></div>
+    `;
+
+    document.getElementById('mrRegistryCards').innerHTML = cardsHTML;
+
+    // Combined results table (only CT.gov has full data)
+    const ctgovResults = multiRegistryResults.ctgov;
+    if (ctgovResults && ctgovResults.studies && ctgovResults.studies.length > 0) {
+        let tableHTML = '<h4 style="margin-top: 20px;">ClinicalTrials.gov Results (Sample)</h4>';
+        tableHTML += '<table class="results-table"><thead><tr><th>ID</th><th>Title</th><th>Status</th><th>Registry</th></tr></thead><tbody>';
+
+        ctgovResults.studies.slice(0, 20).forEach(s => {
+            tableHTML += `<tr>
+                <td><a href="${s.url}" target="_blank">${s.id}</a></td>
+                <td>${s.title.substring(0, 50)}...</td>
+                <td>${s.status}</td>
+                <td>${s.registry}</td>
+            </tr>`;
+        });
+
+        tableHTML += '</tbody></table>';
+        document.getElementById('mrCombinedTable').innerHTML = tableHTML;
+    }
+}
+
+// =============================================================================
+// PICO GENERATOR
+// =============================================================================
+function generatePICOSearch() {
+    const population = document.getElementById('picoPopulation').value.trim();
+    const intervention = document.getElementById('picoIntervention').value.trim();
+    const comparison = document.getElementById('picoComparison').value.trim();
+    const outcome = document.getElementById('picoOutcome').value.trim();
+    const studyType = document.getElementById('picoStudyType').value;
+    const database = document.getElementById('picoDatabase').value;
+
+    if (!population || !intervention) {
+        alert('Population and Intervention are required');
+        return;
+    }
+
+    const lines = [];
+    let lineNum = 1;
+
+    // Population
+    const popTerms = expandTerms(population.split(/[,;]+/).map(t => t.trim()).filter(Boolean));
+    lines.push(`#${lineNum} ${buildBlock(popTerms, database)}`);
+    lineNum++;
+
+    // Intervention
+    const intTerms = expandTerms(intervention.split(/[,;]+/).map(t => t.trim()).filter(Boolean));
+    lines.push(`#${lineNum} ${buildBlock(intTerms, database)}`);
+    lineNum++;
+
+    // Comparison
+    if (comparison) {
+        const compTerms = expandTerms(comparison.split(/[,;]+/).map(t => t.trim()).filter(Boolean));
+        lines.push(`#${lineNum} ${buildBlock(compTerms, database)}`);
+        lineNum++;
+    }
+
+    // Outcome
+    if (outcome) {
+        const outTerms = expandTerms(outcome.split(/[,;]+/).map(t => t.trim()).filter(Boolean));
+        lines.push(`#${lineNum} ${buildBlock(outTerms, database)}`);
+        lineNum++;
+    }
+
+    // Combine
+    const combineRefs = Array.from({length: lineNum - 1}, (_, i) => `#${i + 1}`).join(' AND ');
+    lines.push(`#${lineNum} ${combineRefs}`);
+    const combinedLine = lineNum;
+    lineNum++;
+
+    // Study filter
+    if (studyType && STUDY_FILTERS[studyType] && STUDY_FILTERS[studyType][database]) {
+        const filterTerms = STUDY_FILTERS[studyType][database];
+        lines.push(`#${lineNum} ${filterTerms.join(' OR ')}`);
+        lines.push(`#${lineNum + 1} #${combinedLine} AND #${lineNum}`);
+    }
+
+    document.getElementById('picoOutput').textContent = lines.join('\n');
+    document.getElementById('picoResults').classList.remove('hidden');
+}
+
+function buildBlock(terms, database) {
+    const parts = terms.map(term => {
+        if (database === 'pubmed') {
+            return term.endsWith('*') ? `${term}[tiab]` : `"${term}"[tiab] OR "${term}"[mesh]`;
+        } else {
+            return `AREA[ConditionSearch] "${term}"`;
+        }
+    });
+    return '(' + parts.join(' OR ') + ')';
+}
+
+function loadPICOExample() {
+    document.getElementById('picoPopulation').value = 'adults with type 2 diabetes, T2DM';
+    document.getElementById('picoIntervention').value = 'metformin';
+    document.getElementById('picoComparison').value = 'placebo';
+    document.getElementById('picoOutcome').value = 'HbA1c, mortality';
+    document.getElementById('picoStudyType').value = 'rct';
+}
+
+// =============================================================================
+// TRANSLATOR
+// =============================================================================
+function translateQuery() {
+    const source = document.getElementById('sourceQuery').value.trim();
+    const sourceDb = document.getElementById('sourceDatabase').value;
+    const targetDb = document.getElementById('targetDatabase').value;
+
+    if (!source) { alert('Please enter a source query'); return; }
+
+    let translated = source;
+
+    if (sourceDb === 'pubmed' && targetDb === 'ctgov') {
+        translated = source
+            .replace(/\[tiab\]/gi, '')
+            .replace(/\[mesh\]/gi, '')
+            .replace(/\[mh\]/gi, '')
+            .replace(/\[pt\]/gi, '')
+            .replace(/\[tw\]/gi, '');
+    } else if (sourceDb === 'ctgov' && targetDb === 'pubmed') {
+        translated = source
+            .replace(/AREA\[ConditionSearch\]/gi, '')
+            .replace(/AREA\[InterventionSearch\]/gi, '');
+    }
+
+    document.getElementById('translatedOutput').textContent = translated + '\n\n/* Note: Always verify translated syntax in target database */';
+    document.getElementById('translatorResults').classList.remove('hidden');
+}
+
+function loadTranslatorExample() {
+    document.getElementById('sourceQuery').value = `#1 "diabetes mellitus"[tiab] OR "diabetes"[mesh]
+#2 "metformin"[tiab] OR "biguanide"[tiab]
+#3 randomized controlled trial[pt]
+#4 #1 AND #2 AND #3`;
+    document.getElementById('sourceDatabase').value = 'pubmed';
+    document.getElementById('targetDatabase').value = 'ctgov';
+}
+
+// =============================================================================
+// PRESS VALIDATOR
+// =============================================================================
+function validatePRESS() {
+    const query = document.getElementById('pressQuery').value.trim();
+    if (!query) { alert('Please enter a query'); return; }
+
+    const picoTerms = document.getElementById('pressPico').value.split(',').map(t => t.trim().toLowerCase()).filter(Boolean);
+
+    const elements = {
+        translation: validateTranslation(query, picoTerms),
+        boolean: validateBoolean(query),
+        subject_headings: validateSubjectHeadings(query),
+        text_words: validateTextWords(query),
+        spelling: validateSpelling(query),
+        limits: validateLimits(query)
+    };
+
+    const weights = { translation: 0.25, boolean: 0.20, subject_headings: 0.15, text_words: 0.20, spelling: 0.10, limits: 0.10 };
+    let totalScore = 0;
+    Object.entries(elements).forEach(([k, v]) => totalScore += v.score * weights[k]);
+
+    const score = Math.round(totalScore * 100);
+    const passed = Object.values(elements).filter(e => e.passed).length;
+
+    document.getElementById('pressScore').textContent = `${score}%`;
+    document.getElementById('pressPassed').textContent = `${passed}/6`;
+
+    let grade, gradeClass;
+    if (score >= 85) { grade = 'Gold'; gradeClass = 'grade-gold'; }
+    else if (score >= 70) { grade = 'Silver'; gradeClass = 'grade-silver'; }
+    else if (score >= 50) { grade = 'Bronze'; gradeClass = 'grade-bronze'; }
+    else { grade = 'Needs Work'; gradeClass = 'grade-needs-work'; }
+
+    document.getElementById('pressGrade').textContent = grade;
+    document.getElementById('pressGrade').className = `grade-badge ${gradeClass}`;
+
+    const names = {
+        translation: '1. Translation',
+        boolean: '2. Boolean/Proximity',
+        subject_headings: '3. Subject Headings',
+        text_words: '4. Text Words',
+        spelling: '5. Spelling/Syntax',
+        limits: '6. Limits/Filters'
+    };
+
+    let tbody = '';
+    Object.entries(elements).forEach(([k, v]) => {
+        tbody += `<tr>
+            <td>${names[k]}</td>
+            <td>${Math.round(v.score * 100)}%</td>
+            <td>${v.passed ? '<span style="color: var(--success);">Pass</span>' : '<span style="color: var(--danger);">Fail</span>'}</td>
+            <td>${v.issues.join('; ') || 'None'}</td>
+        </tr>`;
+    });
+    document.getElementById('pressBody').innerHTML = tbody;
+    document.getElementById('pressResults').classList.remove('hidden');
+}
+
+function validateTranslation(query, picoTerms) {
+    const result = { passed: true, score: 1.0, issues: [] };
+    if (picoTerms.length === 0) { result.score = 0.5; return result; }
+    const missing = picoTerms.filter(t => !query.toLowerCase().includes(t));
+    if (missing.length > 0) {
+        result.passed = false;
+        result.score = 1.0 - (missing.length * 0.25);
+        result.issues.push(`Missing: ${missing.join(', ')}`);
+    }
+    return result;
+}
+
+function validateBoolean(query) {
+    const result = { passed: true, score: 1.0, issues: [] };
+    if (!/\bAND\b|\bOR\b/i.test(query)) { result.score -= 0.2; result.issues.push('No Boolean operators'); }
+    if (query.split('(').length !== query.split(')').length) { result.passed = false; result.score -= 0.3; result.issues.push('Unbalanced parentheses'); }
+    result.passed = result.score >= 0.7;
+    return result;
+}
+
+function validateSubjectHeadings(query) {
+    const result = { passed: true, score: 1.0, issues: [] };
+    if (!/\[mesh\]|\[mh\]/i.test(query) && document.getElementById('pressDatabase').value === 'pubmed') {
+        result.score -= 0.3;
+        result.issues.push('No MeSH terms');
+    }
+    result.passed = result.score >= 0.7;
+    return result;
+}
+
+function validateTextWords(query) {
+    const result = { passed: true, score: 1.0, issues: [] };
+    if (!/\*/.test(query)) { result.score -= 0.1; result.issues.push('No truncation'); }
+    result.passed = result.score >= 0.7;
+    return result;
+}
+
+function validateSpelling(query) {
+    const result = { passed: true, score: 1.0, issues: [] };
+    const typos = ['randomzied', 'controled', 'placbo'];
+    typos.forEach(t => { if (query.toLowerCase().includes(t)) { result.passed = false; result.score -= 0.2; result.issues.push(`Typo: ${t}`); }});
+    return result;
+}
+
+function validateLimits(query) {
+    return { passed: true, score: 1.0, issues: [] };
+}
+
+function loadPRESSExample() {
+    document.getElementById('pressQuery').value = `#1 "diabetes"[tiab] OR "diabetes mellitus"[mesh]
+#2 metformin[tiab] OR biguanide*[tiab]
+#3 randomized controlled trial[pt] OR randomized[tiab] OR randomised[tiab]
+#4 #1 AND #2 AND #3`;
+    document.getElementById('pressPico').value = 'diabetes, metformin';
+}
+
+// =============================================================================
+// VALIDATE NCT IDs
+// =============================================================================
+async function validateNCTs() {
+    const input = document.getElementById('nctInput').value.trim();
+    if (!input) { alert('Please enter NCT IDs'); return; }
+
+    const nctIds = input.split(/[\n,\s]+/).map(id => id.trim().toUpperCase()).filter(id => /^NCT\d{8}$/.test(id));
+    if (nctIds.length === 0) { alert('No valid NCT IDs found'); return; }
+
+    log('validateLog', `Validating ${nctIds.length} NCT IDs...`);
+    const results = [];
+
+    for (const nctId of nctIds.slice(0, 20)) {
+        try {
+            const url = `${APIS.ctgov}?query.id=${nctId}&pageSize=1`;
+            const response = await fetch(url);
+            const data = await response.json();
+            const found = (data.studies?.length || 0) > 0;
+            results.push({ nctId, valid: found, title: data.studies?.[0]?.protocolSection?.identificationModule?.briefTitle || '' });
+            log('validateLog', `${nctId}: ${found ? 'Found' : 'Not Found'}`, found ? 'success' : 'error');
+            await new Promise(r => setTimeout(r, 200));
+        } catch (e) {
+            results.push({ nctId, valid: false, title: 'Error' });
+        }
+    }
+
+    displayValidateResults(results);
+}
+
+function displayValidateResults(results) {
+    document.getElementById('validateResults').classList.remove('hidden');
+    const valid = results.filter(r => r.valid).length;
+    const [ciLow, ciHigh] = wilsonCI(valid, results.length);
+
+    document.getElementById('validateSummary').innerHTML = `
+        <div class="stat-card"><div class="value">${results.length}</div><div class="label">Total</div></div>
+        <div class="stat-card"><div class="value" style="color: var(--success);">${valid}</div><div class="label">Found</div></div>
+        <div class="stat-card"><div class="value">${(valid/results.length*100).toFixed(1)}%</div><div class="label">API Recall</div></div>
+        <div class="stat-card"><div class="value">${(ciLow*100).toFixed(1)}-${(ciHigh*100).toFixed(1)}%</div><div class="label">95% CI</div></div>
+    `;
+
+    let html = '<table class="results-table"><thead><tr><th>NCT ID</th><th>Status</th><th>Title</th></tr></thead><tbody>';
+    results.forEach(r => {
+        html += `<tr><td>${r.nctId}</td><td>${r.valid ? '<span style="color:var(--success);">Found</span>' : '<span style="color:var(--danger);">Not Found</span>'}</td><td>${r.title.substring(0,50)}...</td></tr>`;
+    });
+    html += '</tbody></table>';
+    document.getElementById('validateTable').innerHTML = html;
+}
+
+function loadSampleNCTs() {
+    document.getElementById('nctInput').value = SAMPLE_NCTS.join('\n');
+}
+
+// =============================================================================
+// METRICS
+// =============================================================================
+function calculateCI() {
+    const s = parseInt(document.getElementById('ciSuccesses').value) || 0;
+    const t = parseInt(document.getElementById('ciTotal').value) || 1;
+    const [lo, hi] = wilsonCI(s, t);
+    const p = s / t;
+    document.getElementById('ciResult').innerHTML = `
+        <div class="results-summary">
+            <div class="stat-card"><div class="value">${(p*100).toFixed(1)}%</div><div class="label">Point Estimate</div></div>
+            <div class="stat-card"><div class="value">${(lo*100).toFixed(1)}%</div><div class="label">95% CI Lower</div></div>
+            <div class="stat-card"><div class="value">${(hi*100).toFixed(1)}%</div><div class="label">95% CI Upper</div></div>
+        </div>
+    `;
+}
+
+function calculateMetrics() {
+    const tp = parseInt(document.getElementById('metricTP').value) || 0;
+    const fp = parseInt(document.getElementById('metricFP').value) || 0;
+    const fn = parseInt(document.getElementById('metricFN').value) || 0;
+
+    const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
+    const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
+    const f1 = precision + recall > 0 ? 2 * precision * recall / (precision + recall) : 0;
+    const nns = tp > 0 ? (tp + fp) / tp : Infinity;
+
+    document.getElementById('metricsResult').innerHTML = `
+        <div class="results-summary">
+            <div class="stat-card"><div class="value">${(recall*100).toFixed(1)}%</div><div class="label">Recall</div></div>
+            <div class="stat-card"><div class="value">${(precision*100).toFixed(1)}%</div><div class="label">Precision</div></div>
+            <div class="stat-card"><div class="value">${f1.toFixed(3)}</div><div class="label">F1</div></div>
+            <div class="stat-card"><div class="value">${nns === Infinity ? 'N/A' : nns.toFixed(1)}</div><div class="label">NNS</div></div>
+        </div>
+    `;
+}
+
+// =============================================================================
+// EXPORT
+// =============================================================================
+async function fetchForExport() {
+    const condition = document.getElementById('exportCondition').value.trim();
+    if (!condition) { alert('Please enter a condition'); return; }
+
+    const limit = parseInt(document.getElementById('exportLimit').value) || 100;
+    log('exportLog', `Fetching ${limit} studies for: ${condition}`);
+
+    try {
+        const url = `${APIS.ctgov}?query.cond=${encodeURIComponent(condition)}&pageSize=${limit}`;
+        const response = await fetch(url);
+        const data = await response.json();
+        currentStudies = data.studies || [];
+        document.getElementById('exportCount').textContent = `${currentStudies.length} studies ready for export`;
+        document.getElementById('exportReady').classList.remove('hidden');
+        log('exportLog', `Ready to export ${currentStudies.length} studies`, 'success');
+    } catch (error) {
+        log('exportLog', `Error: ${error.message}`, 'error');
+    }
+}
+
+function exportRIS() {
+    let ris = '';
+    currentStudies.forEach(s => {
+        const id = s.protocolSection?.identificationModule || {};
+        ris += `TY  - CTRIAL\nTI  - ${id.briefTitle || ''}\nID  - ${id.nctId || ''}\nUR  - https://clinicaltrials.gov/study/${id.nctId}\nER  - \n\n`;
+    });
+    downloadFile(ris, 'export.ris', 'text/plain');
+}
+
+function exportCSV() {
+    let csv = 'NCT_ID,Title,Status,Phase\n';
+    currentStudies.forEach(s => {
+        const ps = s.protocolSection || {};
+        const id = ps.identificationModule || {};
+        const st = ps.statusModule || {};
+        const d = ps.designModule || {};
+        csv += `"${id.nctId || ''}","${(id.briefTitle || '').replace(/"/g, '""')}","${st.overallStatus || ''}","${(d.phases || []).join(';')}"\n`;
+    });
+    downloadFile(csv, 'export.csv', 'text/csv');
+}
+
+function exportJSON() {
+    downloadFile(JSON.stringify(currentStudies, null, 2), 'export.json', 'application/json');
+}
+
+function downloadFile(content, filename, mimeType) {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// =============================================================================
+// AACT DATABASE INTEGRATION (IndexedDB Caching)
+// =============================================================================
+const AACT_DB_NAME = 'CTGovSearchAACT';
+const AACT_DB_VERSION = 1;
+const AACT_STORE_NAME = 'validatedStudies';
+const AACT_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+
+let aactDB = null;
+let aactValidationResults = [];
+
+async function initAACTDatabase() {
+    return new Promise((resolve, reject) => {
+        const request = indexedDB.open(AACT_DB_NAME, AACT_DB_VERSION);
+
+        request.onerror = () => reject(request.error);
+        request.onsuccess = () => {
+            aactDB = request.result;
+            updateAACTCacheCount();
+            resolve(aactDB);
+        };
+
+        request.onupgradeneeded = (event) => {
+            const db = event.target.result;
+            if (!db.objectStoreNames.contains(AACT_STORE_NAME)) {
+                const store = db.createObjectStore(AACT_STORE_NAME, { keyPath: 'nctId' });
+                store.createIndex('timestamp', 'timestamp', { unique: false });
+            }
+        };
+    });
+}
+
+async function aactGetFromCache(nctId) {
+    if (!aactDB) return null;
+    return new Promise((resolve) => {
+        const transaction = aactDB.transaction([AACT_STORE_NAME], 'readonly');
+        const store = transaction.objectStore(AACT_STORE_NAME);
+        const request = store.get(nctId);
+
+        request.onsuccess = () => {
+            const result = request.result;
+            if (result && (Date.now() - result.timestamp) < AACT_CACHE_EXPIRY) {
+                resolve(result);
+            } else {
+                resolve(null);
+            }
+        };
+        request.onerror = () => resolve(null);
+    });
+}
+
+async function aactSaveToCache(studyData) {
+    if (!aactDB) return;
+    return new Promise((resolve) => {
+        const transaction = aactDB.transaction([AACT_STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(AACT_STORE_NAME);
+        studyData.timestamp = Date.now();
+        store.put(studyData);
+        transaction.oncomplete = () => {
+            updateAACTCacheCount();
+            resolve();
+        };
+        transaction.onerror = () => resolve();
+    });
+}
+
+function updateAACTCacheCount() {
+    if (!aactDB) return;
+    const transaction = aactDB.transaction([AACT_STORE_NAME], 'readonly');
+    const store = transaction.objectStore(AACT_STORE_NAME);
+    const countRequest = store.count();
+    countRequest.onsuccess = () => {
+        document.getElementById('aactCacheCount').textContent = countRequest.result;
+    };
+}
+
+async function aactClearCache() {
+    if (!aactDB) return;
+    if (!confirm('Clear all cached validation results?')) return;
+
+    const transaction = aactDB.transaction([AACT_STORE_NAME], 'readwrite');
+    const store = transaction.objectStore(AACT_STORE_NAME);
+    store.clear();
+
+    transaction.oncomplete = () => {
+        updateAACTCacheCount();
+        document.getElementById('aactHistory').classList.add('hidden');
+        log('aactLog', 'Cache cleared successfully', 'success');
+    };
+}
+
+async function aactValidateSingle(nctId) {
+    // Check cache first
+    const cached = await aactGetFromCache(nctId);
+    if (cached) {
+        log('aactLog', `[Cache Hit] ${nctId}`);
+        return cached;
+    }
+
+    try {
+        const url = `${APIS.ctgov}?query.id=${nctId}&pageSize=1`;
+        const response = await fetch(url);
+        const data = await response.json();
+
+        if (data.studies && data.studies.length > 0) {
+            const study = data.studies[0];
+            const ps = study.protocolSection || {};
+            const id = ps.identificationModule || {};
+            const st = ps.statusModule || {};
+            const d = ps.designModule || {};
+            const cond = ps.conditionsModule || {};
+
+            const result = {
+                nctId: nctId,
+                valid: true,
+                title: id.briefTitle || '',
+                status: st.overallStatus || '',
+                phase: (d.phases || []).join(', ') || 'N/A',
+                conditions: (cond.conditions || []).slice(0, 3).join('; '),
+                startDate: st.startDateStruct?.date || '',
+                completionDate: st.completionDateStruct?.date || '',
+                enrollment: ps.eligibilityModule?.healthyVolunteers ? 'Healthy Volunteers' : (d.enrollmentInfo?.count || 'N/A'),
+                url: `https://clinicaltrials.gov/study/${nctId}`
+            };
+
+            await aactSaveToCache(result);
+            return result;
+        } else {
+            const result = {
+                nctId: nctId,
+                valid: false,
+                title: 'Not Found',
+                status: 'N/A'
+            };
+            await aactSaveToCache(result);
+            return result;
+        }
+    } catch (error) {
+        return {
+            nctId: nctId,
+            valid: false,
+            title: 'Error: ' + error.message,
+            status: 'Error'
+        };
+    }
+}
+
+async function aactValidateBatch() {
+    const input = document.getElementById('aactNctInput').value.trim();
+    if (!input) { alert('Please enter NCT IDs'); return; }
+
+    // Parse NCT IDs
+    const nctIds = input.split(/[\n,\s]+/)
+        .map(id => id.trim().toUpperCase())
+        .filter(id => /^NCT\d{8}$/.test(id));
+
+    if (nctIds.length === 0) {
+        alert('No valid NCT IDs found (format: NCT followed by 8 digits)');
+        return;
+    }
+
+    const uniqueIds = [...new Set(nctIds)];
+    log('aactLog', `Starting batch validation of ${uniqueIds.length} NCT IDs...`);
+
+    document.getElementById('aactProgress').classList.remove('hidden');
+    document.getElementById('aactResults').classList.add('hidden');
+
+    aactValidationResults = [];
+    let completed = 0;
+
+    for (const nctId of uniqueIds) {
+        try {
+            const result = await aactValidateSingle(nctId);
+            aactValidationResults.push(result);
+        } catch (e) {
+            aactValidationResults.push({
+                nctId: nctId,
+                valid: false,
+                title: 'Error',
+                status: 'Error'
+            });
+        }
+
+        completed++;
+        const pct = Math.round((completed / uniqueIds.length) * 100);
+        document.getElementById('aactProgressBar').style.width = `${pct}%`;
+        document.getElementById('aactProgressText').textContent = `${completed} / ${uniqueIds.length}`;
+
+        // Rate limiting if not cached
+        if (!await aactGetFromCache(nctId)) {
+            await new Promise(r => setTimeout(r, 200));
+        }
+    }
+
+    log('aactLog', `Validation complete: ${aactValidationResults.filter(r => r.valid).length} valid, ${aactValidationResults.filter(r => !r.valid).length} invalid`, 'success');
+
+    displayAACTResults();
+    document.getElementById('aactProgress').classList.add('hidden');
+}
+
+function displayAACTResults() {
+    document.getElementById('aactResults').classList.remove('hidden');
+
+    const valid = aactValidationResults.filter(r => r.valid);
+    const invalid = aactValidationResults.filter(r => !r.valid);
+    const [ciLow, ciHigh] = wilsonCI(valid.length, aactValidationResults.length);
+
+    document.getElementById('aactSummary').innerHTML = `
+        <div class="stat-card"><div class="value">${aactValidationResults.length}</div><div class="label">Total</div></div>
+        <div class="stat-card"><div class="value" style="color: var(--success);">${valid.length}</div><div class="label">Valid</div></div>
+        <div class="stat-card"><div class="value" style="color: var(--danger);">${invalid.length}</div><div class="label">Invalid</div></div>
+        <div class="stat-card"><div class="value">${((valid.length / aactValidationResults.length) * 100).toFixed(1)}%</div><div class="label">API Recall</div></div>
+        <div class="stat-card"><div class="value">${(ciLow * 100).toFixed(1)}-${(ciHigh * 100).toFixed(1)}%</div><div class="label">95% CI</div></div>
+    `;
+
+    renderAACTTable(aactValidationResults);
+}
+
+function renderAACTTable(results) {
+    let html = `<table class="results-table">
+        <thead><tr><th>NCT ID</th><th>Status</th><th>Title</th><th>Overall Status</th><th>Phase</th><th>Actions</th></tr></thead>
+        <tbody>`;
+
+    results.forEach(r => {
+        html += `<tr>
+            <td><a href="${r.url || '#'}" target="_blank">${r.nctId}</a></td>
+            <td>${r.valid ? '<span style="color: var(--success);">Valid</span>' : '<span style="color: var(--danger);">Invalid</span>'}</td>
+            <td>${(r.title || '').substring(0, 50)}${(r.title || '').length > 50 ? '...' : ''}</td>
+            <td>${r.status || '-'}</td>
+            <td>${r.phase || '-'}</td>
+            <td>${r.valid ? `<button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="aactShowDetails('${r.nctId}')">
+                <i class="fas fa-info-circle"></i></button>` : '-'}</td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('aactTable').innerHTML = html;
+}
+
+function aactFilterResults() {
+    const textFilter = document.getElementById('aactFilterInput').value.toLowerCase();
+    const statusFilter = document.getElementById('aactStatusFilter').value;
+
+    let filtered = aactValidationResults;
+
+    if (textFilter) {
+        filtered = filtered.filter(r =>
+            r.nctId.toLowerCase().includes(textFilter) ||
+            (r.title || '').toLowerCase().includes(textFilter) ||
+            (r.status || '').toLowerCase().includes(textFilter)
+        );
+    }
+
+    if (statusFilter === 'valid') {
+        filtered = filtered.filter(r => r.valid);
+    } else if (statusFilter === 'invalid') {
+        filtered = filtered.filter(r => !r.valid);
+    }
+
+    renderAACTTable(filtered);
+}
+
+function aactShowDetails(nctId) {
+    const study = aactValidationResults.find(r => r.nctId === nctId);
+    if (!study) return;
+
+    alert(`NCT ID: ${study.nctId}
+Title: ${study.title}
+Status: ${study.status}
+Phase: ${study.phase}
+Conditions: ${study.conditions || 'N/A'}
+Start Date: ${study.startDate || 'N/A'}
+Completion Date: ${study.completionDate || 'N/A'}
+Enrollment: ${study.enrollment || 'N/A'}`);
+}
+
+async function aactShowHistory() {
+    if (!aactDB) {
+        log('aactLog', 'Database not initialized', 'error');
+        return;
+    }
+
+    const transaction = aactDB.transaction([AACT_STORE_NAME], 'readonly');
+    const store = transaction.objectStore(AACT_STORE_NAME);
+    const request = store.getAll();
+
+    request.onsuccess = () => {
+        const studies = request.result;
+        const historyDiv = document.getElementById('aactHistory');
+
+        if (studies.length === 0) {
+            historyDiv.innerHTML = '<p>No cached studies found.</p>';
+        } else {
+            let html = `<table class="results-table">
+                <thead><tr><th>NCT ID</th><th>Valid</th><th>Title</th><th>Cached At</th></tr></thead>
+                <tbody>`;
+
+            studies.slice(0, 50).forEach(s => {
+                const cachedAt = new Date(s.timestamp).toLocaleString();
+                html += `<tr>
+                    <td>${s.nctId}</td>
+                    <td>${s.valid ? 'Yes' : 'No'}</td>
+                    <td>${(s.title || '').substring(0, 40)}...</td>
+                    <td>${cachedAt}</td>
+                </tr>`;
+            });
+
+            html += '</tbody></table>';
+            historyDiv.innerHTML = html;
+        }
+
+        historyDiv.classList.remove('hidden');
+    };
+}
+
+function aactExportResults(format) {
+    if (aactValidationResults.length === 0) {
+        alert('No results to export');
+        return;
+    }
+
+    if (format === 'csv') {
+        let csv = 'NCT_ID,Valid,Title,Status,Phase,Conditions,URL\n';
+        aactValidationResults.forEach(r => {
+            csv += `"${r.nctId}","${r.valid}","${(r.title || '').replace(/"/g, '""')}","${r.status || ''}","${r.phase || ''}","${r.conditions || ''}","${r.url || ''}"\n`;
+        });
+        downloadFile(csv, 'aact_validation_results.csv', 'text/csv');
+    } else if (format === 'json') {
+        const data = JSON.stringify(aactValidationResults, null, 2);
+        downloadFile(data, 'aact_validation_results.json', 'application/json');
+    } else if (format === 'ris') {
+        let ris = '';
+        aactValidationResults.filter(r => r.valid).forEach(r => {
+            ris += `TY  - CTRIAL\nTI  - ${r.title || ''}\nID  - ${r.nctId}\nUR  - ${r.url || ''}\nER  - \n\n`;
+        });
+        downloadFile(ris, 'aact_validation_results.ris', 'text/plain');
+    }
+
+    log('aactLog', `Exported ${aactValidationResults.length} results as ${format.toUpperCase()}`, 'success');
+}
+
+function aactClearInput() {
+    document.getElementById('aactNctInput').value = '';
+    document.getElementById('aactProgress').classList.add('hidden');
+    document.getElementById('aactResults').classList.add('hidden');
+    aactValidationResults = [];
+}
+
+function aactLoadSample() {
+    const sampleNCTs = [
+        "NCT02963883", "NCT02644395", "NCT00071032", "NCT01484639", "NCT03407573",
+        "NCT01461850", "NCT01116479", "NCT00765869", "NCT02527005", "NCT01346774",
+        "NCT00000000",  // Invalid
+        "NCT99999999",  // Invalid
+        "NCT00814255"
+    ];
+    document.getElementById('aactNctInput').value = sampleNCTs.join('\n');
+    log('aactLog', `Loaded ${sampleNCTs.length} sample NCT IDs (including 2 invalid for testing)`);
+}
+
+// =============================================================================
+// MESH TERM EXPANSION (NLM MeSH API)
+// =============================================================================
+const MESH_API = {
+    search: 'https://id.nlm.nih.gov/mesh/lookup/term',
+    sparql: 'https://id.nlm.nih.gov/mesh/sparql'
+};
+
+let meshExpansionResult = null;
+
+async function expandMeSHTerm() {
+    const term = document.getElementById('meshTerm').value.trim();
+    if (!term) { alert('Please enter a medical term'); return; }
+
+    const maxTerms = parseInt(document.getElementById('meshMaxTerms').value) || 20;
+    const includeChildren = document.getElementById('meshIncludeChildren').value === 'true';
+
+    log('meshLog', `Expanding MeSH term: ${term}`);
+
+    try {
+        // Step 1: Search for MeSH terms using the lookup API
+        log('meshLog', 'Step 1: Searching MeSH database...');
+        const searchUrl = `${MESH_API.search}?label=${encodeURIComponent(term)}&match=contains&limit=10`;
+
+        const response = await fetch(searchUrl, {
+            headers: { 'Accept': 'application/json' }
+        });
+
+        if (!response.ok) {
+            throw new Error(`MeSH API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const meshTerms = data || [];
+
+        log('meshLog', `Found ${meshTerms.length} MeSH terms`, 'success');
+
+        // Step 2: Get synonyms for each term
+        log('meshLog', 'Step 2: Fetching synonyms and entry terms...');
+        const allSynonyms = new Set([term.toLowerCase()]);
+        const termDetails = [];
+
+        for (const meshTerm of meshTerms.slice(0, 5)) {
+            const termLabel = meshTerm.label || '';
+            const termUri = meshTerm.resource || '';
+            const termId = termUri.split('/').pop() || '';
+
+            allSynonyms.add(termLabel.toLowerCase());
+
+            // Get additional details via SPARQL
+            if (termId && termId.startsWith('D')) {
+                try {
+                    const details = await getMeSHTermDetails(termId);
+                    termDetails.push({
+                        id: termId,
+                        name: termLabel,
+                        ...details
+                    });
+
+                    // Add synonyms
+                    if (details.synonyms) {
+                        details.synonyms.forEach(s => allSynonyms.add(s.toLowerCase()));
+                    }
+                } catch (e) {
+                    termDetails.push({ id: termId, name: termLabel, synonyms: [] });
+                }
+            }
+
+            await new Promise(r => setTimeout(r, 250)); // Rate limiting
+        }
+
+        // Step 3: Build results
+        meshExpansionResult = {
+            originalTerm: term,
+            meshTerms: termDetails,
+            allSynonyms: Array.from(allSynonyms).sort(),
+            queryTerms: Array.from(allSynonyms).slice(0, maxTerms)
+        };
+
+        log('meshLog', `Expansion complete: ${meshExpansionResult.allSynonyms.length} unique terms found`, 'success');
+        displayMeSHResults();
+
+    } catch (error) {
+        log('meshLog', `Error: ${error.message}`, 'error');
+
+        // Fallback: use local abbreviation expansions
+        log('meshLog', 'Using local term expansion as fallback...');
+        const expanded = expandTerms([term]);
+
+        meshExpansionResult = {
+            originalTerm: term,
+            meshTerms: [],
+            allSynonyms: expanded,
+            queryTerms: expanded.slice(0, maxTerms)
+        };
+
+        displayMeSHResults();
+    }
+}
+
+async function getMeSHTermDetails(meshId) {
+    // SPARQL query to get term details
+    const sparqlQuery = `
+        PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+        PREFIX meshv: <http://id.nlm.nih.gov/mesh/vocab#>
+        PREFIX mesh: <http://id.nlm.nih.gov/mesh/>
+
+        SELECT ?label ?scopeNote WHERE {
+            mesh:${meshId} rdfs:label ?label .
+            OPTIONAL { mesh:${meshId} meshv:scopeNote ?scopeNote }
+        }
+        LIMIT 20
+    `;
+
+    try {
+        const response = await fetch(`${MESH_API.sparql}?query=${encodeURIComponent(sparqlQuery)}&format=json`, {
+            headers: { 'Accept': 'application/sparql-results+json' }
+        });
+
+        if (!response.ok) {
+            return { synonyms: [], scopeNote: '' };
+        }
+
+        const data = await response.json();
+        const bindings = data.results?.bindings || [];
+
+        const synonyms = bindings.map(b => b.label?.value).filter(Boolean);
+        const scopeNote = bindings[0]?.scopeNote?.value || '';
+
+        return { synonyms: [...new Set(synonyms)], scopeNote };
+    } catch {
+        return { synonyms: [], scopeNote: '' };
+    }
+}
+
+function displayMeSHResults() {
+    document.getElementById('meshResults').classList.remove('hidden');
+
+    const result = meshExpansionResult;
+
+    // Summary
+    document.getElementById('meshSummary').innerHTML = `
+        <div class="stat-card"><div class="value">${result.meshTerms.length}</div><div class="label">MeSH Terms</div></div>
+        <div class="stat-card"><div class="value">${result.allSynonyms.length}</div><div class="label">Total Synonyms</div></div>
+        <div class="stat-card"><div class="value">${result.queryTerms.length}</div><div class="label">Query Terms</div></div>
+    `;
+
+    // MeSH terms found
+    if (result.meshTerms.length > 0) {
+        let termsHTML = '<table class="results-table"><thead><tr><th>MeSH ID</th><th>Preferred Name</th><th>Synonyms</th></tr></thead><tbody>';
+        result.meshTerms.forEach(t => {
+            termsHTML += `<tr>
+                <td><a href="https://meshb.nlm.nih.gov/record/ui?ui=${t.id}" target="_blank">${t.id}</a></td>
+                <td>${t.name}</td>
+                <td>${(t.synonyms || []).slice(0, 5).join(', ')}${(t.synonyms || []).length > 5 ? '...' : ''}</td>
+            </tr>`;
+        });
+        termsHTML += '</tbody></table>';
+        document.getElementById('meshTermsFound').innerHTML = termsHTML;
+    } else {
+        document.getElementById('meshTermsFound').innerHTML = '<p>No MeSH terms found. Using local abbreviation expansion.</p>';
+    }
+
+    // All synonyms
+    document.getElementById('meshSynonyms').textContent = result.allSynonyms.join('\n');
+
+    // Generated query
+    const quotedTerms = result.queryTerms.map(t => `"${t}"`);
+    const query = quotedTerms.join(' OR ');
+    document.getElementById('meshQuery').textContent = query;
+}
+
+function loadMeSHExample() {
+    document.getElementById('meshTerm').value = 'diabetes mellitus';
+}
+
+// =============================================================================
+// PICO RCT FINDER - INTELLIGENT TERM EXPANSION
+// =============================================================================
+
+// Comprehensive drug database: generic -> brand names, variants, spellings
+const DRUG_DATABASE = {
+    // Diabetes medications
+    "metformin": ["glucophage", "fortamet", "glumetza", "riomet"],
+    "sitagliptin": ["januvia"],
+    "empagliflozin": ["jardiance"],
+    "dapagliflozin": ["farxiga", "forxiga"],
+    "canagliflozin": ["invokana"],
+    "liraglutide": ["victoza", "saxenda"],
+    "semaglutide": ["ozempic", "wegovy", "rybelsus"],
+    "dulaglutide": ["trulicity"],
+    "pioglitazone": ["actos"],
+    "glimepiride": ["amaryl"],
+    "glyburide": ["glibenclamide", "diabeta", "micronase"],
+    "insulin glargine": ["lantus", "basaglar", "toujeo"],
+    "insulin lispro": ["humalog", "admelog"],
+    "insulin aspart": ["novolog", "novorapid", "fiasp"],
+
+    // Cardiovascular medications
+    "atorvastatin": ["lipitor"],
+    "rosuvastatin": ["crestor"],
+    "simvastatin": ["zocor"],
+    "pravastatin": ["pravachol"],
+    "lisinopril": ["prinivil", "zestril"],
+    "enalapril": ["vasotec"],
+    "ramipril": ["altace"],
+    "losartan": ["cozaar"],
+    "valsartan": ["diovan"],
+    "irbesartan": ["avapro"],
+    "amlodipine": ["norvasc"],
+    "metoprolol": ["lopressor", "toprol"],
+    "carvedilol": ["coreg"],
+    "bisoprolol": ["zebeta"],
+    "warfarin": ["coumadin", "jantoven"],
+    "rivaroxaban": ["xarelto"],
+    "apixaban": ["eliquis"],
+    "dabigatran": ["pradaxa"],
+    "clopidogrel": ["plavix"],
+    "aspirin": ["acetylsalicylic acid", "asa"],
+
+    // Respiratory medications
+    "salbutamol": ["albuterol", "ventolin", "proventil", "proair"],
+    "formoterol": ["foradil", "perforomist"],
+    "salmeterol": ["serevent"],
+    "tiotropium": ["spiriva"],
+    "fluticasone": ["flovent", "flonase"],
+    "budesonide": ["pulmicort", "rhinocort"],
+    "montelukast": ["singulair"],
+
+    // Pain/Inflammation
+    "ibuprofen": ["advil", "motrin", "nurofen"],
+    "naproxen": ["aleve", "naprosyn"],
+    "celecoxib": ["celebrex"],
+    "acetaminophen": ["paracetamol", "tylenol", "panadol"],
+    "tramadol": ["ultram", "conzip"],
+    "gabapentin": ["neurontin"],
+    "pregabalin": ["lyrica"],
+
+    // Mental health
+    "sertraline": ["zoloft", "lustral"],
+    "fluoxetine": ["prozac", "sarafem"],
+    "escitalopram": ["lexapro", "cipralex"],
+    "citalopram": ["celexa"],
+    "paroxetine": ["paxil", "seroxat"],
+    "venlafaxine": ["effexor"],
+    "duloxetine": ["cymbalta"],
+    "bupropion": ["wellbutrin", "zyban"],
+    "quetiapine": ["seroquel"],
+    "olanzapine": ["zyprexa"],
+    "risperidone": ["risperdal"],
+    "aripiprazole": ["abilify"],
+
+    // Oncology
+    "pembrolizumab": ["keytruda"],
+    "nivolumab": ["opdivo"],
+    "trastuzumab": ["herceptin"],
+    "bevacizumab": ["avastin"],
+    "rituximab": ["rituxan", "mabthera"],
+    "imatinib": ["gleevec", "glivec"],
+    "erlotinib": ["tarceva"],
+    "gefitinib": ["iressa"],
+    "osimertinib": ["tagrisso"],
+    "palbociclib": ["ibrance"],
+    "ribociclib": ["kisqali"],
+
+    // GI medications
+    "omeprazole": ["prilosec", "losec"],
+    "esomeprazole": ["nexium"],
+    "pantoprazole": ["protonix"],
+    "lansoprazole": ["prevacid"],
+    "ranitidine": ["zantac"],
+    "famotidine": ["pepcid"],
+
+    // Antibiotics
+    "amoxicillin": ["amoxil", "trimox"],
+    "azithromycin": ["zithromax", "z-pak"],
+    "ciprofloxacin": ["cipro"],
+    "levofloxacin": ["levaquin"],
+    "doxycycline": ["vibramycin", "doryx"],
+
+    // Biologics/Immunology
+    "adalimumab": ["humira"],
+    "etanercept": ["enbrel"],
+    "infliximab": ["remicade"],
+    "ustekinumab": ["stelara"],
+    "secukinumab": ["cosentyx"],
+    "dupilumab": ["dupixent"]
+};
+
+// Condition synonyms and related terms
+const CONDITION_DATABASE = {
+    // Diabetes
+    "type 2 diabetes": ["t2dm", "type 2 diabetes mellitus", "type ii diabetes", "niddm", "non-insulin dependent diabetes", "adult-onset diabetes", "diabetes mellitus type 2", "dm2"],
+    "type 1 diabetes": ["t1dm", "type 1 diabetes mellitus", "type i diabetes", "iddm", "insulin dependent diabetes", "juvenile diabetes", "diabetes mellitus type 1", "dm1"],
+    "diabetes": ["diabetes mellitus", "dm", "diabetic"],
+    "prediabetes": ["pre-diabetes", "impaired glucose tolerance", "igt", "impaired fasting glucose", "ifg"],
+
+    // Cardiovascular
+    "hypertension": ["high blood pressure", "htn", "elevated blood pressure", "arterial hypertension"],
+    "heart failure": ["cardiac failure", "chf", "congestive heart failure", "hf", "left ventricular failure", "hfref", "hfpef"],
+    "myocardial infarction": ["heart attack", "mi", "acute mi", "ami", "stemi", "nstemi", "acute coronary syndrome"],
+    "atrial fibrillation": ["afib", "af", "a-fib", "auricular fibrillation"],
+    "coronary artery disease": ["cad", "coronary heart disease", "chd", "ischemic heart disease", "ihd"],
+    "stroke": ["cerebrovascular accident", "cva", "ischemic stroke", "cerebral infarction", "brain attack"],
+
+    // Respiratory
+    "asthma": ["bronchial asthma", "allergic asthma", "asthmatic"],
+    "copd": ["chronic obstructive pulmonary disease", "chronic bronchitis", "emphysema", "chronic airflow limitation"],
+
+    // Oncology
+    "breast cancer": ["breast carcinoma", "breast neoplasm", "mammary cancer", "breast tumor", "breast tumour"],
+    "lung cancer": ["lung carcinoma", "pulmonary cancer", "nsclc", "non-small cell lung cancer", "sclc", "small cell lung cancer"],
+    "colorectal cancer": ["colon cancer", "rectal cancer", "bowel cancer", "crc", "colorectal carcinoma"],
+    "prostate cancer": ["prostatic cancer", "prostate carcinoma", "prostatic neoplasm"],
+
+    // Mental Health
+    "depression": ["major depression", "major depressive disorder", "mdd", "clinical depression", "depressive disorder"],
+    "anxiety": ["anxiety disorder", "generalized anxiety", "gad", "anxiety neurosis"],
+    "schizophrenia": ["schizophrenic disorder", "psychosis"],
+    "bipolar disorder": ["bipolar", "manic depression", "bipolar affective disorder"],
+
+    // Autoimmune/Inflammatory
+    "rheumatoid arthritis": ["ra", "rheumatoid", "rheumatoid disease"],
+    "psoriasis": ["plaque psoriasis", "psoriatic disease"],
+    "psoriatic arthritis": ["psa", "psoriatic arthropathy"],
+    "crohn's disease": ["crohn disease", "crohns disease", "regional enteritis"],
+    "ulcerative colitis": ["uc", "ulcerative proctitis"],
+    "multiple sclerosis": ["ms", "disseminated sclerosis"],
+
+    // Other
+    "obesity": ["obese", "overweight", "morbid obesity", "severe obesity"],
+    "osteoporosis": ["bone loss", "osteopenia"],
+    "chronic kidney disease": ["ckd", "chronic renal disease", "renal insufficiency", "kidney failure"],
+    "alzheimer's disease": ["alzheimer disease", "alzheimers", "ad", "dementia of alzheimer type"],
+    "parkinson's disease": ["parkinson disease", "parkinsons", "pd", "parkinsonism"]
+};
+
+// US/UK spelling variants
+const SPELLING_VARIANTS = {
+    "tumor": "tumour",
+    "color": "colour",
+    "behavior": "behaviour",
+    "anemia": "anaemia",
+    "leukemia": "leukaemia",
+    "edema": "oedema",
+    "estrogen": "oestrogen",
+    "fetus": "foetus",
+    "pediatric": "paediatric",
+    "gynecology": "gynaecology",
+    "hemorrhage": "haemorrhage",
+    "diarrhea": "diarrhoea",
+    "randomized": "randomised",
+    "analyze": "analyse",
+    "center": "centre",
+    "fiber": "fibre",
+    "labeled": "labelled",
+    "modeled": "modelled",
+    "sulfate": "sulphate",
+    "aluminum": "aluminium"
+};
+
+// Outcome categories and standard terms
+const OUTCOME_CATEGORIES = {
+    efficacy: ["efficacy", "effectiveness", "response", "remission", "improvement", "reduction", "change from baseline", "treatment response"],
+    safety: ["safety", "adverse event", "adverse effect", "side effect", "tolerability", "toxicity", "serious adverse event", "sae"],
+    mortality: ["mortality", "death", "survival", "all-cause mortality", "cardiovascular mortality", "overall survival", "os"],
+    qol: ["quality of life", "qol", "hrqol", "health-related quality of life", "patient reported outcome", "pro", "sf-36", "eq-5d"],
+    biomarker: ["biomarker", "laboratory", "blood test", "serum level", "hba1c", "ldl", "hdl", "creatinine", "egfr"]
+};
+
+// Common outcome measures by condition
+const CONDITION_OUTCOMES = {
+    "diabetes": ["hba1c", "fasting glucose", "fasting plasma glucose", "fpg", "glycemic control", "hypoglycemia", "weight change", "insulin dose"],
+    "hypertension": ["blood pressure", "systolic blood pressure", "sbp", "diastolic blood pressure", "dbp", "bp control"],
+    "heart failure": ["hospitalization", "hospitalisation", "lvef", "ejection fraction", "nt-probnp", "6-minute walk", "6mwd", "nyha class"],
+    "depression": ["depression score", "ham-d", "hamilton", "phq-9", "madrs", "remission", "response rate"],
+    "pain": ["pain score", "vas", "visual analog scale", "nrs", "numeric rating scale", "pain relief", "pain reduction"]
+};
+
+// PICO Finder state
+let picoFinderState = {
+    originalPICO: { population: '', intervention: '', comparator: '', outcome: '' },
+    expandedTerms: { population: [], intervention: [], comparator: [], outcome: [] },
+    selectedTerms: { population: [], intervention: [], comparator: [], outcome: [] },
+    results: { ctgov: [], pubmed: [], combined: [] },
+    aactSQL: ''
+};
+
+// Step navigation
+function picoGoToStep(step) {
+    // Hide all steps
+    document.querySelectorAll('.pico-step').forEach(s => s.classList.add('hidden'));
+    // Show target step
+    document.getElementById(`picoStep${step}`).classList.remove('hidden');
+
+    // Update indicators
+    for (let i = 1; i <= 4; i++) {
+        const ind = document.getElementById(`step${i}Ind`);
+        if (i === step) {
+            ind.style.background = 'var(--primary)';
+        } else if (i < step) {
+            ind.style.background = 'var(--success)';
+        } else {
+            ind.style.background = 'var(--bg-input)';
+        }
+    }
+}
+
+// Expand terms based on PICO input
+function picoExpandTerms() {
+    const population = document.getElementById('pf_population').value.trim();
+    const intervention = document.getElementById('pf_intervention').value.trim();
+    const comparator = document.getElementById('pf_comparator').value.trim();
+    const outcome = document.getElementById('pf_outcome').value.trim();
+
+    if (!population && !intervention) {
+        alert('Please enter at least a Population or Intervention');
+        return;
+    }
+
+    log('picoFinderLog', 'Expanding PICO terms...', 'info');
+
+    // Store original PICO
+    picoFinderState.originalPICO = { population, intervention, comparator, outcome };
+
+    // Expand each element
+    picoFinderState.expandedTerms.population = expandTerms(population, 'population');
+    picoFinderState.expandedTerms.intervention = expandTerms(intervention, 'intervention');
+    picoFinderState.expandedTerms.comparator = expandTerms(comparator, 'comparator');
+    picoFinderState.expandedTerms.outcome = expandTerms(outcome, 'outcome');
+
+    // Set selected terms (all selected by default)
+    picoFinderState.selectedTerms = JSON.parse(JSON.stringify(picoFinderState.expandedTerms));
+
+    // Render checkboxes
+    renderTermCheckboxes('population', picoFinderState.expandedTerms.population);
+    renderTermCheckboxes('intervention', picoFinderState.expandedTerms.intervention);
+    renderTermCheckboxes('comparator', picoFinderState.expandedTerms.comparator);
+    renderTermCheckboxes('outcome', picoFinderState.expandedTerms.outcome);
+
+    log('picoFinderLog', `Expanded to ${getTotalTermCount()} terms`, 'success');
+
+    // Go to step 2
+    picoGoToStep(2);
+}
+
+// Expand a single term using all expansion methods
+function expandTerms(input, type) {
+    if (!input) return [];
+
+    const terms = new Set();
+    const inputLower = input.toLowerCase().trim();
+
+    // Add original term
+    terms.add(inputLower);
+
+    // Split by common delimiters
+    const parts = inputLower.split(/[,;\/\+]|\s+and\s+|\s+or\s+/).map(p => p.trim()).filter(p => p.length > 2);
+    parts.forEach(p => terms.add(p));
+
+    // For each part, expand
+    parts.forEach(part => {
+        // 1. Check drug database
+        if (type === 'intervention' || type === 'comparator') {
+            Object.entries(DRUG_DATABASE).forEach(([generic, brands]) => {
+                if (part.includes(generic) || generic.includes(part)) {
+                    terms.add(generic);
+                    brands.forEach(b => terms.add(b));
+                }
+                brands.forEach(brand => {
+                    if (part.includes(brand) || brand.includes(part)) {
+                        terms.add(generic);
+                        brands.forEach(b => terms.add(b));
+                    }
+                });
+            });
+        }
+
+        // 2. Check condition database
+        if (type === 'population') {
+            Object.entries(CONDITION_DATABASE).forEach(([condition, synonyms]) => {
+                const allTerms = [condition, ...synonyms];
+                if (allTerms.some(t => part.includes(t) || t.includes(part))) {
+                    allTerms.forEach(t => terms.add(t));
+                }
+            });
+        }
+
+        // 3. US/UK spelling variants
+        Object.entries(SPELLING_VARIANTS).forEach(([us, uk]) => {
+            if (part.includes(us)) {
+                terms.add(part);
+                terms.add(part.replace(us, uk));
+            }
+            if (part.includes(uk)) {
+                terms.add(part);
+                terms.add(part.replace(uk, us));
+            }
+        });
+
+        // 4. Add outcome category terms
+        if (type === 'outcome') {
+            Object.entries(OUTCOME_CATEGORIES).forEach(([category, catTerms]) => {
+                if (catTerms.some(t => part.includes(t) || t.includes(part))) {
+                    catTerms.slice(0, 3).forEach(t => terms.add(t)); // Add top 3 from category
+                }
+            });
+
+            // Check condition-specific outcomes
+            Object.entries(CONDITION_OUTCOMES).forEach(([condition, outcomes]) => {
+                const popTerms = picoFinderState.originalPICO.population.toLowerCase();
+                if (popTerms.includes(condition) || condition.includes(popTerms.split(' ')[0])) {
+                    outcomes.forEach(o => terms.add(o));
+                }
+            });
+        }
+
+        // 5. Generate common variations
+        terms.add(part);
+        // Plural/singular
+        if (part.endsWith('s') && part.length > 4) {
+            terms.add(part.slice(0, -1));
+        } else if (!part.endsWith('s')) {
+            terms.add(part + 's');
+        }
+        // With/without hyphens
+        if (part.includes('-')) {
+            terms.add(part.replace(/-/g, ' '));
+            terms.add(part.replace(/-/g, ''));
+        }
+        if (part.includes(' ')) {
+            terms.add(part.replace(/\s+/g, '-'));
+        }
+    });
+
+    // Filter and sort
+    return [...terms]
+        .filter(t => t.length > 2)
+        .sort((a, b) => {
+            // Original terms first
+            if (inputLower.includes(a) && !inputLower.includes(b)) return -1;
+            if (!inputLower.includes(a) && inputLower.includes(b)) return 1;
+            return a.localeCompare(b);
+        });
+}
+
+// Render checkboxes for term selection
+function renderTermCheckboxes(type, terms) {
+    const container = document.getElementById(`pf_${type}Terms`);
+    if (!container) return;
+
+    if (terms.length === 0) {
+        container.innerHTML = '<span style="color: var(--text-secondary);">No terms entered</span>';
+        return;
+    }
+
+    const original = picoFinderState.originalPICO[type].toLowerCase();
+
+    container.innerHTML = terms.map((term, idx) => {
+        const isOriginal = original.includes(term);
+        const labelClass = isOriginal ? 'style="font-weight: bold;"' : '';
+        const badge = isOriginal ? '<span style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 4px; font-size: 0.7rem; margin-left: 5px;">Original</span>' : '';
+
+        return `
+            <label style="display: flex; align-items: center; gap: 8px; padding: 6px 10px; background: var(--bg-card); border-radius: 6px; cursor: pointer;">
+                <input type="checkbox" checked data-type="${type}" data-term="${term}" onchange="updateSelectedTerms()">
+                <span ${labelClass}>${term}</span>${badge}
+            </label>
+        `;
+    }).join('');
+}
+
+// Update selected terms based on checkboxes
+function updateSelectedTerms() {
+    ['population', 'intervention', 'comparator', 'outcome'].forEach(type => {
+        const checkboxes = document.querySelectorAll(`input[data-type="${type}"]:checked`);
+        picoFinderState.selectedTerms[type] = Array.from(checkboxes).map(cb => cb.dataset.term);
+    });
+}
+
+// Add custom term
+function addCustomPicoTerm() {
+    const term = document.getElementById('pf_customTerm').value.trim().toLowerCase();
+    const type = document.getElementById('pf_customTermType').value;
+
+    if (!term) return;
+
+    if (!picoFinderState.expandedTerms[type].includes(term)) {
+        picoFinderState.expandedTerms[type].push(term);
+        picoFinderState.selectedTerms[type].push(term);
+        renderTermCheckboxes(type, picoFinderState.expandedTerms[type]);
+    }
+
+    document.getElementById('pf_customTerm').value = '';
+    log('picoFinderLog', `Added custom term "${term}" to ${type}`, 'success');
+}
+
+function getTotalTermCount() {
+    return Object.values(picoFinderState.expandedTerms).reduce((sum, arr) => sum + arr.length, 0);
+}
+
+// Run the search
+async function picoRunSearch() {
+    updateSelectedTerms(); // Ensure we have latest selections
+
+    picoGoToStep(3);
+    log('pf_searchLog', 'Starting PICO-based RCT search...', 'info');
+
+    const phase = document.getElementById('pf_studyPhase').value;
+    const status = document.getElementById('pf_status').value;
+    const dateFrom = document.getElementById('pf_dateFrom').value;
+
+    picoFinderState.results = { ctgov: [], pubmed: [], combined: [] };
+
+    try {
+        // Step 1: Search CT.gov API
+        updatePicoProgress(25, 'Searching ClinicalTrials.gov API...');
+        await searchCTGovPICO(phase, status, dateFrom);
+
+        // Step 2: Cross-reference with PubMed
+        updatePicoProgress(50, 'Cross-referencing with PubMed...');
+        await crossReferencePubMed();
+
+        // Step 3: Generate AACT SQL
+        updatePicoProgress(75, 'Generating AACT SQL query...');
+        generateAACTSQL(phase, status, dateFrom);
+
+        // Step 4: Combine and deduplicate
+        updatePicoProgress(90, 'Combining results...');
+        combineAndDeduplicateResults();
+
+        // Show results
+        updatePicoProgress(100, 'Complete!');
+        displayPicoResults();
+        picoGoToStep(4);
+
+    } catch (error) {
+        log('pf_searchLog', `ERROR: ${error.message}`, 'error');
+    }
+}
+
+function updatePicoProgress(pct, message) {
+    document.getElementById('pf_progressBar').style.width = `${pct}%`;
+    document.getElementById('pf_progressText').textContent = message;
+    log('pf_searchLog', message, 'info');
+}
+
+// Search CT.gov with PICO terms
+async function searchCTGovPICO(phase, status, dateFrom) {
+    const popTerms = picoFinderState.selectedTerms.population;
+    const intTerms = picoFinderState.selectedTerms.intervention;
+    const compTerms = picoFinderState.selectedTerms.comparator;
+
+    // Build query
+    let queryParts = [];
+
+    if (popTerms.length > 0) {
+        queryParts.push(`(${popTerms.slice(0, 10).join(' OR ')})`);
+    }
+    if (intTerms.length > 0) {
+        queryParts.push(`(${intTerms.slice(0, 10).join(' OR ')})`);
+    }
+
+    const conditionQuery = popTerms.slice(0, 5).join(' OR ');
+    const interventionQuery = intTerms.slice(0, 5).join(' OR ');
+
+    try {
+        const params = new URLSearchParams({
+            'query.cond': conditionQuery || '',
+            'query.intr': interventionQuery || '',
+            'filter.overallStatus': status || '',
+            'filter.phase': phase || '',
+            'query.term': 'AREA[DesignAllocation] "Randomized"',
+            pageSize: 1000,
+            countTotal: true
+        });
+
+        // Remove empty params
+        [...params.entries()].forEach(([key, value]) => {
+            if (!value) params.delete(key);
+        });
+
+        const resp = await fetch(`${APIS.ctgov}?${params}`);
+        if (!resp.ok) throw new Error('CT.gov API request failed');
+
+        const data = await resp.json();
+        const studies = data.studies || [];
+
+        studies.forEach(study => {
+            const ps = study.protocolSection;
+            if (!ps) return;
+
+            const nctId = ps.identificationModule?.nctId;
+            if (!nctId) return;
+
+            picoFinderState.results.ctgov.push({
+                nctId: nctId,
+                title: ps.identificationModule?.briefTitle || '',
+                status: ps.statusModule?.overallStatus || '',
+                phase: ps.designModule?.phases?.join(', ') || '',
+                conditions: ps.conditionsModule?.conditions?.join('; ') || '',
+                interventions: ps.armsInterventionsModule?.interventions?.map(i => i.name).join('; ') || '',
+                startDate: ps.statusModule?.startDateStruct?.date || '',
+                enrollment: ps.designModule?.enrollmentInfo?.count || '',
+                source: 'CT.gov API'
+            });
+        });
+
+        log('pf_searchLog', `Found ${studies.length} RCTs in CT.gov API`, 'success');
+        log('pf_searchLog', `Total in database: ${data.totalCount || studies.length}`, 'info');
+
+    } catch (error) {
+        log('pf_searchLog', `CT.gov error: ${error.message}`, 'error');
+    }
+}
+
+// Cross-reference with PubMed to find additional NCT IDs
+async function crossReferencePubMed() {
+    const popTerms = picoFinderState.selectedTerms.population.slice(0, 5);
+    const intTerms = picoFinderState.selectedTerms.intervention.slice(0, 5);
+
+    if (popTerms.length === 0 && intTerms.length === 0) return;
+
+    // Build PubMed query
+    let queryParts = [];
+    if (popTerms.length > 0) {
+        queryParts.push(`(${popTerms.map(t => `"${t}"[Title/Abstract]`).join(' OR ')})`);
+    }
+    if (intTerms.length > 0) {
+        queryParts.push(`(${intTerms.map(t => `"${t}"[Title/Abstract]`).join(' OR ')})`);
+    }
+
+    const query = queryParts.join(' AND ') + ' AND (randomized[Title/Abstract] OR "clinical trial"[Publication Type])';
+
+    try {
+        // Search PubMed
+        const searchParams = new URLSearchParams({
+            db: 'pubmed',
+            term: query,
+            retmax: 500,
+            retmode: 'json'
+        });
+
+        const searchResp = await fetch(`${APIS.pubmed.search}?${searchParams}`);
+        if (!searchResp.ok) return;
+
+        const searchData = await searchResp.json();
+        const pmids = searchData.esearchresult?.idlist || [];
+
+        if (pmids.length === 0) return;
+
+        log('pf_searchLog', `Found ${pmids.length} PubMed articles, extracting NCT IDs...`, 'info');
+
+        // Fetch in batches and extract NCT IDs
+        const batchSize = 100;
+        const nctIds = new Set();
+
+        for (let i = 0; i < Math.min(pmids.length, 300); i += batchSize) {
+            const batch = pmids.slice(i, i + batchSize);
+
+            const fetchParams = new URLSearchParams({
+                db: 'pubmed',
+                id: batch.join(','),
+                retmode: 'xml'
+            });
+
+            try {
+                const fetchResp = await fetch(`${APIS.pubmed.fetch}?${fetchParams}`);
+                if (fetchResp.ok) {
+                    const xmlText = await fetchResp.text();
+                    const matches = xmlText.match(/NCT\d{8}/gi) || [];
+                    matches.forEach(m => nctIds.add(m.toUpperCase()));
+                }
+            } catch (e) { /* continue */ }
+
+            await delay(350);
+        }
+
+        // Add to results (NCT IDs found in literature but not in CT.gov search)
+        const ctgovNcts = new Set(picoFinderState.results.ctgov.map(r => r.nctId));
+
+        nctIds.forEach(nctId => {
+            if (!ctgovNcts.has(nctId)) {
+                picoFinderState.results.pubmed.push({
+                    nctId: nctId,
+                    source: 'PubMed Cross-Ref'
+                });
+            }
+        });
+
+        log('pf_searchLog', `Found ${nctIds.size} NCT IDs in PubMed (${picoFinderState.results.pubmed.length} additional)`, 'success');
+
+    } catch (error) {
+        log('pf_searchLog', `PubMed cross-ref error: ${error.message}`, 'error');
+    }
+}
+
+// Generate AACT SQL query
+function generateAACTSQL(phase, status, dateFrom) {
+    const popTerms = picoFinderState.selectedTerms.population;
+    const intTerms = picoFinderState.selectedTerms.intervention;
+    const compTerms = picoFinderState.selectedTerms.comparator;
+    const outTerms = picoFinderState.selectedTerms.outcome;
+
+    let conditions = [];
+
+    // Condition terms
+    if (popTerms.length > 0) {
+        const condClause = popTerms.map(t => `LOWER(c.name) LIKE '%${t.replace(/'/g, "''")}%'`).join('\n      OR ');
+        conditions.push(`(${condClause})`);
+    }
+
+    // Intervention terms
+    if (intTerms.length > 0) {
+        const intClause = intTerms.map(t => `LOWER(i.name) LIKE '%${t.replace(/'/g, "''")}%'`).join('\n      OR ');
+        conditions.push(`(${intClause})`);
+    }
+
+    // Build the SQL
+    let sql = `-- AACT SQL Query for PICO-based RCT Search
+-- Generated: ${new Date().toISOString()}
+-- Connect to: aact-db.ctti-clinicaltrials.org:5432/aact
+
+SELECT DISTINCT
+    s.nct_id,
+    s.brief_title,
+    s.overall_status,
+    s.phase,
+    s.enrollment,
+    s.start_date,
+    d.allocation,
+    STRING_AGG(DISTINCT c.name, '; ') AS conditions,
+    STRING_AGG(DISTINCT i.name, '; ') AS interventions
+FROM studies s
+LEFT JOIN designs d ON s.nct_id = d.nct_id
+LEFT JOIN conditions c ON s.nct_id = c.nct_id
+LEFT JOIN interventions i ON s.nct_id = i.nct_id
+WHERE s.study_type = 'Interventional'
+  AND (d.allocation = 'Randomized' OR d.allocation IS NULL)`;
+
+    if (conditions.length > 0) {
+        sql += `\n  AND (${conditions.join('\n  AND ')})`;
+    }
+
+    if (status) {
+        const statuses = status.split(',').map(s => `'${s}'`).join(', ');
+        sql += `\n  AND s.overall_status IN (${statuses})`;
+    }
+
+    if (phase) {
+        const phases = phase.split(',').map(p => `'${p.replace('PHASE', 'Phase ')}'`).join(', ');
+        sql += `\n  AND s.phase IN (${phases})`;
+    }
+
+    if (dateFrom) {
+        sql += `\n  AND s.start_date >= '${dateFrom}-01-01'`;
+    }
+
+    sql += `
+GROUP BY s.nct_id, s.brief_title, s.overall_status, s.phase, s.enrollment, s.start_date, d.allocation
+ORDER BY s.start_date DESC
+LIMIT 2000;`;
+
+    picoFinderState.aactSQL = sql;
+    log('pf_searchLog', 'Generated AACT SQL query for complete coverage', 'success');
+}
+
+// Combine and deduplicate results
+function combineAndDeduplicateResults() {
+    const combined = new Map();
+
+    // Add CT.gov results
+    picoFinderState.results.ctgov.forEach(r => {
+        combined.set(r.nctId, r);
+    });
+
+    // Add PubMed cross-ref results (only NCT IDs, need to fetch details)
+    picoFinderState.results.pubmed.forEach(r => {
+        if (!combined.has(r.nctId)) {
+            combined.set(r.nctId, {
+                nctId: r.nctId,
+                title: '(Details in AACT)',
+                status: '',
+                phase: '',
+                conditions: '',
+                interventions: '',
+                source: 'PubMed Cross-Ref'
+            });
+        }
+    });
+
+    picoFinderState.results.combined = Array.from(combined.values());
+    log('pf_searchLog', `Combined total: ${picoFinderState.results.combined.length} unique RCTs`, 'success');
+}
+
+// Display results
+function displayPicoResults() {
+    const ctgovCount = picoFinderState.results.ctgov.length;
+    const pubmedCount = picoFinderState.results.pubmed.length;
+    const totalCount = picoFinderState.results.combined.length;
+
+    // Update counts
+    document.getElementById('pf_ctgovCount').textContent = ctgovCount;
+    document.getElementById('pf_pubmedCount').textContent = pubmedCount;
+    document.getElementById('pf_totalCount').textContent = totalCount;
+
+    // Update cards styling
+    document.getElementById('pf_ctgovCard').classList.toggle('has-results', ctgovCount > 0);
+    document.getElementById('pf_pubmedCard').classList.toggle('has-results', pubmedCount > 0);
+
+    // Summary
+    document.getElementById('pf_resultsSummary').innerHTML = `
+        <div class="stat-card"><div class="value">${totalCount}</div><div class="label">Total Unique RCTs</div></div>
+        <div class="stat-card"><div class="value">${getTotalTermCount()}</div><div class="label">Search Terms Used</div></div>
+        <div class="stat-card"><div class="value">${picoFinderState.selectedTerms.population.length}</div><div class="label">Population Terms</div></div>
+        <div class="stat-card"><div class="value">${picoFinderState.selectedTerms.intervention.length}</div><div class="label">Intervention Terms</div></div>
+    `;
+
+    // AACT SQL
+    document.getElementById('pf_aactSQL').textContent = picoFinderState.aactSQL;
+
+    // Results table
+    let tableHTML = `
+        <table class="results-table">
+            <thead>
+                <tr>
+                    <th>NCT ID</th>
+                    <th>Title</th>
+                    <th>Status</th>
+                    <th>Phase</th>
+                    <th>Source</th>
+                </tr>
+            </thead>
+            <tbody>
+    `;
+
+    picoFinderState.results.combined.slice(0, 200).forEach(r => {
+        tableHTML += `
+            <tr>
+                <td><a href="https://clinicaltrials.gov/study/${r.nctId}" target="_blank">${r.nctId}</a></td>
+                <td title="${r.title}">${r.title.substring(0, 80)}${r.title.length > 80 ? '...' : ''}</td>
+                <td>${r.status}</td>
+                <td>${r.phase}</td>
+                <td>${r.source}</td>
+            </tr>
+        `;
+    });
+
+    if (picoFinderState.results.combined.length > 200) {
+        tableHTML += `<tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">... and ${picoFinderState.results.combined.length - 200} more</td></tr>`;
+    }
+
+    tableHTML += '</tbody></table>';
+    document.getElementById('pf_resultsTable').innerHTML = tableHTML;
+}
+
+// Copy AACT SQL
+function copyAACTSQL() {
+    navigator.clipboard.writeText(picoFinderState.aactSQL).then(() => {
+        log('picoFinderLog', 'AACT SQL copied to clipboard', 'success');
+    });
+}
+
+// Export results
+function exportPicoResults(format) {
+    const results = picoFinderState.results.combined;
+
+    if (format === 'nct') {
+        const ncts = results.map(r => r.nctId).join('\n');
+        downloadFile(ncts, 'pico_rct_nct_ids.txt', 'text/plain');
+    } else if (format === 'csv') {
+        let csv = 'NCT_ID,Title,Status,Phase,Conditions,Interventions,Source\n';
+        results.forEach(r => {
+            csv += `"${r.nctId}","${(r.title || '').replace(/"/g, '""')}","${r.status}","${r.phase}","${(r.conditions || '').replace(/"/g, '""')}","${(r.interventions || '').replace(/"/g, '""')}","${r.source}"\n`;
+        });
+        downloadFile(csv, 'pico_rct_results.csv', 'text/csv');
+    }
+}
+
+function downloadFile(content, filename, type) {
+    const blob = new Blob([content], { type });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Load example
+function loadPicoFinderExample() {
+    document.getElementById('pf_population').value = 'adults with type 2 diabetes';
+    document.getElementById('pf_intervention').value = 'metformin';
+    document.getElementById('pf_comparator').value = 'placebo';
+    document.getElementById('pf_outcome').value = 'HbA1c';
+    document.getElementById('pf_studyPhase').value = 'PHASE3,PHASE4';
+    document.getElementById('pf_status').value = 'COMPLETED';
+}
+
+// Start new search
+function picoStartNew() {
+    document.getElementById('pf_population').value = '';
+    document.getElementById('pf_intervention').value = '';
+    document.getElementById('pf_comparator').value = '';
+    document.getElementById('pf_outcome').value = '';
+    document.getElementById('pf_studyPhase').value = '';
+    document.getElementById('pf_status').value = '';
+    document.getElementById('pf_dateFrom').value = '';
+    document.getElementById('picoFinderLog').innerHTML = '';
+
+    picoFinderState = {
+        originalPICO: { population: '', intervention: '', comparator: '', outcome: '' },
+        expandedTerms: { population: [], intervention: [], comparator: [], outcome: [] },
+        selectedTerms: { population: [], intervention: [], comparator: [], outcome: [] },
+        results: { ctgov: [], pubmed: [], combined: [] },
+        aactSQL: ''
+    };
+
+    picoGoToStep(1);
+}
+
+// =============================================================================
+// COMPREHENSIVE RCT SEARCH FUNCTIONS
+// =============================================================================
+
+// Global state for comprehensive search
+let comprehensiveResults = {
+    pubmedNCTs: new Set(),
+    epmcNCTs: new Set(),
+    linkageNCTs: new Set(),
+    ctgovNCTs: new Set(),
+    allNCTs: new Set(),
+    nctSourceMap: {} // NCT ID -> array of sources
+};
+
+const EUROPE_PMC_API = 'https://www.ebi.ac.uk/europepmc/webservices/rest/search';
+
+async function runComprehensiveSearch() {
+    const condition = document.getElementById('compCondition').value.trim();
+    if (!condition) {
+        alert('Please enter a condition to search');
+        return;
+    }
+
+    // Reset state
+    comprehensiveResults = {
+        pubmedNCTs: new Set(),
+        epmcNCTs: new Set(),
+        linkageNCTs: new Set(),
+        ctgovNCTs: new Set(),
+        allNCTs: new Set(),
+        nctSourceMap: {}
+    };
+
+    // Show progress, hide results
+    document.getElementById('compProgress').classList.remove('hidden');
+    document.getElementById('compResults').classList.add('hidden');
+    document.getElementById('compSearchBtn').disabled = true;
+
+    const logId = 'compLog';
+    log(logId, `Starting comprehensive RCT search for: "${condition}"`, 'info');
+    log(logId, '━'.repeat(60), 'info');
+
+    const usePubMed = document.getElementById('compPubMed').checked;
+    const useEPMC = document.getElementById('compEPMC').checked;
+    const useLinkage = document.getElementById('compLinkage').checked;
+    const useCTGov = document.getElementById('compCTGov').checked;
+
+    const maxPubMed = parseInt(document.getElementById('compMaxPubMed').value) || 500;
+    const maxEPMC = parseInt(document.getElementById('compMaxEPMC').value) || 500;
+
+    let progress = 0;
+    const totalSteps = [usePubMed, useEPMC, useLinkage, useCTGov].filter(Boolean).length;
+
+    try {
+        // 1. PubMed Article Search
+        if (usePubMed) {
+            updateCompProgress(progress, totalSteps, 'Searching PubMed articles...');
+            await searchPubMedForNCTs(condition, maxPubMed, logId);
+            progress++;
+        }
+
+        // 2. Europe PMC Search
+        if (useEPMC) {
+            updateCompProgress(progress, totalSteps, 'Searching Europe PMC...');
+            await searchEuropePMC(condition, maxEPMC, logId);
+            progress++;
+        }
+
+        // 3. PubMed-CT.gov Linkage
+        if (useLinkage) {
+            updateCompProgress(progress, totalSteps, 'Checking PubMed-CT.gov linkage...');
+            await searchPubMedLinkage(condition, logId);
+            progress++;
+        }
+
+        // 4. CT.gov Direct Search
+        if (useCTGov) {
+            updateCompProgress(progress, totalSteps, 'Searching CT.gov API...');
+            await searchCTGovForComp(condition, logId);
+            progress++;
+        }
+
+        // Combine all NCT IDs
+        combineComprehensiveResults();
+
+        // Show results
+        updateCompProgress(totalSteps, totalSteps, 'Complete!');
+        displayComprehensiveResults(condition);
+
+    } catch (error) {
+        log(logId, `ERROR: ${error.message}`, 'error');
+    } finally {
+        document.getElementById('compSearchBtn').disabled = false;
+    }
+}
+
+function updateCompProgress(current, total, message) {
+    const pct = total > 0 ? Math.round((current / total) * 100) : 0;
+    document.getElementById('compProgressBar').style.width = `${pct}%`;
+    document.getElementById('compProgressText').textContent = message;
+}
+
+// Search PubMed for articles and extract NCT IDs
+async function searchPubMedForNCTs(condition, maxResults, logId) {
+    log(logId, '\n[1] PUBMED ARTICLE SEARCH', 'info');
+
+    // Build search query for clinical trials about this condition
+    const query = `"${condition}"[Title/Abstract] AND (randomized[Title/Abstract] OR "clinical trial"[Publication Type])`;
+
+    try {
+        // Step 1: Search for PMIDs
+        const searchParams = new URLSearchParams({
+            db: 'pubmed',
+            term: query,
+            retmax: maxResults,
+            retmode: 'json',
+            usehistory: 'y'
+        });
+
+        const searchResp = await fetch(`${APIS.pubmed.search}?${searchParams}`);
+        if (!searchResp.ok) throw new Error('PubMed search failed');
+
+        const searchData = await searchResp.json();
+        const pmids = searchData.esearchresult?.idlist || [];
+        log(logId, `  Found ${pmids.length} PubMed articles`, 'info');
+
+        if (pmids.length === 0) return;
+
+        // Step 2: Fetch article XML to extract NCT IDs
+        const batchSize = 100;
+        for (let i = 0; i < pmids.length; i += batchSize) {
+            const batch = pmids.slice(i, i + batchSize);
+
+            const fetchParams = new URLSearchParams({
+                db: 'pubmed',
+                id: batch.join(','),
+                retmode: 'xml'
+            });
+
+            try {
+                const fetchResp = await fetch(`${APIS.pubmed.fetch}?${fetchParams}`);
+                if (fetchResp.ok) {
+                    const xmlText = await fetchResp.text();
+                    const ncts = extractNCTsFromPubMedXML(xmlText);
+                    ncts.forEach(nct => {
+                        comprehensiveResults.pubmedNCTs.add(nct);
+                        addNCTSource(nct, 'PubMed Articles');
+                    });
+                }
+            } catch (e) {
+                // Continue with next batch
+            }
+
+            // Rate limit
+            await delay(350);
+        }
+
+        log(logId, `  Extracted ${comprehensiveResults.pubmedNCTs.size} NCT IDs from PubMed abstracts`, 'success');
+
+    } catch (error) {
+        log(logId, `  PubMed error: ${error.message}`, 'error');
+    }
+}
+
+// Extract NCT IDs from PubMed XML
+function extractNCTsFromPubMedXML(xmlText) {
+    const ncts = new Set();
+    const nctPattern = /NCT\d{8}/gi;
+
+    // Find NCT IDs anywhere in the XML
+    const matches = xmlText.match(nctPattern) || [];
+    matches.forEach(m => ncts.add(m.toUpperCase()));
+
+    return ncts;
+}
+
+// Search Europe PMC
+async function searchEuropePMC(condition, maxResults, logId) {
+    log(logId, '\n[2] EUROPE PMC SEARCH', 'info');
+
+    const params = new URLSearchParams({
+        query: `"${condition}" AND (NCT OR "clinical trial")`,
+        format: 'json',
+        pageSize: Math.min(maxResults, 1000),
+        resultType: 'core'
+    });
+
+    try {
+        const resp = await fetch(`${EUROPE_PMC_API}?${params}`);
+        if (!resp.ok) throw new Error('Europe PMC request failed');
+
+        const data = await resp.json();
+        const results = data.resultList?.result || [];
+        log(logId, `  Found ${results.length} Europe PMC results`, 'info');
+
+        results.forEach(result => {
+            // Check abstract
+            const abstract = result.abstractText || '';
+            const nctMatches = abstract.match(/NCT\d{8}/gi) || [];
+            nctMatches.forEach(nct => {
+                const normalized = nct.toUpperCase();
+                comprehensiveResults.epmcNCTs.add(normalized);
+                addNCTSource(normalized, 'Europe PMC');
+            });
+
+            // Check full text references if available
+            const fullTextRefs = result.fullTextRefList?.fullTextRef || [];
+            fullTextRefs.forEach(ref => {
+                const refStr = JSON.stringify(ref);
+                const refMatches = refStr.match(/NCT\d{8}/gi) || [];
+                refMatches.forEach(nct => {
+                    const normalized = nct.toUpperCase();
+                    comprehensiveResults.epmcNCTs.add(normalized);
+                    addNCTSource(normalized, 'Europe PMC');
+                });
+            });
+        });
+
+        log(logId, `  Extracted ${comprehensiveResults.epmcNCTs.size} NCT IDs from Europe PMC`, 'success');
+
+    } catch (error) {
+        log(logId, `  Europe PMC error: ${error.message}`, 'error');
+    }
+}
+
+// Search PubMed-CT.gov Linkage
+async function searchPubMedLinkage(condition, logId) {
+    log(logId, '\n[3] PUBMED-CT.GOV LINKAGE', 'info');
+
+    // First search for clinical trials in PubMed
+    const query = `"${condition}"[Title/Abstract] AND "clinical trial"[Publication Type]`;
+
+    try {
+        const searchParams = new URLSearchParams({
+            db: 'pubmed',
+            term: query,
+            retmax: 500,
+            retmode: 'json'
+        });
+
+        const searchResp = await fetch(`${APIS.pubmed.search}?${searchParams}`);
+        if (!searchResp.ok) throw new Error('PubMed linkage search failed');
+
+        const searchData = await searchResp.json();
+        const pmids = searchData.esearchresult?.idlist || [];
+        log(logId, `  Found ${pmids.length} clinical trial articles`, 'info');
+
+        if (pmids.length === 0) return;
+
+        // Use elink to find linked clinical trials
+        const linkParams = new URLSearchParams({
+            dbfrom: 'pubmed',
+            db: 'clinicaltrials',
+            id: pmids.slice(0, 100).join(','),
+            retmode: 'json'
+        });
+
+        const linkResp = await fetch(`https://eutils.ncbi.nlm.nih.gov/entrez/eutils/elink.fcgi?${linkParams}`);
+        if (!linkResp.ok) {
+            log(logId, '  elink request failed, trying alternative approach', 'warning');
+            return;
+        }
+
+        const linkData = await linkResp.json();
+        const linksets = linkData.linksets || [];
+
+        // Extract NCT IDs from linkage
+        for (const linkset of linksets) {
+            const linksetdbs = linkset.linksetdbs || [];
+            for (const db of linksetdbs) {
+                if (db.dbto === 'clinicaltrials') {
+                    const links = db.links || [];
+                    // These are internal IDs, need to resolve them
+                    await resolveClinicalTrialsLinks(links, logId);
+                }
+            }
+        }
+
+        log(logId, `  Found ${comprehensiveResults.linkageNCTs.size} NCT IDs via PubMed linkage`, 'success');
+
+    } catch (error) {
+        log(logId, `  Linkage error: ${error.message}`, 'error');
+    }
+}
+
+// Resolve internal PubMed clinicaltrials IDs to NCT IDs
+async function resolveClinicalTrialsLinks(links, logId) {
+    if (!links || links.length === 0) return;
+
+    // Filter and process links
+    const numericIds = links.filter(l => /^\d+$/.test(String(l)));
+
+    if (numericIds.length === 0) {
+        // Check if any are already NCT IDs
+        links.forEach(l => {
+            const linkStr = String(l).toUpperCase();
+            if (linkStr.startsWith('NCT')) {
+                comprehensiveResults.linkageNCTs.add(linkStr);
+                addNCTSource(linkStr, 'PubMed Linkage');
+            }
+        });
+        return;
+    }
+
+    try {
+        const summaryParams = new URLSearchParams({
+            db: 'clinicaltrials',
+            id: numericIds.slice(0, 200).join(','),
+            retmode: 'json'
+        });
+
+        const resp = await fetch(`${APIS.pubmed.summary}?${summaryParams}`);
+        if (!resp.ok) return;
+
+        const data = await resp.json();
+        const results = data.result || {};
+
+        for (const [key, value] of Object.entries(results)) {
+            if (typeof value !== 'object') continue;
+            const nctId = value.nct_id || value.nctid;
+            if (nctId) {
+                const normalized = nctId.toUpperCase();
+                comprehensiveResults.linkageNCTs.add(normalized);
+                addNCTSource(normalized, 'PubMed Linkage');
+            }
+        }
+    } catch (error) {
+        // Silently fail
+    }
+}
+
+// Search CT.gov directly
+async function searchCTGovForComp(condition, logId) {
+    log(logId, '\n[4] CT.GOV API DIRECT SEARCH', 'info');
+
+    try {
+        const params = new URLSearchParams({
+            'query.cond': condition,
+            pageSize: 1000,
+            countTotal: true,
+            fields: 'NCTId'
+        });
+
+        const resp = await fetch(`${APIS.ctgov}?${params}`);
+        if (!resp.ok) throw new Error('CT.gov API request failed');
+
+        const data = await resp.json();
+        const studies = data.studies || [];
+        log(logId, `  Found ${studies.length} studies in CT.gov`, 'info');
+
+        studies.forEach(study => {
+            const nctId = study.protocolSection?.identificationModule?.nctId;
+            if (nctId) {
+                const normalized = nctId.toUpperCase();
+                comprehensiveResults.ctgovNCTs.add(normalized);
+                addNCTSource(normalized, 'CT.gov API');
+            }
+        });
+
+        // Check if there are more results
+        const totalCount = data.totalCount || 0;
+        if (totalCount > 1000) {
+            log(logId, `  Note: CT.gov has ${totalCount} total studies (showing first 1000)`, 'warning');
+        }
+
+        log(logId, `  Retrieved ${comprehensiveResults.ctgovNCTs.size} NCT IDs from CT.gov`, 'success');
+
+    } catch (error) {
+        log(logId, `  CT.gov error: ${error.message}`, 'error');
+    }
+}
+
+// Add NCT ID source tracking
+function addNCTSource(nctId, source) {
+    if (!comprehensiveResults.nctSourceMap[nctId]) {
+        comprehensiveResults.nctSourceMap[nctId] = [];
+    }
+    if (!comprehensiveResults.nctSourceMap[nctId].includes(source)) {
+        comprehensiveResults.nctSourceMap[nctId].push(source);
+    }
+}
+
+// Combine all NCT IDs from different sources
+function combineComprehensiveResults() {
+    comprehensiveResults.allNCTs = new Set([
+        ...comprehensiveResults.pubmedNCTs,
+        ...comprehensiveResults.epmcNCTs,
+        ...comprehensiveResults.linkageNCTs,
+        ...comprehensiveResults.ctgovNCTs
+    ]);
+}
+
+// Display comprehensive search results
+function displayComprehensiveResults(condition) {
+    const logId = 'compLog';
+
+    log(logId, '\n' + '━'.repeat(60), 'info');
+    log(logId, 'COMPREHENSIVE SEARCH COMPLETE', 'success');
+    log(logId, `Total unique NCT IDs: ${comprehensiveResults.allNCTs.size}`, 'success');
+
+    document.getElementById('compResults').classList.remove('hidden');
+    document.getElementById('compProgress').classList.add('hidden');
+
+    // Summary stats
+    const ctgovOnly = [...comprehensiveResults.ctgovNCTs].filter(nct =>
+        comprehensiveResults.nctSourceMap[nct]?.length === 1 &&
+        comprehensiveResults.nctSourceMap[nct][0] === 'CT.gov API'
+    ).length;
+
+    const foundByLiterature = comprehensiveResults.allNCTs.size - ctgovOnly;
+    const multiSource = [...comprehensiveResults.allNCTs].filter(nct =>
+        (comprehensiveResults.nctSourceMap[nct]?.length || 0) > 1
+    ).length;
+
+    document.getElementById('compSummary').innerHTML = `
+        <div class="stat-card"><div class="value">${comprehensiveResults.allNCTs.size}</div><div class="label">Total Unique NCT IDs</div></div>
+        <div class="stat-card"><div class="value">${comprehensiveResults.ctgovNCTs.size}</div><div class="label">From CT.gov</div></div>
+        <div class="stat-card"><div class="value">${comprehensiveResults.pubmedNCTs.size}</div><div class="label">From PubMed</div></div>
+        <div class="stat-card"><div class="value">${comprehensiveResults.epmcNCTs.size}</div><div class="label">From Europe PMC</div></div>
+        <div class="stat-card"><div class="value">${multiSource}</div><div class="label">Found in 2+ Sources</div></div>
+    `;
+
+    // Source cards
+    const sources = [
+        { name: 'CT.gov API', set: comprehensiveResults.ctgovNCTs, icon: 'fas fa-flask', color: 'var(--primary)' },
+        { name: 'PubMed Articles', set: comprehensiveResults.pubmedNCTs, icon: 'fas fa-book-medical', color: 'var(--success)' },
+        { name: 'Europe PMC', set: comprehensiveResults.epmcNCTs, icon: 'fas fa-book', color: 'var(--secondary)' },
+        { name: 'PubMed Linkage', set: comprehensiveResults.linkageNCTs, icon: 'fas fa-link', color: 'var(--warning)' }
+    ];
+
+    let cardsHTML = '';
+    sources.forEach(src => {
+        const uniqueToSource = [...src.set].filter(nct =>
+            comprehensiveResults.nctSourceMap[nct]?.length === 1
+        ).length;
+
+        cardsHTML += `
+            <div class="registry-card ${src.set.size > 0 ? 'has-results' : ''}">
+                <h4><i class="${src.icon}" style="color: ${src.color}"></i> ${src.name}</h4>
+                <div class="count">${src.set.size}</div>
+                <small style="color: var(--text-secondary);">${uniqueToSource} unique to this source</small>
+            </div>
+        `;
+    });
+    document.getElementById('compSourceCards').innerHTML = cardsHTML;
+
+    // NCT ID list
+    const sortedNCTs = [...comprehensiveResults.allNCTs].sort();
+    document.getElementById('compUniqueCount').textContent = sortedNCTs.length;
+    document.getElementById('compNCTList').textContent = sortedNCTs.join('\n');
+
+    // Source matrix table
+    let matrixHTML = '<table class="results-table"><thead><tr><th>NCT ID</th><th>CT.gov</th><th>PubMed</th><th>Europe PMC</th><th>Linkage</th><th>Sources</th></tr></thead><tbody>';
+
+    sortedNCTs.slice(0, 200).forEach(nct => {
+        const inCtgov = comprehensiveResults.ctgovNCTs.has(nct) ? '✓' : '';
+        const inPubmed = comprehensiveResults.pubmedNCTs.has(nct) ? '✓' : '';
+        const inEpmc = comprehensiveResults.epmcNCTs.has(nct) ? '✓' : '';
+        const inLinkage = comprehensiveResults.linkageNCTs.has(nct) ? '✓' : '';
+        const sourceCount = comprehensiveResults.nctSourceMap[nct]?.length || 0;
+
+        matrixHTML += `
+            <tr>
+                <td><a href="https://clinicaltrials.gov/study/${nct}" target="_blank">${nct}</a></td>
+                <td style="text-align:center; color: var(--success);">${inCtgov}</td>
+                <td style="text-align:center; color: var(--success);">${inPubmed}</td>
+                <td style="text-align:center; color: var(--success);">${inEpmc}</td>
+                <td style="text-align:center; color: var(--success);">${inLinkage}</td>
+                <td style="text-align:center;">${sourceCount}</td>
+            </tr>
+        `;
+    });
+
+    if (sortedNCTs.length > 200) {
+        matrixHTML += `<tr><td colspan="6" style="text-align:center; color: var(--text-secondary);">... and ${sortedNCTs.length - 200} more NCT IDs</td></tr>`;
+    }
+
+    matrixHTML += '</tbody></table>';
+    document.getElementById('compMatrix').innerHTML = matrixHTML;
+
+    // Log summary
+    log(logId, `\nSource breakdown:`, 'info');
+    log(logId, `  CT.gov API: ${comprehensiveResults.ctgovNCTs.size} NCT IDs`, 'info');
+    log(logId, `  PubMed Articles: ${comprehensiveResults.pubmedNCTs.size} NCT IDs`, 'info');
+    log(logId, `  Europe PMC: ${comprehensiveResults.epmcNCTs.size} NCT IDs`, 'info');
+    log(logId, `  PubMed Linkage: ${comprehensiveResults.linkageNCTs.size} NCT IDs`, 'info');
+    log(logId, `  Found in 2+ sources: ${multiSource} NCT IDs`, 'info');
+}
+
+// Export comprehensive NCT IDs
+function exportCompNCTs() {
+    const ncts = [...comprehensiveResults.allNCTs].sort().join('\n');
+    const blob = new Blob([ncts], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comprehensive_nct_ids.txt';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+// Export source matrix as CSV
+function exportCompMatrix() {
+    const sortedNCTs = [...comprehensiveResults.allNCTs].sort();
+    let csv = 'NCT_ID,CT.gov,PubMed,Europe_PMC,PubMed_Linkage,Source_Count\n';
+
+    sortedNCTs.forEach(nct => {
+        const inCtgov = comprehensiveResults.ctgovNCTs.has(nct) ? 1 : 0;
+        const inPubmed = comprehensiveResults.pubmedNCTs.has(nct) ? 1 : 0;
+        const inEpmc = comprehensiveResults.epmcNCTs.has(nct) ? 1 : 0;
+        const inLinkage = comprehensiveResults.linkageNCTs.has(nct) ? 1 : 0;
+        const sourceCount = comprehensiveResults.nctSourceMap[nct]?.length || 0;
+        csv += `${nct},${inCtgov},${inPubmed},${inEpmc},${inLinkage},${sourceCount}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comprehensive_source_matrix.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function loadCompExample() {
+    document.getElementById('compCondition').value = 'stroke';
+}
+
+function clearCompResults() {
+    document.getElementById('compCondition').value = '';
+    document.getElementById('compProgress').classList.add('hidden');
+    document.getElementById('compResults').classList.add('hidden');
+    document.getElementById('compLog').innerHTML = '';
+    comprehensiveResults = {
+        pubmedNCTs: new Set(),
+        epmcNCTs: new Set(),
+        linkageNCTs: new Set(),
+        ctgovNCTs: new Set(),
+        allNCTs: new Set(),
+        nctSourceMap: {}
+    };
+}
+
+// =============================================================================
+// INIT
+// =============================================================================
+// Initialize AACT IndexedDB
+initAACTDatabase().then(() => {
+    console.log('AACT IndexedDB initialized');
+}).catch(err => {
+    console.error('AACT IndexedDB error:', err);
+});
+
+console.log('Systematic Review Search Tool loaded - Multi-Registry Edition with AACT, MeSH & Comprehensive RCT Search');
+    </script>
+</body>
+</html>

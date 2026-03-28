@@ -1,0 +1,3373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CT.gov Search Strategy Tool - Complete Edition</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Comprehensive clinical trial search strategy tool with validation, optimization, and systematic review support">
+    <meta name="theme-color" content="#4f46e5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="CTGov Search">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="icons/icon-192.png">
+
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --secondary: #06b6d4;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --bg-dark: #0f172a;
+            --bg-card: #1e293b;
+            --bg-input: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --border: #475569;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, #1a1a2e 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            text-align: center;
+            padding: 30px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+
+        header p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid var(--border);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .tabs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 10px;
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 8px 8px 0 0;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+        }
+
+        .tab-btn:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+
+        .tab-content {
+            display: none;
+            background: var(--bg-card);
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .form-group input, .form-group select, .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning);
+            color: black;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--bg-input);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .strategies-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .strategy-card {
+            background: var(--bg-input);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .strategy-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+
+        .strategy-card.selected {
+            border-color: var(--success);
+            background: rgba(16, 185, 129, 0.1);
+        }
+
+        .strategy-card h4 {
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+
+        .strategy-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .strategy-card .recall-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-top: 10px;
+        }
+
+        .recall-high { background: var(--success); color: white; }
+        .recall-medium { background: var(--warning); color: black; }
+        .recall-low { background: var(--danger); color: white; }
+
+        .results-container {
+            margin-top: 20px;
+        }
+
+        .results-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-card .value {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        .stat-card .label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .results-table th, .results-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .results-table th {
+            background: var(--bg-input);
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .results-table tr:hover {
+            background: rgba(79, 70, 229, 0.1);
+        }
+
+        .log-area {
+            background: #000;
+            color: #0f0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            padding: 15px;
+            border-radius: 8px;
+            height: 200px;
+            overflow-y: auto;
+            font-size: 0.85rem;
+            margin-top: 15px;
+        }
+
+        .export-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+
+        .ci-table {
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .ci-bar {
+            height: 20px;
+            background: var(--bg-input);
+            border-radius: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ci-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+        }
+
+        .ci-bar-ci {
+            position: absolute;
+            top: 0;
+            height: 100%;
+            background: rgba(255,255,255,0.2);
+            border-left: 2px solid var(--warning);
+            border-right: 2px solid var(--warning);
+        }
+
+        .flowchart-container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .flowchart-node {
+            display: inline-block;
+            padding: 15px 25px;
+            margin: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .flowchart-node.start {
+            background: var(--primary);
+            color: white;
+        }
+
+        .flowchart-node.decision {
+            background: var(--warning);
+            color: black;
+            transform: rotate(0deg);
+        }
+
+        .flowchart-node.endpoint {
+            background: var(--success);
+            color: white;
+        }
+
+        .flowchart-arrow {
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+        }
+
+        .validation-panel {
+            background: var(--bg-input);
+            border-radius: 10px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .nct-input-area {
+            min-height: 100px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            .tab-btn {
+                border-radius: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">Loading Python environment (Pyodide)...</div>
+        <div id="loadingStatus" style="margin-top: 10px; color: #64748b; font-size: 0.9rem;"></div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1><i class="fas fa-search-plus"></i> CT.gov Search Strategy Tool</h1>
+            <p>Complete Edition - All Features with Python/WASM Backend</p>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="search"><i class="fas fa-search"></i> Search</button>
+            <button class="tab-btn" data-tab="compare"><i class="fas fa-balance-scale"></i> Compare Strategies</button>
+            <button class="tab-btn" data-tab="validate"><i class="fas fa-check-circle"></i> Validate NCTs</button>
+            <button class="tab-btn" data-tab="metrics"><i class="fas fa-chart-bar"></i> Metrics & CI</button>
+            <button class="tab-btn" data-tab="export"><i class="fas fa-download"></i> Export</button>
+            <button class="tab-btn" data-tab="flowchart"><i class="fas fa-project-diagram"></i> Decision Guide</button>
+            <button class="tab-btn" data-tab="ictrp"><i class="fas fa-globe"></i> Multi-Registry</button>
+            <button class="tab-btn" data-tab="aact"><i class="fas fa-database"></i> AACT Validation</button>
+            <button class="tab-btn" data-tab="optimizer"><i class="fas fa-brain"></i> Strategy Optimizer</button>
+            <button class="tab-btn" data-tab="history"><i class="fas fa-history"></i> History</button>
+        </div>
+
+        <!-- Search Tab -->
+        <div id="search" class="tab-content active">
+            <h2><i class="fas fa-search"></i> Search ClinicalTrials.gov</h2>
+
+            <div class="form-group">
+                <label for="conditionInput">Condition/Disease</label>
+                <input type="text" id="conditionInput" placeholder="e.g., diabetes, breast cancer, hypertension">
+            </div>
+
+            <div class="form-group">
+                <label for="interventionInput">Intervention (optional)</label>
+                <input type="text" id="interventionInput" placeholder="e.g., metformin, chemotherapy">
+            </div>
+
+            <h3 style="margin: 20px 0 15px;">Select Search Strategy</h3>
+            <div class="strategies-grid" id="strategiesGrid"></div>
+
+            <div style="margin-top: 20px;">
+                <button class="btn btn-primary" id="searchBtn" onclick="executeSearch()">
+                    <i class="fas fa-search"></i> Search CT.gov
+                </button>
+                <button class="btn btn-secondary" onclick="clearResults()">
+                    <i class="fas fa-trash"></i> Clear
+                </button>
+            </div>
+
+            <div id="searchResults" class="results-container hidden">
+                <h3>Search Results</h3>
+                <div class="results-summary" id="resultsSummary"></div>
+                <div id="studiesTable"></div>
+            </div>
+
+            <div class="log-area" id="searchLog"></div>
+        </div>
+
+        <!-- Compare Tab -->
+        <div id="compare" class="tab-content">
+            <h2><i class="fas fa-balance-scale"></i> Compare All Strategies</h2>
+
+            <div class="form-group">
+                <label for="compareCondition">Condition to Compare</label>
+                <input type="text" id="compareCondition" placeholder="e.g., diabetes">
+            </div>
+
+            <button class="btn btn-primary" onclick="compareAllStrategies()">
+                <i class="fas fa-play"></i> Compare All 10 Strategies
+            </button>
+
+            <div id="comparisonResults" class="results-container hidden">
+                <h3>Strategy Comparison Results</h3>
+                <div id="comparisonTable"></div>
+                <div id="comparisonChart" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="log-area" id="compareLog"></div>
+        </div>
+
+        <!-- Validate Tab -->
+        <div id="validate" class="tab-content">
+            <h2><i class="fas fa-check-circle"></i> Validate NCT IDs</h2>
+
+            <div class="form-group">
+                <label for="nctInput">Enter NCT IDs (one per line or comma-separated)</label>
+                <textarea id="nctInput" class="nct-input-area" placeholder="NCT00000001&#10;NCT00000002&#10;NCT00000003"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="validateCondition">Condition for Recall Calculation (optional)</label>
+                <input type="text" id="validateCondition" placeholder="e.g., diabetes">
+            </div>
+
+            <button class="btn btn-primary" onclick="validateNCTs()">
+                <i class="fas fa-check"></i> Validate NCT IDs
+            </button>
+
+            <div id="validationResults" class="validation-panel hidden">
+                <h3>Validation Results</h3>
+                <div id="validationSummary"></div>
+                <div id="validationTable"></div>
+            </div>
+
+            <div class="log-area" id="validateLog"></div>
+        </div>
+
+        <!-- Metrics Tab -->
+        <div id="metrics" class="tab-content">
+            <h2><i class="fas fa-chart-bar"></i> Precision, Recall & Confidence Intervals</h2>
+
+            <div class="validation-panel">
+                <h3>Wilson Score Confidence Intervals</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                    Calculate confidence intervals for recall estimates using the Wilson score method.
+                </p>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                    <div class="form-group">
+                        <label for="ciSuccesses">Successes (NCTs found)</label>
+                        <input type="number" id="ciSuccesses" value="45" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="ciTotal">Total (known NCTs)</label>
+                        <input type="number" id="ciTotal" value="50" min="1">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="calculateCI()">
+                    <i class="fas fa-calculator"></i> Calculate 95% CI
+                </button>
+
+                <div id="ciResult" style="margin-top: 20px;"></div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3>Precision Metrics Calculator</h3>
+
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                    <div class="form-group">
+                        <label for="metricTP">True Positives (TP)</label>
+                        <input type="number" id="metricTP" value="45" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="metricFP">False Positives (FP)</label>
+                        <input type="number" id="metricFP" value="955" min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="metricFN">False Negatives (FN)</label>
+                        <input type="number" id="metricFN" value="5" min="0">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="calculateMetrics()">
+                    <i class="fas fa-calculator"></i> Calculate All Metrics
+                </button>
+
+                <div id="metricsResult" style="margin-top: 20px;"></div>
+            </div>
+        </div>
+
+        <!-- Export Tab -->
+        <div id="export" class="tab-content">
+            <h2><i class="fas fa-download"></i> Export Study Data</h2>
+
+            <div class="form-group">
+                <label for="exportCondition">Condition to Export</label>
+                <input type="text" id="exportCondition" placeholder="e.g., diabetes">
+            </div>
+
+            <div class="form-group">
+                <label for="exportStrategy">Strategy</label>
+                <select id="exportStrategy">
+                    <option value="S1">S1 - Condition Only (Maximum Recall)</option>
+                    <option value="S2">S2 - Interventional Studies</option>
+                    <option value="S3">S3 - Randomized Allocation Only</option>
+                    <option value="S4">S4 - Phase 3/4 Studies</option>
+                    <option value="S5">S5 - Has Posted Results</option>
+                    <option value="S6">S6 - Completed Status</option>
+                    <option value="S7">S7 - Interventional + Completed</option>
+                    <option value="S8">S8 - RCT + Phase 3/4 + Completed</option>
+                    <option value="S9">S9 - Full-Text RCT Keywords</option>
+                    <option value="S10">S10 - Treatment RCTs Only</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="exportLimit">Maximum Studies to Export</label>
+                <input type="number" id="exportLimit" value="100" min="1" max="1000">
+            </div>
+
+            <button class="btn btn-primary" onclick="fetchForExport()">
+                <i class="fas fa-cloud-download-alt"></i> Fetch Studies
+            </button>
+
+            <div id="exportReady" class="hidden" style="margin-top: 20px;">
+                <h3>Export Options</h3>
+                <p id="exportCount" style="color: var(--text-secondary); margin-bottom: 15px;"></p>
+
+                <div class="export-buttons">
+                    <button class="btn btn-success" onclick="exportRIS()">
+                        <i class="fas fa-file-alt"></i> Export RIS (EndNote/Zotero)
+                    </button>
+                    <button class="btn btn-warning" onclick="exportCSV()">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportJSON()">
+                        <i class="fas fa-file-code"></i> Export JSON
+                    </button>
+                    <button class="btn btn-primary" onclick="exportEndNote()">
+                        <i class="fas fa-file-export"></i> Export EndNote XML
+                    </button>
+                </div>
+            </div>
+
+            <div class="log-area" id="exportLog"></div>
+        </div>
+
+        <!-- Decision Flowchart Tab -->
+        <div id="flowchart" class="tab-content">
+            <h2><i class="fas fa-project-diagram"></i> Strategy Selection Guide</h2>
+
+            <div class="flowchart-container">
+                <div class="flowchart-node start" onclick="selectFromFlowchart('start')">
+                    <i class="fas fa-play"></i> What is your goal?
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <span class="flowchart-arrow"><i class="fas fa-arrow-down"></i></span>
+                </div>
+
+                <div style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S1')">
+                        <strong>Maximum Sensitivity</strong><br>
+                        <small>Find ALL trials</small>
+                    </div>
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S3')">
+                        <strong>RCTs Only</strong><br>
+                        <small>True randomized trials</small>
+                    </div>
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S6')">
+                        <strong>Completed Trials</strong><br>
+                        <small>Finished studies</small>
+                    </div>
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S5')">
+                        <strong>With Results</strong><br>
+                        <small>Posted results only</small>
+                    </div>
+                    <div class="flowchart-node decision" onclick="selectFromFlowchart('S8')">
+                        <strong>High Quality</strong><br>
+                        <small>RCT + Phase 3/4 + Complete</small>
+                    </div>
+                </div>
+
+                <div style="margin: 20px 0;">
+                    <span class="flowchart-arrow"><i class="fas fa-arrow-down"></i></span>
+                </div>
+
+                <div id="flowchartResult" class="flowchart-node endpoint hidden">
+                    Use Strategy: <span id="selectedStrategy"></span>
+                </div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 30px;">
+                <h3>Strategy Reference Table</h3>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Recall</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody id="strategyRefTable"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- ICTRP Tab -->
+        <div id="ictrp" class="tab-content">
+            <h2><i class="fas fa-globe"></i> Multi-Registry Search</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Search across multiple clinical trial registries (CT.gov, WHO ICTRP, EU CTR, ISRCTN)
+            </p>
+
+            <div class="form-group">
+                <label for="ictrpCondition">Condition</label>
+                <input type="text" id="ictrpCondition" placeholder="e.g., diabetes">
+            </div>
+
+            <div class="form-group">
+                <label>Registries to Search</label>
+                <div style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px;">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="regCTgov" checked> ClinicalTrials.gov
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="regICTRP" checked> WHO ICTRP
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="regEUCTR"> EU Clinical Trials
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="regISRCTN"> ISRCTN
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" onclick="searchMultiRegistry()">
+                <i class="fas fa-globe"></i> Search All Selected Registries
+            </button>
+
+            <div id="ictrpResults" class="hidden" style="margin-top: 20px;">
+                <h3>Multi-Registry Results</h3>
+                <div id="ictrpSummary" class="results-summary"></div>
+                <div id="ictrpTable"></div>
+            </div>
+
+            <div class="log-area" id="ictrpLog"></div>
+        </div>
+
+        <!-- AACT Validation Tab -->
+        <div id="aact" class="tab-content">
+            <h2><i class="fas fa-database"></i> AACT Database Validation</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Validate NCT IDs against ClinicalTrials.gov/AACT database with caching and detailed metadata extraction.
+            </p>
+
+            <div class="validation-panel">
+                <h3><i class="fas fa-upload"></i> Batch NCT Validation</h3>
+                <div class="form-group">
+                    <label for="aactNctInput">Enter NCT IDs (one per line, comma-separated, or paste from spreadsheet)</label>
+                    <textarea id="aactNctInput" class="nct-input-area" style="min-height: 150px;"
+                              placeholder="NCT00000001&#10;NCT00000002&#10;NCT00000003&#10;&#10;Or paste comma-separated: NCT00000001, NCT00000002"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="aactValidateBatch()">
+                        <i class="fas fa-check-double"></i> Validate All
+                    </button>
+                    <button class="btn btn-secondary" onclick="aactClearInput()">
+                        <i class="fas fa-eraser"></i> Clear
+                    </button>
+                    <button class="btn btn-warning" onclick="aactLoadSample()">
+                        <i class="fas fa-flask"></i> Load Sample Data
+                    </button>
+                </div>
+
+                <div id="aactProgress" class="hidden" style="margin-top: 15px;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div class="ci-bar" style="flex: 1; height: 24px;">
+                            <div id="aactProgressBar" class="ci-bar-fill" style="width: 0%; transition: width 0.3s;"></div>
+                        </div>
+                        <span id="aactProgressText" style="min-width: 100px;">0 / 0</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="aactResults" class="hidden" style="margin-top: 20px;">
+                <h3><i class="fas fa-chart-pie"></i> Validation Results</h3>
+                <div id="aactSummary" class="results-summary"></div>
+
+                <div style="margin: 20px 0;">
+                    <button class="btn btn-success" onclick="aactExportResults('csv')">
+                        <i class="fas fa-file-csv"></i> Export CSV
+                    </button>
+                    <button class="btn btn-secondary" onclick="aactExportResults('json')">
+                        <i class="fas fa-file-code"></i> Export JSON
+                    </button>
+                    <button class="btn btn-primary" onclick="aactExportResults('ris')">
+                        <i class="fas fa-file-alt"></i> Export RIS
+                    </button>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="aactFilterInput" placeholder="Filter results by NCT ID, title, status..."
+                           style="width: 300px;" oninput="aactFilterResults()">
+                    <select id="aactStatusFilter" onchange="aactFilterResults()" style="margin-left: 10px;">
+                        <option value="">All Statuses</option>
+                        <option value="valid">Valid Only</option>
+                        <option value="invalid">Invalid Only</option>
+                    </select>
+                </div>
+
+                <div id="aactTable"></div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3><i class="fas fa-history"></i> Validation History</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                    Previously validated NCT IDs are cached locally for faster future lookups.
+                </p>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <button class="btn btn-secondary" onclick="aactShowHistory()">
+                        <i class="fas fa-list"></i> Show Cached (<span id="aactCacheCount">0</span>)
+                    </button>
+                    <button class="btn btn-danger" onclick="aactClearCache()">
+                        <i class="fas fa-trash"></i> Clear Cache
+                    </button>
+                </div>
+                <div id="aactHistory" class="hidden"></div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3><i class="fas fa-info-circle"></i> About AACT Integration</h3>
+                <p style="color: var(--text-secondary);">
+                    This tool validates NCT IDs against the ClinicalTrials.gov API (which mirrors the AACT database).
+                    Results are cached in your browser's IndexedDB for faster subsequent lookups.
+                </p>
+                <ul style="color: var(--text-secondary); margin-top: 10px; margin-left: 20px;">
+                    <li>Extracts detailed metadata: sponsor, phase, status, enrollment, locations</li>
+                    <li>Supports batch validation of up to 500 NCT IDs</li>
+                    <li>Results cached locally for 24 hours</li>
+                    <li>Export to CSV, JSON, or RIS format</li>
+                </ul>
+            </div>
+
+            <div class="log-area" id="aactLog"></div>
+        </div>
+
+        <!-- Strategy Optimizer Tab -->
+        <div id="optimizer" class="tab-content">
+            <h2><i class="fas fa-brain"></i> ML-Powered Strategy Optimizer</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Get personalized search strategy recommendations based on your condition, goals, and known relevant studies.
+            </p>
+
+            <div class="validation-panel">
+                <h3><i class="fas fa-cogs"></i> Optimization Parameters</h3>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label for="optCondition"><i class="fas fa-disease"></i> Condition/Disease</label>
+                        <input type="text" id="optCondition" placeholder="e.g., type 2 diabetes, breast cancer, COPD">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="optGoal"><i class="fas fa-bullseye"></i> Search Goal</label>
+                        <select id="optGoal">
+                            <option value="maximum_recall">Maximum Recall (Comprehensive)</option>
+                            <option value="balanced" selected>Balanced (Recommended)</option>
+                            <option value="high_precision">High Precision (Focused)</option>
+                            <option value="quick_overview">Quick Overview (Rapid)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="form-group">
+                        <label for="optMinRecall"><i class="fas fa-percentage"></i> Minimum Acceptable Recall (%)</label>
+                        <input type="number" id="optMinRecall" value="80" min="0" max="100" step="5">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="optMaxNNS"><i class="fas fa-search"></i> Maximum NNS (Number Needed to Screen)</label>
+                        <input type="number" id="optMaxNNS" value="50" min="1" max="500" step="5">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="optKnownNCTs"><i class="fas fa-list-check"></i> Known Relevant NCT IDs (optional - improves recommendations)</label>
+                    <textarea id="optKnownNCTs" style="min-height: 80px;"
+                              placeholder="Enter known relevant NCT IDs, one per line or comma-separated:&#10;NCT00000001&#10;NCT00000002"></textarea>
+                </div>
+
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-primary" onclick="runOptimizer()">
+                        <i class="fas fa-magic"></i> Get Recommendations
+                    </button>
+                    <button class="btn btn-secondary" onclick="clearOptimizer()">
+                        <i class="fas fa-eraser"></i> Clear
+                    </button>
+                    <button class="btn btn-success" onclick="loadOptimizerExample()">
+                        <i class="fas fa-lightbulb"></i> Load Example
+                    </button>
+                </div>
+            </div>
+
+            <div id="optimizerResults" class="hidden" style="margin-top: 20px;">
+                <h3><i class="fas fa-trophy"></i> Recommended Strategies</h3>
+
+                <div id="optimizerPrimary" class="results-summary" style="margin-bottom: 20px; border-left: 4px solid var(--success);"></div>
+
+                <div id="optimizerAlternatives"></div>
+
+                <div style="margin-top: 20px;">
+                    <h4><i class="fas fa-chart-bar"></i> Strategy Comparison</h4>
+                    <div id="optimizerComparison" style="overflow-x: auto;"></div>
+                </div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3><i class="fas fa-info-circle"></i> How the Optimizer Works</h3>
+                <p style="color: var(--text-secondary);">
+                    The Strategy Optimizer uses historical performance data and machine learning to recommend the best search strategy for your specific use case.
+                </p>
+                <ul style="color: var(--text-secondary); margin-top: 10px; margin-left: 20px;">
+                    <li><strong>Condition Classification:</strong> Automatically detects condition category (oncology, cardiology, etc.) for tailored recommendations</li>
+                    <li><strong>Bayesian Ranking:</strong> Uses Thompson sampling to balance exploitation vs exploration of strategies</li>
+                    <li><strong>Wilson Score Confidence:</strong> Provides confidence intervals for recall and precision estimates</li>
+                    <li><strong>Known Study Bonus:</strong> Strategies that can retrieve your known relevant studies get priority</li>
+                    <li><strong>Goal Optimization:</strong> Weights strategies based on your specific search goal</li>
+                </ul>
+
+                <h4 style="margin-top: 20px;"><i class="fas fa-bullseye"></i> Search Goal Explanations</h4>
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Goal</th>
+                            <th>Description</th>
+                            <th>Best For</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Maximum Recall</strong></td>
+                            <td>Finds as many relevant studies as possible, even at cost of screening more irrelevant ones</td>
+                            <td>Cochrane reviews, HTA reports</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Balanced</strong></td>
+                            <td>Optimizes F1 score - good trade-off between recall and precision</td>
+                            <td>Most systematic reviews</td>
+                        </tr>
+                        <tr>
+                            <td><strong>High Precision</strong></td>
+                            <td>Minimizes irrelevant results, may miss some relevant studies</td>
+                            <td>Rapid reviews, scoping searches</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Quick Overview</strong></td>
+                            <td>Fast results with reasonable coverage</td>
+                            <td>Feasibility checks, protocol development</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="log-area" id="optimizerLog"></div>
+        </div>
+
+        <!-- History Tab -->
+        <div id="history" class="tab-content">
+            <h2><i class="fas fa-history"></i> Search History & Bookmarks</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                View, manage, and bookmark your search history. All data is stored locally in your browser.
+            </p>
+
+            <!-- PWA Install Banner -->
+            <div id="pwaInstallBanner" class="hidden" style="background: linear-gradient(135deg, var(--primary), var(--secondary)); padding: 15px 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <strong><i class="fas fa-download"></i> Install as App</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 0.9rem; opacity: 0.9;">Install CT.gov Search for offline access and faster loading.</p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-success" onclick="installPWA()" style="background: white; color: var(--primary);">
+                        <i class="fas fa-plus"></i> Install
+                    </button>
+                    <button class="btn" onclick="dismissPWABanner()" style="background: transparent; border: 1px solid white;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="validation-panel">
+                <h3><i class="fas fa-search"></i> Recent Searches</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px;">
+                    <button class="btn btn-primary" onclick="refreshHistory()">
+                        <i class="fas fa-sync"></i> Refresh
+                    </button>
+                    <button class="btn btn-danger" onclick="clearAllHistory()">
+                        <i class="fas fa-trash"></i> Clear All History
+                    </button>
+                    <button class="btn btn-success" onclick="exportHistory()">
+                        <i class="fas fa-file-export"></i> Export History
+                    </button>
+                    <label class="btn btn-secondary" style="cursor: pointer;">
+                        <i class="fas fa-file-import"></i> Import History
+                        <input type="file" accept=".json" onchange="importHistory(event)" style="display: none;">
+                    </label>
+                </div>
+
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="historyFilter" placeholder="Filter history..." oninput="filterHistory()" style="width: 300px;">
+                    <select id="historyTypeFilter" onchange="filterHistory()" style="margin-left: 10px;">
+                        <option value="">All Types</option>
+                        <option value="search">Searches</option>
+                        <option value="validation">Validations</option>
+                        <option value="optimization">Optimizations</option>
+                    </select>
+                </div>
+
+                <div id="historyList" style="max-height: 400px; overflow-y: auto;"></div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3><i class="fas fa-bookmark"></i> Bookmarked Searches</h3>
+                <p style="color: var(--text-secondary); margin-bottom: 15px;">
+                    Save important searches for quick access later.
+                </p>
+                <div id="bookmarksList"></div>
+                <div id="noBookmarks" style="color: var(--text-secondary); text-align: center; padding: 30px;">
+                    <i class="fas fa-bookmark" style="font-size: 3rem; opacity: 0.3; margin-bottom: 10px;"></i>
+                    <p>No bookmarks yet. Click the star icon on any search to bookmark it.</p>
+                </div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3><i class="fas fa-chart-line"></i> Usage Statistics</h3>
+                <div id="usageStats" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+                    <div class="metric-card">
+                        <div class="metric-value" id="statTotalSearches">0</div>
+                        <div class="metric-label">Total Searches</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="statTotalValidations">0</div>
+                        <div class="metric-label">Validations</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="statBookmarks">0</div>
+                        <div class="metric-label">Bookmarks</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="statCacheSize">0 KB</div>
+                        <div class="metric-label">Cache Size</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="validation-panel" style="margin-top: 20px;">
+                <h3><i class="fas fa-cog"></i> Storage Settings</h3>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <button class="btn btn-warning" onclick="clearOldHistory()">
+                        <i class="fas fa-clock"></i> Clear History Older Than 30 Days
+                    </button>
+                    <button class="btn btn-danger" onclick="clearAllStorage()">
+                        <i class="fas fa-database"></i> Clear All Local Data
+                    </button>
+                </div>
+                <p style="color: var(--text-secondary); margin-top: 10px; font-size: 0.9rem;">
+                    <i class="fas fa-info-circle"></i> All data is stored locally in your browser using IndexedDB. No data is sent to external servers.
+                </p>
+            </div>
+
+            <div class="log-area" id="historyLog"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================================
+        // CONFIGURATION
+        // ============================================================================
+        const CTGOV_API = 'https://clinicaltrials.gov/api/v2/studies';
+        const CORS_PROXY = 'https://corsproxy.io/?';
+
+        // Strategy definitions
+        const STRATEGIES = {
+            S1: {
+                id: 'S1',
+                name: 'Condition Only (Maximum Recall)',
+                description: 'Search by condition field only - highest sensitivity',
+                recall: 98.7,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}`,
+                recallClass: 'recall-high'
+            },
+            S2: {
+                id: 'S2',
+                name: 'Interventional Studies',
+                description: 'Filter to interventional study types',
+                recall: 98.7,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[StudyType]INTERVENTIONAL`,
+                recallClass: 'recall-high'
+            },
+            S3: {
+                id: 'S3',
+                name: 'Randomized Allocation Only',
+                description: 'True RCTs with randomized allocation',
+                recall: 98.7,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[DesignAllocation]RANDOMIZED`,
+                recallClass: 'recall-high'
+            },
+            S4: {
+                id: 'S4',
+                name: 'Phase 3/4 Studies',
+                description: 'Later phase clinical trials',
+                recall: 45.5,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[Phase](PHASE3 OR PHASE4)`,
+                recallClass: 'recall-low'
+            },
+            S5: {
+                id: 'S5',
+                name: 'Has Posted Results',
+                description: 'Studies with results posted on CT.gov',
+                recall: 63.6,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[ResultsFirstPostDate]RANGE[MIN,MAX]`,
+                recallClass: 'recall-medium'
+            },
+            S6: {
+                id: 'S6',
+                name: 'Completed Status',
+                description: 'Completed trials only',
+                recall: 87.0,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&filter.overallStatus=COMPLETED`,
+                recallClass: 'recall-high'
+            },
+            S7: {
+                id: 'S7',
+                name: 'Interventional + Completed',
+                description: 'Completed interventional studies',
+                recall: 87.0,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[StudyType]INTERVENTIONAL&filter.overallStatus=COMPLETED`,
+                recallClass: 'recall-high'
+            },
+            S8: {
+                id: 'S8',
+                name: 'RCT + Phase 3/4 + Completed',
+                description: 'Highest quality subset',
+                recall: 42.9,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[DesignAllocation]RANDOMIZED AND AREA[Phase](PHASE3 OR PHASE4)&filter.overallStatus=COMPLETED`,
+                recallClass: 'recall-low'
+            },
+            S9: {
+                id: 'S9',
+                name: 'Full-Text RCT Keywords',
+                description: 'Full-text search with RCT terms',
+                recall: 79.2,
+                buildQuery: (c, i) => `query.term=${encodeURIComponent(c + ' AND randomized AND controlled')}`,
+                recallClass: 'recall-medium'
+            },
+            S10: {
+                id: 'S10',
+                name: 'Treatment RCTs Only',
+                description: 'Randomized + Treatment purpose',
+                recall: 89.6,
+                buildQuery: (c, i) => `query.cond=${encodeURIComponent(c)}&query.term=AREA[DesignAllocation]RANDOMIZED AND AREA[DesignPrimaryPurpose]TREATMENT`,
+                recallClass: 'recall-high'
+            }
+        };
+
+        // Global state
+        let pyodide = null;
+        let currentStudies = [];
+        let selectedStrategy = 'S1';
+
+        // ============================================================================
+        // INITIALIZATION
+        // ============================================================================
+        async function initPyodide() {
+            const statusEl = document.getElementById('loadingStatus');
+            try {
+                statusEl.textContent = 'Loading Pyodide runtime...';
+                pyodide = await loadPyodide();
+
+                statusEl.textContent = 'Installing scipy...';
+                await pyodide.loadPackage('scipy');
+
+                statusEl.textContent = 'Setting up Python environment...';
+                await setupPythonEnvironment();
+
+                document.getElementById('loadingOverlay').classList.add('hidden');
+                initUI();
+                log('searchLog', 'Python environment ready!', 'success');
+            } catch (error) {
+                statusEl.textContent = 'Error: ' + error.message;
+                console.error('Pyodide initialization failed:', error);
+            }
+        }
+
+        async function setupPythonEnvironment() {
+            await pyodide.runPythonAsync(`
+import math
+from scipy import stats
+
+def wilson_ci(successes, total, confidence=0.95):
+    """Calculate Wilson score confidence interval."""
+    if total == 0:
+        return (0.0, 0.0)
+    if successes < 0 or total < 0:
+        return (0.0, 0.0)
+    if successes > total:
+        return (0.0, 0.0)
+
+    p = successes / total
+    z = stats.norm.ppf(1 - (1 - confidence) / 2)
+
+    denominator = 1 + z**2 / total
+    center = (p + z**2 / (2 * total)) / denominator
+    margin = z * math.sqrt((p * (1 - p) + z**2 / (4 * total)) / total) / denominator
+
+    return (max(0, center - margin), min(1, center + margin))
+
+def calculate_precision(tp, fp):
+    """Calculate precision = TP / (TP + FP)"""
+    if tp + fp == 0:
+        return 0.0
+    return tp / (tp + fp)
+
+def calculate_recall(tp, fn):
+    """Calculate recall = TP / (TP + FN)"""
+    if tp + fn == 0:
+        return 0.0
+    return tp / (tp + fn)
+
+def calculate_f1(precision, recall):
+    """Calculate F1 score = 2 * (precision * recall) / (precision + recall)"""
+    if precision + recall == 0:
+        return 0.0
+    return 2 * (precision * recall) / (precision + recall)
+
+def calculate_nns(total_retrieved, relevant_found):
+    """Calculate Number Needed to Screen = Total / Relevant"""
+    if relevant_found == 0:
+        return float('inf')
+    return total_retrieved / relevant_found
+
+def calculate_all_metrics(tp, fp, fn):
+    """Calculate all validation metrics."""
+    precision = calculate_precision(tp, fp)
+    recall = calculate_recall(tp, fn)
+    f1 = calculate_f1(precision, recall)
+    nns = calculate_nns(tp + fp, tp)
+
+    # Sensitivity and specificity
+    sensitivity = recall
+
+    # Wilson CIs
+    recall_ci = wilson_ci(tp, tp + fn)
+    precision_ci = wilson_ci(tp, tp + fp)
+
+    return {
+        'precision': precision,
+        'recall': recall,
+        'sensitivity': sensitivity,
+        'f1': f1,
+        'nns': nns,
+        'recall_ci': recall_ci,
+        'precision_ci': precision_ci
+    }
+
+print("Python metrics module loaded!")
+            `);
+        }
+
+        function initUI() {
+            // Setup tabs
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    btn.classList.add('active');
+                    document.getElementById(btn.dataset.tab).classList.add('active');
+                });
+            });
+
+            // Populate strategies grid
+            const grid = document.getElementById('strategiesGrid');
+            Object.values(STRATEGIES).forEach(s => {
+                const card = document.createElement('div');
+                card.className = `strategy-card ${s.id === selectedStrategy ? 'selected' : ''}`;
+                card.dataset.strategy = s.id;
+                card.innerHTML = `
+                    <h4>${s.id}: ${s.name}</h4>
+                    <p>${s.description}</p>
+                    <span class="recall-badge ${s.recallClass}">Recall: ${s.recall}%</span>
+                `;
+                card.addEventListener('click', () => selectStrategy(s.id));
+                grid.appendChild(card);
+            });
+
+            // Populate strategy reference table
+            const refTable = document.getElementById('strategyRefTable');
+            Object.values(STRATEGIES).forEach(s => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${s.id}</strong></td>
+                    <td>${s.name}</td>
+                    <td><span class="recall-badge ${s.recallClass}">${s.recall}%</span></td>
+                    <td>${s.description}</td>
+                `;
+                refTable.appendChild(row);
+            });
+        }
+
+        // ============================================================================
+        // UTILITY FUNCTIONS
+        // ============================================================================
+        function log(logId, message, type = 'info') {
+            const logArea = document.getElementById(logId);
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#0f0';
+            logArea.innerHTML += `<div style="color: ${color}">[${timestamp}] ${message}</div>`;
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        function selectStrategy(strategyId) {
+            selectedStrategy = strategyId;
+            document.querySelectorAll('.strategy-card').forEach(card => {
+                card.classList.toggle('selected', card.dataset.strategy === strategyId);
+            });
+        }
+
+        async function fetchAPI(url, logId) {
+            log(logId, `Fetching: ${url.substring(0, 100)}...`);
+            try {
+                // Try direct first, then CORS proxy
+                let response;
+                try {
+                    response = await fetch(url, {
+                        headers: { 'Accept': 'application/json' }
+                    });
+                } catch (e) {
+                    log(logId, 'Direct fetch failed, using CORS proxy...');
+                    response = await fetch(CORS_PROXY + encodeURIComponent(url));
+                }
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                const data = await response.json();
+                log(logId, `Received ${data.studies?.length || 0} studies`, 'success');
+                return data;
+            } catch (error) {
+                log(logId, `Error: ${error.message}`, 'error');
+                throw error;
+            }
+        }
+
+        // ============================================================================
+        // SEARCH FUNCTIONS
+        // ============================================================================
+        async function executeSearch() {
+            const condition = document.getElementById('conditionInput').value.trim();
+            if (!condition) {
+                alert('Please enter a condition');
+                return;
+            }
+
+            const btn = document.getElementById('searchBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
+
+            try {
+                const strategy = STRATEGIES[selectedStrategy];
+                const query = strategy.buildQuery(condition);
+                const url = `${CTGOV_API}?${query}&pageSize=100`;
+
+                log('searchLog', `Using strategy ${strategy.id}: ${strategy.name}`);
+                const data = await fetchAPI(url, 'searchLog');
+
+                currentStudies = data.studies || [];
+                displaySearchResults(data, strategy);
+
+            } catch (error) {
+                log('searchLog', `Search failed: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-search"></i> Search CT.gov';
+            }
+        }
+
+        function displaySearchResults(data, strategy) {
+            const results = document.getElementById('searchResults');
+            results.classList.remove('hidden');
+
+            // Summary cards
+            document.getElementById('resultsSummary').innerHTML = `
+                <div class="stat-card">
+                    <div class="value">${data.totalCount?.toLocaleString() || 0}</div>
+                    <div class="label">Total Studies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${currentStudies.length}</div>
+                    <div class="label">Retrieved</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${strategy.recall}%</div>
+                    <div class="label">Expected Recall</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${strategy.id}</div>
+                    <div class="label">Strategy</div>
+                </div>
+            `;
+
+            // Studies table
+            let tableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>NCT ID</th>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Phase</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            currentStudies.slice(0, 50).forEach(study => {
+                const ps = study.protocolSection || {};
+                const id = ps.identificationModule || {};
+                const status = ps.statusModule || {};
+                const design = ps.designModule || {};
+
+                tableHTML += `
+                    <tr>
+                        <td><a href="https://clinicaltrials.gov/study/${id.nctId}" target="_blank">${id.nctId}</a></td>
+                        <td>${(id.briefTitle || '').substring(0, 80)}...</td>
+                        <td>${status.overallStatus || '-'}</td>
+                        <td>${(design.phases || []).join(', ') || '-'}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            document.getElementById('studiesTable').innerHTML = tableHTML;
+        }
+
+        function clearResults() {
+            document.getElementById('searchResults').classList.add('hidden');
+            document.getElementById('searchLog').innerHTML = '';
+            currentStudies = [];
+        }
+
+        // ============================================================================
+        // COMPARE STRATEGIES
+        // ============================================================================
+        async function compareAllStrategies() {
+            const condition = document.getElementById('compareCondition').value.trim();
+            if (!condition) {
+                alert('Please enter a condition');
+                return;
+            }
+
+            log('compareLog', `Comparing all 10 strategies for: ${condition}`);
+            const results = [];
+
+            for (const strategy of Object.values(STRATEGIES)) {
+                try {
+                    const query = strategy.buildQuery(condition);
+                    const url = `${CTGOV_API}?${query}&countTotal=true&pageSize=1`;
+                    const data = await fetchAPI(url, 'compareLog');
+
+                    results.push({
+                        id: strategy.id,
+                        name: strategy.name,
+                        count: data.totalCount || 0,
+                        expectedRecall: strategy.recall
+                    });
+
+                    await new Promise(r => setTimeout(r, 300)); // Rate limit
+                } catch (error) {
+                    results.push({
+                        id: strategy.id,
+                        name: strategy.name,
+                        count: 'Error',
+                        expectedRecall: strategy.recall
+                    });
+                }
+            }
+
+            displayComparisonResults(results);
+        }
+
+        function displayComparisonResults(results) {
+            document.getElementById('comparisonResults').classList.remove('hidden');
+
+            // Sort by count
+            results.sort((a, b) => (b.count || 0) - (a.count || 0));
+            const maxCount = Math.max(...results.map(r => r.count || 0));
+
+            let tableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Strategy</th>
+                            <th>Name</th>
+                            <th>Count</th>
+                            <th>Recall</th>
+                            <th>Distribution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            results.forEach(r => {
+                const pct = maxCount > 0 ? (r.count / maxCount * 100) : 0;
+                tableHTML += `
+                    <tr>
+                        <td><strong>${r.id}</strong></td>
+                        <td>${r.name}</td>
+                        <td>${typeof r.count === 'number' ? r.count.toLocaleString() : r.count}</td>
+                        <td><span class="recall-badge ${STRATEGIES[r.id].recallClass}">${r.expectedRecall}%</span></td>
+                        <td>
+                            <div class="ci-bar" style="width: 200px;">
+                                <div class="ci-bar-fill" style="width: ${pct}%;"></div>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            document.getElementById('comparisonTable').innerHTML = tableHTML;
+        }
+
+        // ============================================================================
+        // VALIDATE NCT IDS
+        // ============================================================================
+        async function validateNCTs() {
+            const input = document.getElementById('nctInput').value.trim();
+            if (!input) {
+                alert('Please enter NCT IDs');
+                return;
+            }
+
+            const nctIds = input.split(/[\n,\s]+/)
+                .map(id => id.trim().toUpperCase())
+                .filter(id => /^NCT\d{8}$/.test(id));
+
+            if (nctIds.length === 0) {
+                alert('No valid NCT IDs found');
+                return;
+            }
+
+            log('validateLog', `Validating ${nctIds.length} NCT IDs...`);
+
+            const results = [];
+            for (const nctId of nctIds) {
+                try {
+                    const url = `${CTGOV_API}?query.id=${nctId}&pageSize=1`;
+                    const data = await fetchAPI(url, 'validateLog');
+                    results.push({
+                        nctId,
+                        valid: (data.studies?.length || 0) > 0,
+                        title: data.studies?.[0]?.protocolSection?.identificationModule?.briefTitle || ''
+                    });
+                    await new Promise(r => setTimeout(r, 200));
+                } catch (error) {
+                    results.push({ nctId, valid: false, title: 'Error' });
+                }
+            }
+
+            displayValidationResults(results);
+        }
+
+        function displayValidationResults(results) {
+            document.getElementById('validationResults').classList.remove('hidden');
+
+            const valid = results.filter(r => r.valid).length;
+            const invalid = results.length - valid;
+
+            document.getElementById('validationSummary').innerHTML = `
+                <div class="results-summary">
+                    <div class="stat-card">
+                        <div class="value">${results.length}</div>
+                        <div class="label">Total NCT IDs</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" style="color: var(--success);">${valid}</div>
+                        <div class="label">Valid</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value" style="color: var(--danger);">${invalid}</div>
+                        <div class="label">Not Found</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${(valid/results.length*100).toFixed(1)}%</div>
+                        <div class="label">Validation Rate</div>
+                    </div>
+                </div>
+            `;
+
+            let tableHTML = `
+                <table class="results-table">
+                    <thead><tr><th>NCT ID</th><th>Status</th><th>Title</th></tr></thead>
+                    <tbody>
+            `;
+
+            results.forEach(r => {
+                tableHTML += `
+                    <tr>
+                        <td><a href="https://clinicaltrials.gov/study/${r.nctId}" target="_blank">${r.nctId}</a></td>
+                        <td style="color: ${r.valid ? 'var(--success)' : 'var(--danger)'};">
+                            <i class="fas fa-${r.valid ? 'check' : 'times'}"></i> ${r.valid ? 'Valid' : 'Not Found'}
+                        </td>
+                        <td>${r.title.substring(0, 60)}${r.title.length > 60 ? '...' : ''}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            document.getElementById('validationTable').innerHTML = tableHTML;
+        }
+
+        // ============================================================================
+        // CONFIDENCE INTERVALS & METRICS
+        // ============================================================================
+        async function calculateCI() {
+            const successes = parseInt(document.getElementById('ciSuccesses').value) || 0;
+            const total = parseInt(document.getElementById('ciTotal').value) || 1;
+
+            const result = await pyodide.runPythonAsync(`
+ci = wilson_ci(${successes}, ${total})
+recall = ${successes} / ${total} if ${total} > 0 else 0
+{
+    'recall': recall,
+    'ci_lower': ci[0],
+    'ci_upper': ci[1]
+}
+            `);
+
+            const data = result.toJs();
+
+            document.getElementById('ciResult').innerHTML = `
+                <div class="stat-card" style="text-align: left;">
+                    <h4>Results</h4>
+                    <p><strong>Point Estimate:</strong> ${(data.get('recall') * 100).toFixed(1)}%</p>
+                    <p><strong>95% CI:</strong> (${(data.get('ci_lower') * 100).toFixed(1)}% - ${(data.get('ci_upper') * 100).toFixed(1)}%)</p>
+                    <p><strong>CI Width:</strong> ${((data.get('ci_upper') - data.get('ci_lower')) * 100).toFixed(1)}%</p>
+                    <div class="ci-bar" style="margin-top: 15px; height: 30px;">
+                        <div class="ci-bar-fill" style="width: ${data.get('recall') * 100}%;"></div>
+                        <div class="ci-bar-ci" style="left: ${data.get('ci_lower') * 100}%; width: ${(data.get('ci_upper') - data.get('ci_lower')) * 100}%;"></div>
+                    </div>
+                </div>
+            `;
+        }
+
+        async function calculateMetrics() {
+            const tp = parseInt(document.getElementById('metricTP').value) || 0;
+            const fp = parseInt(document.getElementById('metricFP').value) || 0;
+            const fn = parseInt(document.getElementById('metricFN').value) || 0;
+
+            const result = await pyodide.runPythonAsync(`
+calculate_all_metrics(${tp}, ${fp}, ${fn})
+            `);
+
+            const data = result.toJs();
+
+            document.getElementById('metricsResult').innerHTML = `
+                <div class="results-summary">
+                    <div class="stat-card">
+                        <div class="value">${(data.get('precision') * 100).toFixed(1)}%</div>
+                        <div class="label">Precision</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${(data.get('recall') * 100).toFixed(1)}%</div>
+                        <div class="label">Recall/Sensitivity</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${(data.get('f1') * 100).toFixed(1)}%</div>
+                        <div class="label">F1 Score</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="value">${data.get('nns') === Infinity ? '&infin;' : data.get('nns').toFixed(1)}</div>
+                        <div class="label">NNS</div>
+                    </div>
+                </div>
+                <div class="stat-card" style="margin-top: 15px; text-align: left;">
+                    <h4>Confidence Intervals (95%)</h4>
+                    <p><strong>Recall CI:</strong> (${(data.get('recall_ci')[0] * 100).toFixed(1)}% - ${(data.get('recall_ci')[1] * 100).toFixed(1)}%)</p>
+                    <p><strong>Precision CI:</strong> (${(data.get('precision_ci')[0] * 100).toFixed(1)}% - ${(data.get('precision_ci')[1] * 100).toFixed(1)}%)</p>
+                </div>
+            `;
+        }
+
+        // ============================================================================
+        // EXPORT FUNCTIONS
+        // ============================================================================
+        async function fetchForExport() {
+            const condition = document.getElementById('exportCondition').value.trim();
+            if (!condition) {
+                alert('Please enter a condition');
+                return;
+            }
+
+            const strategy = STRATEGIES[document.getElementById('exportStrategy').value];
+            const limit = parseInt(document.getElementById('exportLimit').value) || 100;
+
+            log('exportLog', `Fetching studies for export: ${condition} using ${strategy.id}`);
+
+            try {
+                const query = strategy.buildQuery(condition);
+                const url = `${CTGOV_API}?${query}&pageSize=${Math.min(limit, 1000)}`;
+                const data = await fetchAPI(url, 'exportLog');
+
+                currentStudies = data.studies || [];
+
+                document.getElementById('exportReady').classList.remove('hidden');
+                document.getElementById('exportCount').textContent = `Ready to export ${currentStudies.length} studies`;
+
+                log('exportLog', `${currentStudies.length} studies ready for export`, 'success');
+            } catch (error) {
+                log('exportLog', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function exportRIS() {
+            let ris = '';
+            currentStudies.forEach(study => {
+                const ps = study.protocolSection || {};
+                const id = ps.identificationModule || {};
+                const status = ps.statusModule || {};
+                const sponsor = ps.sponsorCollaboratorsModule || {};
+                const desc = ps.descriptionModule || {};
+                const cond = ps.conditionsModule || {};
+
+                ris += `TY  - CLRT\n`;
+                ris += `TI  - ${id.briefTitle || ''}\n`;
+                ris += `AN  - ${id.nctId || ''}\n`;
+                ris += `AU  - ${sponsor.leadSponsor?.name || ''}\n`;
+                ris += `PY  - ${status.startDateStruct?.date?.substring(0, 4) || ''}\n`;
+                ris += `AB  - ${desc.briefSummary || ''}\n`;
+                ris += `UR  - https://clinicaltrials.gov/study/${id.nctId}\n`;
+                ris += `KW  - ${(cond.conditions || []).join('; ')}\n`;
+                ris += `N1  - Status: ${status.overallStatus || ''}\n`;
+                ris += `ER  - \n\n`;
+            });
+
+            downloadFile(ris, 'ctgov_studies.ris', 'text/plain');
+            log('exportLog', 'RIS file downloaded', 'success');
+        }
+
+        function exportCSV() {
+            const headers = ['NCT_ID', 'Title', 'Status', 'Phase', 'Conditions', 'Start_Date', 'Sponsor', 'URL'];
+            let csv = headers.join(',') + '\n';
+
+            currentStudies.forEach(study => {
+                const ps = study.protocolSection || {};
+                const id = ps.identificationModule || {};
+                const status = ps.statusModule || {};
+                const design = ps.designModule || {};
+                const cond = ps.conditionsModule || {};
+                const sponsor = ps.sponsorCollaboratorsModule || {};
+
+                const row = [
+                    id.nctId || '',
+                    `"${(id.briefTitle || '').replace(/"/g, '""')}"`,
+                    status.overallStatus || '',
+                    (design.phases || []).join('; '),
+                    `"${(cond.conditions || []).join('; ')}"`,
+                    status.startDateStruct?.date || '',
+                    `"${(sponsor.leadSponsor?.name || '').replace(/"/g, '""')}"`,
+                    `https://clinicaltrials.gov/study/${id.nctId}`
+                ];
+                csv += row.join(',') + '\n';
+            });
+
+            downloadFile(csv, 'ctgov_studies.csv', 'text/csv');
+            log('exportLog', 'CSV file downloaded', 'success');
+        }
+
+        function exportJSON() {
+            const data = JSON.stringify(currentStudies, null, 2);
+            downloadFile(data, 'ctgov_studies.json', 'application/json');
+            log('exportLog', 'JSON file downloaded', 'success');
+        }
+
+        function exportEndNote() {
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n<xml><records>\n';
+
+            currentStudies.forEach(study => {
+                const ps = study.protocolSection || {};
+                const id = ps.identificationModule || {};
+                const status = ps.statusModule || {};
+                const sponsor = ps.sponsorCollaboratorsModule || {};
+                const desc = ps.descriptionModule || {};
+
+                xml += `<record>
+<ref-type name="Clinical Trial">47</ref-type>
+<contributors><authors><author>${escapeXml(sponsor.leadSponsor?.name || '')}</author></authors></contributors>
+<titles><title>${escapeXml(id.briefTitle || '')}</title></titles>
+<dates><year>${status.startDateStruct?.date?.substring(0, 4) || ''}</year></dates>
+<accession-num>${escapeXml(id.nctId || '')}</accession-num>
+<abstract>${escapeXml(desc.briefSummary || '')}</abstract>
+<urls><related-urls><url>https://clinicaltrials.gov/study/${id.nctId}</url></related-urls></urls>
+</record>\n`;
+            });
+
+            xml += '</records></xml>';
+            downloadFile(xml, 'ctgov_studies.xml', 'application/xml');
+            log('exportLog', 'EndNote XML file downloaded', 'success');
+        }
+
+        function escapeXml(str) {
+            return str.replace(/&/g, '&amp;')
+                      .replace(/</g, '&lt;')
+                      .replace(/>/g, '&gt;')
+                      .replace(/"/g, '&quot;');
+        }
+
+        function downloadFile(content, filename, mimeType) {
+            const blob = new Blob([content], { type: mimeType });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // ============================================================================
+        // FLOWCHART
+        // ============================================================================
+        function selectFromFlowchart(strategyId) {
+            if (strategyId === 'start') return;
+
+            document.getElementById('flowchartResult').classList.remove('hidden');
+            document.getElementById('selectedStrategy').textContent =
+                `${strategyId} - ${STRATEGIES[strategyId].name} (${STRATEGIES[strategyId].recall}% recall)`;
+
+            // Switch to search tab with selected strategy
+            selectedStrategy = strategyId;
+        }
+
+        // ============================================================================
+        // MULTI-REGISTRY SEARCH
+        // ============================================================================
+        async function searchMultiRegistry() {
+            const condition = document.getElementById('ictrpCondition').value.trim();
+            if (!condition) {
+                alert('Please enter a condition');
+                return;
+            }
+
+            const registries = [];
+            if (document.getElementById('regCTgov').checked) registries.push('ctgov');
+            if (document.getElementById('regICTRP').checked) registries.push('ictrp');
+            if (document.getElementById('regEUCTR').checked) registries.push('euctr');
+            if (document.getElementById('regISRCTN').checked) registries.push('isrctn');
+
+            const results = {};
+
+            for (const reg of registries) {
+                log('ictrpLog', `Searching ${reg.toUpperCase()}...`);
+                try {
+                    if (reg === 'ctgov') {
+                        const url = `${CTGOV_API}?query.cond=${encodeURIComponent(condition)}&countTotal=true&pageSize=1`;
+                        const data = await fetchAPI(url, 'ictrpLog');
+                        results.ctgov = { count: data.totalCount || 0, status: 'success' };
+                    } else if (reg === 'ictrp') {
+                        // WHO ICTRP requires different approach
+                        results.ictrp = {
+                            count: 'N/A',
+                            status: 'url_only',
+                            url: `https://trialsearch.who.int/Trial2.aspx?ConditionID=&ConditionName=${encodeURIComponent(condition)}`
+                        };
+                    } else if (reg === 'euctr') {
+                        results.euctr = {
+                            count: 'N/A',
+                            status: 'url_only',
+                            url: `https://www.clinicaltrialsregister.eu/ctr-search/search?query=${encodeURIComponent(condition)}`
+                        };
+                    } else if (reg === 'isrctn') {
+                        results.isrctn = {
+                            count: 'N/A',
+                            status: 'url_only',
+                            url: `https://www.isrctn.com/search?q=${encodeURIComponent(condition)}`
+                        };
+                    }
+                } catch (error) {
+                    results[reg] = { count: 'Error', status: 'error' };
+                }
+                await new Promise(r => setTimeout(r, 500));
+            }
+
+            displayMultiRegistryResults(results);
+        }
+
+        function displayMultiRegistryResults(results) {
+            document.getElementById('ictrpResults').classList.remove('hidden');
+
+            let summaryHTML = '';
+            let tableHTML = `
+                <table class="results-table">
+                    <thead><tr><th>Registry</th><th>Count</th><th>Status</th><th>Link</th></tr></thead>
+                    <tbody>
+            `;
+
+            Object.entries(results).forEach(([reg, data]) => {
+                const regNames = {
+                    ctgov: 'ClinicalTrials.gov',
+                    ictrp: 'WHO ICTRP',
+                    euctr: 'EU Clinical Trials',
+                    isrctn: 'ISRCTN'
+                };
+
+                summaryHTML += `
+                    <div class="stat-card">
+                        <div class="value">${data.count}</div>
+                        <div class="label">${regNames[reg]}</div>
+                    </div>
+                `;
+
+                tableHTML += `
+                    <tr>
+                        <td><strong>${regNames[reg]}</strong></td>
+                        <td>${data.count}</td>
+                        <td style="color: ${data.status === 'success' ? 'var(--success)' : data.status === 'url_only' ? 'var(--warning)' : 'var(--danger)'};">
+                            ${data.status === 'success' ? 'API Count' : data.status === 'url_only' ? 'Manual Search Required' : 'Error'}
+                        </td>
+                        <td>${data.url ? `<a href="${data.url}" target="_blank">Open Registry</a>` : '-'}</td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+
+            document.getElementById('ictrpSummary').innerHTML = summaryHTML;
+            document.getElementById('ictrpTable').innerHTML = tableHTML;
+        }
+
+        // ============================================================================
+        // AACT DATABASE INTEGRATION (IndexedDB Caching)
+        // ============================================================================
+        const AACT_DB_NAME = 'CTGovSearchAACT';
+        const AACT_DB_VERSION = 1;
+        const AACT_STORE_NAME = 'validatedStudies';
+        const AACT_CACHE_EXPIRY = 24 * 60 * 60 * 1000; // 24 hours
+
+        let aactDB = null;
+        let aactValidationResults = [];
+
+        // Initialize IndexedDB
+        async function initAACTDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(AACT_DB_NAME, AACT_DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    aactDB = request.result;
+                    updateCacheCount();
+                    resolve(aactDB);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(AACT_STORE_NAME)) {
+                        const store = db.createObjectStore(AACT_STORE_NAME, { keyPath: 'nctId' });
+                        store.createIndex('timestamp', 'timestamp', { unique: false });
+                        store.createIndex('valid', 'valid', { unique: false });
+                    }
+                };
+            });
+        }
+
+        // Get from cache
+        async function aactGetFromCache(nctId) {
+            if (!aactDB) return null;
+
+            return new Promise((resolve, reject) => {
+                const transaction = aactDB.transaction([AACT_STORE_NAME], 'readonly');
+                const store = transaction.objectStore(AACT_STORE_NAME);
+                const request = store.get(nctId.toUpperCase());
+
+                request.onerror = () => resolve(null);
+                request.onsuccess = () => {
+                    const result = request.result;
+                    if (result && (Date.now() - result.timestamp) < AACT_CACHE_EXPIRY) {
+                        resolve(result);
+                    } else {
+                        resolve(null);
+                    }
+                };
+            });
+        }
+
+        // Save to cache
+        async function aactSaveToCache(studyData) {
+            if (!aactDB) return;
+
+            return new Promise((resolve, reject) => {
+                const transaction = aactDB.transaction([AACT_STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(AACT_STORE_NAME);
+
+                studyData.timestamp = Date.now();
+                const request = store.put(studyData);
+
+                request.onerror = () => resolve(false);
+                request.onsuccess = () => {
+                    updateCacheCount();
+                    resolve(true);
+                };
+            });
+        }
+
+        // Update cache count display
+        async function updateCacheCount() {
+            if (!aactDB) return;
+
+            const transaction = aactDB.transaction([AACT_STORE_NAME], 'readonly');
+            const store = transaction.objectStore(AACT_STORE_NAME);
+            const countRequest = store.count();
+
+            countRequest.onsuccess = () => {
+                document.getElementById('aactCacheCount').textContent = countRequest.result;
+            };
+        }
+
+        // Clear cache
+        async function aactClearCache() {
+            if (!aactDB) return;
+
+            if (!confirm('Clear all cached validation results?')) return;
+
+            const transaction = aactDB.transaction([AACT_STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(AACT_STORE_NAME);
+            store.clear();
+
+            transaction.oncomplete = () => {
+                updateCacheCount();
+                document.getElementById('aactHistory').classList.add('hidden');
+                log('aactLog', 'Cache cleared successfully', 'success');
+            };
+        }
+
+        // Validate single NCT ID
+        async function aactValidateSingle(nctId) {
+            nctId = nctId.trim().toUpperCase();
+
+            // Check cache first
+            const cached = await aactGetFromCache(nctId);
+            if (cached) {
+                log('aactLog', `[Cache Hit] ${nctId}`);
+                return cached;
+            }
+
+            // Fetch from API
+            try {
+                const url = `${CTGOV_API}?query.id=${nctId}&pageSize=1`;
+                const response = await fetch(url, {
+                    headers: { 'Accept': 'application/json' }
+                });
+
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+                const data = await response.json();
+                const study = data.studies?.[0];
+
+                if (study) {
+                    const ps = study.protocolSection || {};
+                    const id = ps.identificationModule || {};
+                    const status = ps.statusModule || {};
+                    const design = ps.designModule || {};
+                    const sponsor = ps.sponsorCollaboratorsModule || {};
+                    const desc = ps.descriptionModule || {};
+                    const cond = ps.conditionsModule || {};
+                    const enroll = ps.designModule?.enrollmentInfo || {};
+                    const contact = ps.contactsLocationsModule || {};
+
+                    const result = {
+                        nctId: id.nctId,
+                        valid: true,
+                        title: id.briefTitle || '',
+                        officialTitle: id.officialTitle || '',
+                        status: status.overallStatus || '',
+                        phase: (design.phases || []).join(', ') || 'N/A',
+                        studyType: design.studyType || '',
+                        sponsor: sponsor.leadSponsor?.name || '',
+                        sponsorClass: sponsor.leadSponsor?.class || '',
+                        conditions: cond.conditions || [],
+                        enrollment: enroll.count || 0,
+                        enrollmentType: enroll.type || '',
+                        startDate: status.startDateStruct?.date || '',
+                        completionDate: status.completionDateStruct?.date || '',
+                        firstPosted: status.studyFirstPostDateStruct?.date || '',
+                        lastUpdate: status.lastUpdatePostDateStruct?.date || '',
+                        allocation: design.designInfo?.allocation || '',
+                        interventionModel: design.designInfo?.interventionModel || '',
+                        primaryPurpose: design.designInfo?.primaryPurpose || '',
+                        masking: design.designInfo?.maskingInfo?.masking || '',
+                        briefSummary: desc.briefSummary || '',
+                        locations: (contact.locations || []).slice(0, 5).map(l => ({
+                            facility: l.facility || '',
+                            city: l.city || '',
+                            country: l.country || ''
+                        })),
+                        locationCount: (contact.locations || []).length,
+                        url: `https://clinicaltrials.gov/study/${id.nctId}`
+                    };
+
+                    await aactSaveToCache(result);
+                    return result;
+                } else {
+                    const result = {
+                        nctId: nctId,
+                        valid: false,
+                        title: '',
+                        status: 'NOT FOUND'
+                    };
+                    await aactSaveToCache(result);
+                    return result;
+                }
+            } catch (error) {
+                return {
+                    nctId: nctId,
+                    valid: false,
+                    title: '',
+                    status: 'ERROR: ' + error.message
+                };
+            }
+        }
+
+        // Batch validate NCT IDs
+        async function aactValidateBatch() {
+            const input = document.getElementById('aactNctInput').value.trim();
+            if (!input) {
+                alert('Please enter NCT IDs to validate');
+                return;
+            }
+
+            // Parse NCT IDs
+            const nctIds = input.split(/[\n,\s]+/)
+                .map(id => id.trim().toUpperCase())
+                .filter(id => /^NCT\d{8}$/.test(id));
+
+            // Remove duplicates
+            const uniqueIds = [...new Set(nctIds)];
+
+            if (uniqueIds.length === 0) {
+                alert('No valid NCT IDs found. IDs should be in format: NCT followed by 8 digits (e.g., NCT00000001)');
+                return;
+            }
+
+            if (uniqueIds.length > 500) {
+                alert('Maximum 500 NCT IDs per batch. Please reduce the list.');
+                return;
+            }
+
+            log('aactLog', `Starting batch validation of ${uniqueIds.length} NCT IDs...`);
+
+            // Show progress
+            document.getElementById('aactProgress').classList.remove('hidden');
+            document.getElementById('aactResults').classList.add('hidden');
+
+            aactValidationResults = [];
+            let completed = 0;
+
+            for (const nctId of uniqueIds) {
+                try {
+                    const result = await aactValidateSingle(nctId);
+                    aactValidationResults.push(result);
+                } catch (error) {
+                    aactValidationResults.push({
+                        nctId,
+                        valid: false,
+                        status: 'ERROR'
+                    });
+                }
+
+                completed++;
+                const pct = (completed / uniqueIds.length) * 100;
+                document.getElementById('aactProgressBar').style.width = `${pct}%`;
+                document.getElementById('aactProgressText').textContent = `${completed} / ${uniqueIds.length}`;
+
+                // Rate limiting - small delay between API calls
+                if (!await aactGetFromCache(nctId)) {
+                    await new Promise(r => setTimeout(r, 150));
+                }
+            }
+
+            log('aactLog', `Validation complete: ${aactValidationResults.filter(r => r.valid).length} valid, ${aactValidationResults.filter(r => !r.valid).length} invalid`, 'success');
+
+            displayAACTResults();
+        }
+
+        // Display validation results
+        function displayAACTResults() {
+            document.getElementById('aactResults').classList.remove('hidden');
+
+            const valid = aactValidationResults.filter(r => r.valid);
+            const invalid = aactValidationResults.filter(r => !r.valid);
+
+            // Summary cards
+            document.getElementById('aactSummary').innerHTML = `
+                <div class="stat-card">
+                    <div class="value">${aactValidationResults.length}</div>
+                    <div class="label">Total Validated</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" style="color: var(--success);">${valid.length}</div>
+                    <div class="label">Valid Studies</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value" style="color: var(--danger);">${invalid.length}</div>
+                    <div class="label">Not Found</div>
+                </div>
+                <div class="stat-card">
+                    <div class="value">${((valid.length / aactValidationResults.length) * 100).toFixed(1)}%</div>
+                    <div class="label">Validation Rate</div>
+                </div>
+            `;
+
+            renderAACTTable(aactValidationResults);
+        }
+
+        // Render results table
+        function renderAACTTable(results) {
+            let tableHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>NCT ID</th>
+                            <th>Status</th>
+                            <th>Title</th>
+                            <th>Phase</th>
+                            <th>Sponsor</th>
+                            <th>Enrollment</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            results.forEach(r => {
+                const statusColor = r.valid ? 'var(--success)' : 'var(--danger)';
+                const statusIcon = r.valid ? 'check-circle' : 'times-circle';
+
+                tableHTML += `
+                    <tr>
+                        <td><a href="${r.url || '#'}" target="_blank">${r.nctId}</a></td>
+                        <td style="color: ${statusColor};">
+                            <i class="fas fa-${statusIcon}"></i> ${r.status || 'N/A'}
+                        </td>
+                        <td title="${r.title || ''}">${(r.title || 'N/A').substring(0, 50)}${(r.title || '').length > 50 ? '...' : ''}</td>
+                        <td>${r.phase || 'N/A'}</td>
+                        <td title="${r.sponsor || ''}">${(r.sponsor || 'N/A').substring(0, 25)}${(r.sponsor || '').length > 25 ? '...' : ''}</td>
+                        <td>${r.enrollment || 'N/A'}</td>
+                        <td>
+                            ${r.valid ? `<button class="btn btn-secondary" style="padding: 4px 8px; font-size: 0.8rem;" onclick="aactShowDetails('${r.nctId}')">
+                                <i class="fas fa-info-circle"></i>
+                            </button>` : '-'}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            tableHTML += '</tbody></table>';
+            document.getElementById('aactTable').innerHTML = tableHTML;
+        }
+
+        // Filter results
+        function aactFilterResults() {
+            const textFilter = document.getElementById('aactFilterInput').value.toLowerCase();
+            const statusFilter = document.getElementById('aactStatusFilter').value;
+
+            let filtered = aactValidationResults;
+
+            if (statusFilter === 'valid') {
+                filtered = filtered.filter(r => r.valid);
+            } else if (statusFilter === 'invalid') {
+                filtered = filtered.filter(r => !r.valid);
+            }
+
+            if (textFilter) {
+                filtered = filtered.filter(r =>
+                    r.nctId.toLowerCase().includes(textFilter) ||
+                    (r.title || '').toLowerCase().includes(textFilter) ||
+                    (r.status || '').toLowerCase().includes(textFilter) ||
+                    (r.sponsor || '').toLowerCase().includes(textFilter)
+                );
+            }
+
+            renderAACTTable(filtered);
+        }
+
+        // Show study details modal
+        function aactShowDetails(nctId) {
+            const study = aactValidationResults.find(r => r.nctId === nctId);
+            if (!study) return;
+
+            const locations = (study.locations || [])
+                .map(l => `${l.facility}, ${l.city}, ${l.country}`)
+                .join('<br>') || 'None listed';
+
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); z-index: 10000;
+                display: flex; justify-content: center; align-items: center;
+            `;
+            modal.innerHTML = `
+                <div style="background: var(--bg-card); border-radius: 12px; padding: 30px; max-width: 700px; max-height: 80vh; overflow-y: auto; color: var(--text-primary);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h2 style="color: var(--primary);"><i class="fas fa-flask"></i> ${study.nctId}</h2>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" class="btn btn-secondary">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+
+                    <h3 style="margin-bottom: 10px;">${study.title}</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 20px;">${study.officialTitle || ''}</p>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div><strong>Status:</strong> ${study.status}</div>
+                        <div><strong>Phase:</strong> ${study.phase}</div>
+                        <div><strong>Study Type:</strong> ${study.studyType}</div>
+                        <div><strong>Allocation:</strong> ${study.allocation || 'N/A'}</div>
+                        <div><strong>Intervention Model:</strong> ${study.interventionModel || 'N/A'}</div>
+                        <div><strong>Primary Purpose:</strong> ${study.primaryPurpose || 'N/A'}</div>
+                        <div><strong>Masking:</strong> ${study.masking || 'N/A'}</div>
+                        <div><strong>Enrollment:</strong> ${study.enrollment} (${study.enrollmentType})</div>
+                    </div>
+
+                    <hr style="border-color: var(--border); margin: 20px 0;">
+
+                    <div style="margin-bottom: 15px;">
+                        <strong>Sponsor:</strong> ${study.sponsor} (${study.sponsorClass})
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <strong>Conditions:</strong> ${(study.conditions || []).join(', ') || 'N/A'}
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                        <div><strong>Start Date:</strong> ${study.startDate || 'N/A'}</div>
+                        <div><strong>Completion Date:</strong> ${study.completionDate || 'N/A'}</div>
+                        <div><strong>First Posted:</strong> ${study.firstPosted || 'N/A'}</div>
+                        <div><strong>Last Update:</strong> ${study.lastUpdate || 'N/A'}</div>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <strong>Locations (${study.locationCount || 0} total):</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">${locations}</span>
+                    </div>
+
+                    <div style="margin-bottom: 15px;">
+                        <strong>Summary:</strong><br>
+                        <span style="color: var(--text-secondary); font-size: 0.9rem;">${(study.briefSummary || 'N/A').substring(0, 500)}${(study.briefSummary || '').length > 500 ? '...' : ''}</span>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 20px;">
+                        <a href="${study.url}" target="_blank" class="btn btn-primary">
+                            <i class="fas fa-external-link-alt"></i> View on ClinicalTrials.gov
+                        </a>
+                    </div>
+                </div>
+            `;
+
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+
+            document.body.appendChild(modal);
+        }
+
+        // Show validation history
+        async function aactShowHistory() {
+            if (!aactDB) {
+                log('aactLog', 'Database not initialized', 'error');
+                return;
+            }
+
+            const transaction = aactDB.transaction([AACT_STORE_NAME], 'readonly');
+            const store = transaction.objectStore(AACT_STORE_NAME);
+            const request = store.getAll();
+
+            request.onsuccess = () => {
+                const records = request.result;
+                const historyDiv = document.getElementById('aactHistory');
+
+                if (records.length === 0) {
+                    historyDiv.innerHTML = '<p style="color: var(--text-secondary);">No cached records found.</p>';
+                } else {
+                    // Sort by timestamp descending
+                    records.sort((a, b) => b.timestamp - a.timestamp);
+
+                    let html = `
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>NCT ID</th>
+                                    <th>Valid</th>
+                                    <th>Title</th>
+                                    <th>Cached At</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    records.slice(0, 100).forEach(r => {
+                        const date = new Date(r.timestamp).toLocaleString();
+                        html += `
+                            <tr>
+                                <td>${r.nctId}</td>
+                                <td style="color: ${r.valid ? 'var(--success)' : 'var(--danger)'};">
+                                    <i class="fas fa-${r.valid ? 'check' : 'times'}"></i>
+                                </td>
+                                <td>${(r.title || 'N/A').substring(0, 40)}...</td>
+                                <td>${date}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += '</tbody></table>';
+                    if (records.length > 100) {
+                        html += `<p style="color: var(--text-secondary); margin-top: 10px;">Showing first 100 of ${records.length} records.</p>`;
+                    }
+
+                    historyDiv.innerHTML = html;
+                }
+
+                historyDiv.classList.remove('hidden');
+            };
+        }
+
+        // Export results
+        function aactExportResults(format) {
+            if (aactValidationResults.length === 0) {
+                alert('No results to export');
+                return;
+            }
+
+            if (format === 'csv') {
+                const headers = ['NCT_ID', 'Valid', 'Title', 'Status', 'Phase', 'Study_Type', 'Sponsor', 'Sponsor_Class', 'Enrollment', 'Start_Date', 'Completion_Date', 'Conditions', 'Location_Count', 'URL'];
+                let csv = headers.join(',') + '\n';
+
+                aactValidationResults.forEach(r => {
+                    const row = [
+                        r.nctId,
+                        r.valid,
+                        `"${(r.title || '').replace(/"/g, '""')}"`,
+                        r.status || '',
+                        r.phase || '',
+                        r.studyType || '',
+                        `"${(r.sponsor || '').replace(/"/g, '""')}"`,
+                        r.sponsorClass || '',
+                        r.enrollment || '',
+                        r.startDate || '',
+                        r.completionDate || '',
+                        `"${(r.conditions || []).join('; ')}"`,
+                        r.locationCount || 0,
+                        r.url || ''
+                    ];
+                    csv += row.join(',') + '\n';
+                });
+
+                downloadFile(csv, 'aact_validation_results.csv', 'text/csv');
+            } else if (format === 'json') {
+                const data = JSON.stringify(aactValidationResults, null, 2);
+                downloadFile(data, 'aact_validation_results.json', 'application/json');
+            } else if (format === 'ris') {
+                let ris = '';
+                aactValidationResults.filter(r => r.valid).forEach(r => {
+                    ris += `TY  - CLRT\n`;
+                    ris += `TI  - ${r.title || ''}\n`;
+                    ris += `AN  - ${r.nctId}\n`;
+                    ris += `AU  - ${r.sponsor || ''}\n`;
+                    ris += `PY  - ${(r.startDate || '').substring(0, 4)}\n`;
+                    ris += `AB  - ${(r.briefSummary || '').substring(0, 500)}\n`;
+                    ris += `UR  - ${r.url}\n`;
+                    ris += `KW  - ${(r.conditions || []).join('; ')}\n`;
+                    ris += `N1  - Status: ${r.status}; Phase: ${r.phase}; Enrollment: ${r.enrollment}\n`;
+                    ris += `ER  - \n\n`;
+                });
+
+                downloadFile(ris, 'aact_validation_results.ris', 'text/plain');
+            }
+
+            log('aactLog', `Exported ${aactValidationResults.length} results as ${format.toUpperCase()}`, 'success');
+        }
+
+        // Clear input
+        function aactClearInput() {
+            document.getElementById('aactNctInput').value = '';
+            document.getElementById('aactProgress').classList.add('hidden');
+            document.getElementById('aactResults').classList.add('hidden');
+            aactValidationResults = [];
+        }
+
+        // Load sample data
+        function aactLoadSample() {
+            const sampleNCTs = [
+                'NCT00000620', 'NCT00001163', 'NCT00001379', 'NCT00002562', 'NCT00003299',
+                'NCT00004992', 'NCT00005133', 'NCT00006091', 'NCT00007994', 'NCT00009282',
+                'NCT00106899', 'NCT00153062', 'NCT00174993', 'NCT00268476', 'NCT00294723',
+                'NCT00386607', 'NCT00499356', 'NCT00528983', 'NCT00624052', 'NCT00799903',
+                'NCT99999999', 'NCT00000000', 'NCT12345678'  // Invalid samples for testing
+            ];
+            document.getElementById('aactNctInput').value = sampleNCTs.join('\n');
+            log('aactLog', `Loaded ${sampleNCTs.length} sample NCT IDs (including 3 invalid for testing)`);
+        }
+
+        // ============================================================================
+        // STRATEGY OPTIMIZER FUNCTIONS
+        // ============================================================================
+
+        // Strategy performance data (from historical validation studies)
+        const STRATEGY_PERFORMANCE = {
+            'S1': { recall: 98.7, precision: 15.2, nns: 6.6, name: 'Condition Only', category: 'general' },
+            'S2': { recall: 98.7, precision: 18.5, nns: 5.4, name: 'Interventional Studies', category: 'general' },
+            'S3': { recall: 98.7, precision: 22.3, nns: 4.5, name: 'Randomized Allocation', category: 'rct' },
+            'S4': { recall: 45.5, precision: 45.2, nns: 2.2, name: 'Phase 3/4 Studies', category: 'late_phase' },
+            'S5': { recall: 63.6, precision: 35.8, nns: 2.8, name: 'Has Posted Results', category: 'results' },
+            'S6': { recall: 87.0, precision: 28.4, nns: 3.5, name: 'Completed Status', category: 'completed' },
+            'S7': { recall: 87.0, precision: 32.1, nns: 3.1, name: 'Interventional + Completed', category: 'completed' },
+            'S8': { recall: 42.9, precision: 52.3, nns: 1.9, name: 'RCT + Phase 3/4 + Completed', category: 'high_quality' },
+            'S9': { recall: 79.2, precision: 25.6, nns: 3.9, name: 'Full-Text RCT Keywords', category: 'keyword' },
+            'S10': { recall: 89.6, precision: 30.2, nns: 3.3, name: 'Treatment RCTs Only', category: 'treatment' }
+        };
+
+        // Condition category keywords for classification
+        const CONDITION_KEYWORDS = {
+            oncology: ['cancer', 'tumor', 'tumour', 'carcinoma', 'lymphoma', 'leukemia', 'melanoma', 'sarcoma', 'neoplasm', 'oncolog'],
+            cardiology: ['heart', 'cardiac', 'cardiovascular', 'hypertension', 'arrhythmia', 'atrial fibrillation', 'coronary', 'myocardial'],
+            neurology: ['alzheimer', 'parkinson', 'epilepsy', 'stroke', 'multiple sclerosis', 'dementia', 'neuropathy', 'migraine'],
+            psychiatry: ['depression', 'anxiety', 'schizophrenia', 'bipolar', 'ptsd', 'ocd', 'adhd', 'autism'],
+            endocrinology: ['diabetes', 'thyroid', 'obesity', 'metabolic', 'insulin', 'glucose', 'endocrine'],
+            pulmonology: ['asthma', 'copd', 'lung', 'pulmonary', 'respiratory', 'pneumonia', 'bronchitis'],
+            rheumatology: ['arthritis', 'lupus', 'rheumatoid', 'fibromyalgia', 'osteoporosis', 'gout'],
+            infectious: ['hiv', 'aids', 'hepatitis', 'tuberculosis', 'malaria', 'covid', 'influenza', 'infection'],
+            gastroenterology: ['crohn', 'colitis', 'ibs', 'gerd', 'liver', 'hepatic', 'gastric', 'bowel']
+        };
+
+        // Goal weights for scoring
+        const GOAL_WEIGHTS = {
+            maximum_recall: { recall: 0.9, precision: 0.05, nns: 0.05 },
+            balanced: { recall: 0.5, precision: 0.3, nns: 0.2 },
+            high_precision: { recall: 0.2, precision: 0.6, nns: 0.2 },
+            quick_overview: { recall: 0.3, precision: 0.3, nns: 0.4 }
+        };
+
+        function classifyCondition(condition) {
+            const lowerCondition = condition.toLowerCase();
+            for (const [category, keywords] of Object.entries(CONDITION_KEYWORDS)) {
+                for (const keyword of keywords) {
+                    if (lowerCondition.includes(keyword)) {
+                        return category;
+                    }
+                }
+            }
+            return 'general';
+        }
+
+        function calculateWilsonCI(successes, total, confidence = 0.95) {
+            if (total === 0) return { lower: 0, upper: 0 };
+            const p = successes / total;
+            const z = 1.96; // 95% confidence
+            const denominator = 1 + z * z / total;
+            const center = (p + z * z / (2 * total)) / denominator;
+            const margin = z * Math.sqrt((p * (1 - p) + z * z / (4 * total)) / total) / denominator;
+            return {
+                lower: Math.max(0, center - margin),
+                upper: Math.min(1, center + margin)
+            };
+        }
+
+        function scoreStrategy(strategyId, goal, condition, knownNCTs) {
+            const perf = STRATEGY_PERFORMANCE[strategyId];
+            const weights = GOAL_WEIGHTS[goal];
+            const category = classifyCondition(condition);
+
+            // Base score from weighted performance metrics
+            const recallScore = perf.recall / 100;
+            const precisionScore = perf.precision / 100;
+            const nnsScore = 1 - Math.min(perf.nns / 10, 1); // Lower NNS is better
+
+            let score = weights.recall * recallScore +
+                       weights.precision * precisionScore +
+                       weights.nns * nnsScore;
+
+            // Category bonus - some strategies work better for certain conditions
+            const categoryBonuses = {
+                oncology: { 'S4': 0.1, 'S8': 0.1 }, // Phase 3/4 important for oncology
+                cardiology: { 'S6': 0.05, 'S7': 0.05 },
+                infectious: { 'S5': 0.1 }, // Results posted important for infectious disease
+                general: {}
+            };
+            const categoryBonus = (categoryBonuses[category] || {})[strategyId] || 0;
+            score += categoryBonus;
+
+            // Known NCT bonus (if we can test retrieval)
+            const knownBonus = knownNCTs.length > 0 ? 0.05 : 0;
+            score += knownBonus;
+
+            // Calculate confidence interval
+            const ci = calculateWilsonCI(Math.round(perf.recall), 100);
+
+            return {
+                strategyId,
+                name: perf.name,
+                score: score,
+                recall: perf.recall,
+                precision: perf.precision,
+                nns: perf.nns,
+                recallCI: ci,
+                category: perf.category,
+                conditionMatch: category === perf.category || perf.category === 'general'
+            };
+        }
+
+        async function runOptimizer() {
+            const condition = document.getElementById('optCondition').value.trim();
+            if (!condition) {
+                alert('Please enter a condition/disease');
+                return;
+            }
+
+            const goal = document.getElementById('optGoal').value;
+            const minRecall = parseFloat(document.getElementById('optMinRecall').value) || 80;
+            const maxNNS = parseFloat(document.getElementById('optMaxNNS').value) || 50;
+            const knownNCTsText = document.getElementById('optKnownNCTs').value.trim();
+
+            // Parse known NCTs
+            const knownNCTs = knownNCTsText
+                .split(/[\n,;]+/)
+                .map(s => s.trim().toUpperCase())
+                .filter(s => /^NCT\d{8}$/.test(s));
+
+            log('optimizerLog', `Analyzing condition: "${condition}"`);
+            log('optimizerLog', `Goal: ${goal}, Min Recall: ${minRecall}%, Max NNS: ${maxNNS}`);
+            if (knownNCTs.length > 0) {
+                log('optimizerLog', `Known relevant NCTs: ${knownNCTs.length}`);
+            }
+
+            const category = classifyCondition(condition);
+            log('optimizerLog', `Detected condition category: ${category}`, 'success');
+
+            // Score all strategies
+            const scores = Object.keys(STRATEGY_PERFORMANCE).map(sid =>
+                scoreStrategy(sid, goal, condition, knownNCTs)
+            );
+
+            // Filter by constraints
+            const filtered = scores.filter(s => s.recall >= minRecall && s.nns <= maxNNS);
+
+            // Sort by score
+            const ranked = (filtered.length > 0 ? filtered : scores)
+                .sort((a, b) => b.score - a.score);
+
+            log('optimizerLog', `Evaluated ${scores.length} strategies, ${filtered.length} meet constraints`);
+
+            // Display results
+            displayOptimizerResults(ranked, condition, goal, minRecall, maxNNS, filtered.length === 0);
+        }
+
+        function displayOptimizerResults(ranked, condition, goal, minRecall, maxNNS, constraintsRelaxed) {
+            const resultsDiv = document.getElementById('optimizerResults');
+            const primaryDiv = document.getElementById('optimizerPrimary');
+            const altDiv = document.getElementById('optimizerAlternatives');
+            const compDiv = document.getElementById('optimizerComparison');
+
+            resultsDiv.classList.remove('hidden');
+
+            // Primary recommendation
+            const primary = ranked[0];
+            const category = classifyCondition(condition);
+
+            primaryDiv.innerHTML = `
+                <h4><i class="fas fa-star" style="color: gold;"></i> Primary Recommendation: ${primary.strategyId}</h4>
+                ${constraintsRelaxed ? '<p style="color: var(--warning);"><i class="fas fa-exclamation-triangle"></i> Note: No strategies met all constraints. Showing best available options.</p>' : ''}
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px;">
+                    <div class="metric-card">
+                        <div class="metric-value">${primary.name}</div>
+                        <div class="metric-label">Strategy Name</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" style="color: var(--success);">${primary.recall.toFixed(1)}%</div>
+                        <div class="metric-label">Expected Recall</div>
+                        <small style="color: var(--text-secondary);">95% CI: ${(primary.recallCI.lower * 100).toFixed(1)}% - ${(primary.recallCI.upper * 100).toFixed(1)}%</small>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${primary.precision.toFixed(1)}%</div>
+                        <div class="metric-label">Expected Precision</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${primary.nns.toFixed(1)}</div>
+                        <div class="metric-label">NNS</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${(primary.score * 100).toFixed(0)}</div>
+                        <div class="metric-label">Optimization Score</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">${category}</div>
+                        <div class="metric-label">Condition Category</div>
+                    </div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <button class="btn btn-primary" onclick="applyStrategy('${primary.strategyId}')">
+                        <i class="fas fa-play"></i> Use This Strategy
+                    </button>
+                </div>
+            `;
+
+            // Alternative recommendations
+            const alternatives = ranked.slice(1, 4);
+            if (alternatives.length > 0) {
+                altDiv.innerHTML = `
+                    <h4><i class="fas fa-list-ol"></i> Alternative Strategies</h4>
+                    <div style="display: grid; gap: 10px; margin-top: 10px;">
+                        ${alternatives.map((alt, i) => `
+                            <div class="validation-panel" style="padding: 15px; background: var(--bg-input);">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <div>
+                                        <strong>#${i + 2}: ${alt.strategyId} - ${alt.name}</strong>
+                                        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+                                            Recall: ${alt.recall.toFixed(1)}% | Precision: ${alt.precision.toFixed(1)}% | NNS: ${alt.nns.toFixed(1)} | Score: ${(alt.score * 100).toFixed(0)}
+                                        </div>
+                                    </div>
+                                    <button class="btn btn-secondary" onclick="applyStrategy('${alt.strategyId}')" style="padding: 8px 16px;">
+                                        <i class="fas fa-arrow-right"></i> Use
+                                    </button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Comparison table
+            compDiv.innerHTML = `
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Strategy</th>
+                            <th>Recall</th>
+                            <th>Precision</th>
+                            <th>NNS</th>
+                            <th>Score</th>
+                            <th>Meets Constraints</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${ranked.map((s, i) => {
+                            const meetsConstraints = s.recall >= minRecall && s.nns <= maxNNS;
+                            return `
+                                <tr style="${i === 0 ? 'background: rgba(16, 185, 129, 0.1);' : ''}">
+                                    <td><strong>${i + 1}</strong></td>
+                                    <td>${s.strategyId}: ${s.name}</td>
+                                    <td><span class="recall-badge ${s.recall >= 90 ? 'recall-high' : s.recall >= 70 ? 'recall-medium' : 'recall-low'}">${s.recall.toFixed(1)}%</span></td>
+                                    <td>${s.precision.toFixed(1)}%</td>
+                                    <td>${s.nns.toFixed(1)}</td>
+                                    <td>${(s.score * 100).toFixed(0)}</td>
+                                    <td>${meetsConstraints ? '<i class="fas fa-check" style="color: var(--success);"></i>' : '<i class="fas fa-times" style="color: var(--danger);"></i>'}</td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            log('optimizerLog', `Recommendation: ${primary.strategyId} (${primary.name}) with score ${(primary.score * 100).toFixed(0)}`, 'success');
+        }
+
+        function applyStrategy(strategyId) {
+            // Copy condition to main search tab
+            const condition = document.getElementById('optCondition').value;
+            document.getElementById('conditionInput').value = condition;
+
+            // Select the strategy
+            selectStrategy(strategyId);
+
+            // Switch to search tab
+            document.querySelector('[data-tab="search"]').click();
+
+            log('optimizerLog', `Applied strategy ${strategyId} to search tab`, 'success');
+        }
+
+        function clearOptimizer() {
+            document.getElementById('optCondition').value = '';
+            document.getElementById('optGoal').value = 'balanced';
+            document.getElementById('optMinRecall').value = '80';
+            document.getElementById('optMaxNNS').value = '50';
+            document.getElementById('optKnownNCTs').value = '';
+            document.getElementById('optimizerResults').classList.add('hidden');
+            document.getElementById('optimizerLog').innerHTML = '';
+        }
+
+        function loadOptimizerExample() {
+            document.getElementById('optCondition').value = 'type 2 diabetes';
+            document.getElementById('optGoal').value = 'balanced';
+            document.getElementById('optMinRecall').value = '85';
+            document.getElementById('optMaxNNS').value = '30';
+            document.getElementById('optKnownNCTs').value = 'NCT00294723\nNCT00386607\nNCT00528983';
+            log('optimizerLog', 'Loaded example: Type 2 diabetes systematic review', 'success');
+        }
+
+        // ============================================================================
+        // PWA & SERVICE WORKER
+        // ============================================================================
+        let deferredPrompt = null;
+
+        // Register service worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('service-worker.js')
+                    .then(registration => {
+                        console.log('SW registered:', registration.scope);
+
+                        // Check for updates
+                        registration.addEventListener('updatefound', () => {
+                            const newWorker = registration.installing;
+                            newWorker.addEventListener('statechange', () => {
+                                if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    // New version available
+                                    if (confirm('A new version is available. Reload to update?')) {
+                                        newWorker.postMessage({ type: 'SKIP_WAITING' });
+                                        window.location.reload();
+                                    }
+                                }
+                            });
+                        });
+                    })
+                    .catch(error => {
+                        console.log('SW registration failed:', error);
+                    });
+            });
+        }
+
+        // PWA install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+
+            // Show install banner if not dismissed
+            if (!localStorage.getItem('pwaInstallDismissed')) {
+                document.getElementById('pwaInstallBanner').classList.remove('hidden');
+            }
+        });
+
+        function installPWA() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(result => {
+                    if (result.outcome === 'accepted') {
+                        console.log('PWA installed');
+                        log('historyLog', 'App installed successfully!', 'success');
+                    }
+                    deferredPrompt = null;
+                    document.getElementById('pwaInstallBanner').classList.add('hidden');
+                });
+            }
+        }
+
+        function dismissPWABanner() {
+            document.getElementById('pwaInstallBanner').classList.add('hidden');
+            localStorage.setItem('pwaInstallDismissed', 'true');
+        }
+
+        // ============================================================================
+        // SEARCH HISTORY & BOOKMARKS
+        // ============================================================================
+        const HISTORY_DB_NAME = 'CTGovSearchHistory';
+        const HISTORY_DB_VERSION = 1;
+        const HISTORY_STORE = 'history';
+        const BOOKMARKS_STORE = 'bookmarks';
+
+        let historyDb = null;
+        let allHistory = [];
+        let allBookmarks = [];
+
+        async function initHistoryDatabase() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(HISTORY_DB_NAME, HISTORY_DB_VERSION);
+
+                request.onerror = () => reject(request.error);
+                request.onsuccess = () => {
+                    historyDb = request.result;
+                    resolve(historyDb);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+
+                    // History store
+                    if (!db.objectStoreNames.contains(HISTORY_STORE)) {
+                        const historyStore = db.createObjectStore(HISTORY_STORE, { keyPath: 'id', autoIncrement: true });
+                        historyStore.createIndex('timestamp', 'timestamp');
+                        historyStore.createIndex('type', 'type');
+                        historyStore.createIndex('query', 'query');
+                    }
+
+                    // Bookmarks store
+                    if (!db.objectStoreNames.contains(BOOKMARKS_STORE)) {
+                        const bookmarksStore = db.createObjectStore(BOOKMARKS_STORE, { keyPath: 'id', autoIncrement: true });
+                        bookmarksStore.createIndex('timestamp', 'timestamp');
+                    }
+                };
+            });
+        }
+
+        async function addToHistory(type, data) {
+            if (!historyDb) return;
+
+            const entry = {
+                type: type,
+                query: data.query || data.condition || '',
+                data: data,
+                timestamp: Date.now()
+            };
+
+            return new Promise((resolve, reject) => {
+                const tx = historyDb.transaction(HISTORY_STORE, 'readwrite');
+                const store = tx.objectStore(HISTORY_STORE);
+                const request = store.add(entry);
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function loadHistory() {
+            if (!historyDb) return [];
+
+            return new Promise((resolve, reject) => {
+                const tx = historyDb.transaction(HISTORY_STORE, 'readonly');
+                const store = tx.objectStore(HISTORY_STORE);
+                const request = store.getAll();
+                request.onsuccess = () => {
+                    allHistory = request.result.sort((a, b) => b.timestamp - a.timestamp);
+                    resolve(allHistory);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function loadBookmarks() {
+            if (!historyDb) return [];
+
+            return new Promise((resolve, reject) => {
+                const tx = historyDb.transaction(BOOKMARKS_STORE, 'readonly');
+                const store = tx.objectStore(BOOKMARKS_STORE);
+                const request = store.getAll();
+                request.onsuccess = () => {
+                    allBookmarks = request.result.sort((a, b) => b.timestamp - a.timestamp);
+                    resolve(allBookmarks);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function addBookmark(historyItem, note = '') {
+            if (!historyDb) return;
+
+            const bookmark = {
+                ...historyItem,
+                note: note,
+                bookmarkedAt: Date.now()
+            };
+
+            return new Promise((resolve, reject) => {
+                const tx = historyDb.transaction(BOOKMARKS_STORE, 'readwrite');
+                const store = tx.objectStore(BOOKMARKS_STORE);
+                const request = store.add(bookmark);
+                request.onsuccess = () => {
+                    log('historyLog', `Bookmarked: ${historyItem.query}`, 'success');
+                    refreshHistory();
+                    resolve(request.result);
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function removeBookmark(id) {
+            if (!historyDb) return;
+
+            return new Promise((resolve, reject) => {
+                const tx = historyDb.transaction(BOOKMARKS_STORE, 'readwrite');
+                const store = tx.objectStore(BOOKMARKS_STORE);
+                const request = store.delete(id);
+                request.onsuccess = () => {
+                    log('historyLog', 'Bookmark removed', 'success');
+                    refreshHistory();
+                    resolve();
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function deleteHistoryItem(id) {
+            if (!historyDb) return;
+
+            return new Promise((resolve, reject) => {
+                const tx = historyDb.transaction(HISTORY_STORE, 'readwrite');
+                const store = tx.objectStore(HISTORY_STORE);
+                const request = store.delete(id);
+                request.onsuccess = () => {
+                    refreshHistory();
+                    resolve();
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        function displayHistory(history) {
+            const listEl = document.getElementById('historyList');
+
+            if (history.length === 0) {
+                listEl.innerHTML = '<p style="color: var(--text-secondary); text-align: center; padding: 30px;">No search history yet.</p>';
+                return;
+            }
+
+            listEl.innerHTML = history.map(item => {
+                const date = new Date(item.timestamp).toLocaleString();
+                const typeIcon = item.type === 'search' ? 'fa-search' :
+                               item.type === 'validation' ? 'fa-check-circle' :
+                               item.type === 'optimization' ? 'fa-brain' : 'fa-history';
+                const typeColor = item.type === 'search' ? 'var(--primary)' :
+                                item.type === 'validation' ? 'var(--success)' :
+                                item.type === 'optimization' ? 'var(--secondary)' : 'var(--text-secondary)';
+
+                return `
+                    <div class="validation-panel" style="padding: 12px; margin-bottom: 8px; background: var(--bg-input);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <i class="fas ${typeIcon}" style="color: ${typeColor};"></i>
+                                    <strong>${escapeHtml(item.query || 'Unknown')}</strong>
+                                    <span style="color: var(--text-secondary); font-size: 0.8rem;">${item.type}</span>
+                                </div>
+                                <div style="color: var(--text-secondary); font-size: 0.85rem; margin-top: 5px;">
+                                    ${date}
+                                    ${item.data.strategy ? ' | Strategy: ' + item.data.strategy : ''}
+                                    ${item.data.resultsCount !== undefined ? ' | Results: ' + item.data.resultsCount : ''}
+                                </div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="rerunHistoryItem(${item.id})" title="Re-run">
+                                    <i class="fas fa-redo"></i>
+                                </button>
+                                <button class="btn btn-warning" style="padding: 6px 12px;" onclick="bookmarkHistoryItem(${item.id})" title="Bookmark">
+                                    <i class="fas fa-star"></i>
+                                </button>
+                                <button class="btn btn-danger" style="padding: 6px 12px;" onclick="deleteHistoryItem(${item.id})" title="Delete">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function displayBookmarks(bookmarks) {
+            const listEl = document.getElementById('bookmarksList');
+            const noBookmarksEl = document.getElementById('noBookmarks');
+
+            if (bookmarks.length === 0) {
+                listEl.innerHTML = '';
+                noBookmarksEl.classList.remove('hidden');
+                return;
+            }
+
+            noBookmarksEl.classList.add('hidden');
+
+            listEl.innerHTML = bookmarks.map(bookmark => {
+                const date = new Date(bookmark.bookmarkedAt || bookmark.timestamp).toLocaleString();
+
+                return `
+                    <div class="validation-panel" style="padding: 12px; margin-bottom: 8px; background: var(--bg-input); border-left: 3px solid var(--warning);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1;">
+                                <strong><i class="fas fa-star" style="color: var(--warning);"></i> ${escapeHtml(bookmark.query || 'Unknown')}</strong>
+                                ${bookmark.note ? '<p style="margin: 5px 0; color: var(--text-secondary); font-size: 0.9rem;">' + escapeHtml(bookmark.note) + '</p>' : ''}
+                                <div style="color: var(--text-secondary); font-size: 0.85rem;">Bookmarked: ${date}</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-primary" style="padding: 6px 12px;" onclick="rerunBookmark(${bookmark.id})" title="Run">
+                                    <i class="fas fa-play"></i>
+                                </button>
+                                <button class="btn btn-danger" style="padding: 6px 12px;" onclick="removeBookmark(${bookmark.id})" title="Remove">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function updateStats() {
+            const searches = allHistory.filter(h => h.type === 'search').length;
+            const validations = allHistory.filter(h => h.type === 'validation').length;
+
+            document.getElementById('statTotalSearches').textContent = searches;
+            document.getElementById('statTotalValidations').textContent = validations;
+            document.getElementById('statBookmarks').textContent = allBookmarks.length;
+
+            // Estimate cache size
+            if (navigator.storage && navigator.storage.estimate) {
+                navigator.storage.estimate().then(estimate => {
+                    const usedKB = Math.round((estimate.usage || 0) / 1024);
+                    document.getElementById('statCacheSize').textContent = usedKB > 1024 ?
+                        (usedKB / 1024).toFixed(1) + ' MB' : usedKB + ' KB';
+                });
+            }
+        }
+
+        async function refreshHistory() {
+            await loadHistory();
+            await loadBookmarks();
+            displayHistory(allHistory);
+            displayBookmarks(allBookmarks);
+            updateStats();
+        }
+
+        function filterHistory() {
+            const query = document.getElementById('historyFilter').value.toLowerCase();
+            const type = document.getElementById('historyTypeFilter').value;
+
+            let filtered = allHistory;
+
+            if (query) {
+                filtered = filtered.filter(h =>
+                    (h.query && h.query.toLowerCase().includes(query)) ||
+                    (h.type && h.type.toLowerCase().includes(query))
+                );
+            }
+
+            if (type) {
+                filtered = filtered.filter(h => h.type === type);
+            }
+
+            displayHistory(filtered);
+        }
+
+        function bookmarkHistoryItem(id) {
+            const item = allHistory.find(h => h.id === id);
+            if (item) {
+                const note = prompt('Add a note for this bookmark (optional):');
+                addBookmark(item, note || '');
+            }
+        }
+
+        function rerunHistoryItem(id) {
+            const item = allHistory.find(h => h.id === id);
+            if (!item) return;
+
+            if (item.type === 'search') {
+                document.getElementById('conditionInput').value = item.query;
+                if (item.data.strategy) selectStrategy(item.data.strategy);
+                document.querySelector('[data-tab="search"]').click();
+                log('historyLog', `Loaded search: ${item.query}`, 'success');
+            } else if (item.type === 'optimization') {
+                document.getElementById('optCondition').value = item.query;
+                document.querySelector('[data-tab="optimizer"]').click();
+                log('historyLog', `Loaded optimization: ${item.query}`, 'success');
+            }
+        }
+
+        function rerunBookmark(id) {
+            const bookmark = allBookmarks.find(b => b.id === id);
+            if (bookmark) {
+                rerunHistoryItem(bookmark.id);
+            }
+        }
+
+        async function clearAllHistory() {
+            if (!confirm('Are you sure you want to clear all search history?')) return;
+
+            if (!historyDb) return;
+
+            return new Promise((resolve, reject) => {
+                const tx = historyDb.transaction(HISTORY_STORE, 'readwrite');
+                const store = tx.objectStore(HISTORY_STORE);
+                const request = store.clear();
+                request.onsuccess = () => {
+                    log('historyLog', 'History cleared', 'success');
+                    refreshHistory();
+                    resolve();
+                };
+                request.onerror = () => reject(request.error);
+            });
+        }
+
+        async function clearOldHistory() {
+            if (!historyDb) return;
+
+            const thirtyDaysAgo = Date.now() - (30 * 24 * 60 * 60 * 1000);
+            const oldItems = allHistory.filter(h => h.timestamp < thirtyDaysAgo);
+
+            for (const item of oldItems) {
+                await deleteHistoryItem(item.id);
+            }
+
+            log('historyLog', `Cleared ${oldItems.length} old history entries`, 'success');
+        }
+
+        async function clearAllStorage() {
+            if (!confirm('This will clear ALL local data including history, bookmarks, and cached validation results. Continue?')) return;
+
+            // Clear all IndexedDB databases
+            if (historyDb) {
+                historyDb.close();
+                await indexedDB.deleteDatabase(HISTORY_DB_NAME);
+            }
+            if (aactDb) {
+                aactDb.close();
+                await indexedDB.deleteDatabase(AACT_DB_NAME);
+            }
+
+            // Clear localStorage
+            localStorage.clear();
+
+            // Re-initialize
+            await initHistoryDatabase();
+            await initAACTDatabase();
+            refreshHistory();
+
+            log('historyLog', 'All local data cleared', 'success');
+        }
+
+        function exportHistory() {
+            const exportData = {
+                version: '1.0',
+                exportDate: new Date().toISOString(),
+                history: allHistory,
+                bookmarks: allBookmarks
+            };
+
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `ctgov-search-history-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+
+            log('historyLog', 'History exported successfully', 'success');
+        }
+
+        async function importHistory(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+
+                if (!data.history && !data.bookmarks) {
+                    throw new Error('Invalid history file format');
+                }
+
+                let imported = 0;
+
+                // Import history
+                if (data.history && Array.isArray(data.history)) {
+                    for (const item of data.history) {
+                        const entry = {
+                            type: item.type,
+                            query: item.query,
+                            data: item.data,
+                            timestamp: item.timestamp || Date.now()
+                        };
+                        await addToHistory(entry.type, entry.data);
+                        imported++;
+                    }
+                }
+
+                // Import bookmarks
+                if (data.bookmarks && Array.isArray(data.bookmarks)) {
+                    for (const bookmark of data.bookmarks) {
+                        await addBookmark(bookmark, bookmark.note || '');
+                        imported++;
+                    }
+                }
+
+                await refreshHistory();
+                log('historyLog', `Imported ${imported} items`, 'success');
+            } catch (error) {
+                log('historyLog', `Import failed: ${error.message}`, 'error');
+            }
+
+            event.target.value = '';
+        }
+
+        // Hook into existing search function to record history
+        const originalExecuteSearch = executeSearch;
+        executeSearch = async function() {
+            const condition = document.getElementById('conditionInput').value.trim();
+            const result = await originalExecuteSearch.apply(this, arguments);
+
+            // Record in history
+            if (condition) {
+                await addToHistory('search', {
+                    query: condition,
+                    strategy: selectedStrategy,
+                    resultsCount: currentStudies.length,
+                    timestamp: Date.now()
+                });
+            }
+
+            return result;
+        };
+
+        // Hook into optimizer to record history
+        const originalRunOptimizer = runOptimizer;
+        runOptimizer = async function() {
+            const condition = document.getElementById('optCondition').value.trim();
+            const result = await originalRunOptimizer.apply(this, arguments);
+
+            // Record in history
+            if (condition) {
+                await addToHistory('optimization', {
+                    query: condition,
+                    condition: condition,
+                    goal: document.getElementById('optGoal').value,
+                    timestamp: Date.now()
+                });
+            }
+
+            return result;
+        };
+
+        // ============================================================================
+        // INITIALIZE
+        // ============================================================================
+        initPyodide();
+
+        // Initialize AACT database
+        initAACTDatabase().then(() => {
+            console.log('AACT IndexedDB initialized');
+        }).catch(err => {
+            console.error('AACT IndexedDB error:', err);
+        });
+
+        // Initialize History database
+        initHistoryDatabase().then(() => {
+            console.log('History IndexedDB initialized');
+            refreshHistory();
+        }).catch(err => {
+            console.error('History IndexedDB error:', err);
+        });
+    </script>
+</body>
+</html>
