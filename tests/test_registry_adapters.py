@@ -38,12 +38,12 @@ class TestRegistryType:
         assert RegistryType.JRCT in registries
 
     def test_registry_values(self):
-        """Test registry enum values."""
-        assert RegistryType.ANZCTR.value == "anzctr"
-        assert RegistryType.CHICTR.value == "chictr"
-        assert RegistryType.DRKS.value == "drks"
-        assert RegistryType.CTRI.value == "ctri"
-        assert RegistryType.JRCT.value == "jrct"
+        """Test registry enum values (domain-name format)."""
+        assert RegistryType.ANZCTR.value == "anzctr.org.au"
+        assert RegistryType.CHICTR.value == "chictr.org.cn"
+        assert RegistryType.DRKS.value == "drks.de"
+        assert RegistryType.CTRI.value == "ctri.nic.in"
+        assert RegistryType.JRCT.value == "jrct.niph.go.jp"
 
 
 class TestStudyStatus:
@@ -78,12 +78,12 @@ class TestStandardizedStudy:
         """Test creating a standardized study."""
         study = StandardizedStudy(
             registry_id="ACTRN12620000001p",
-            registry=RegistryType.ANZCTR,
+            registry_type=RegistryType.ANZCTR,
             title="Test Study",
             status=StudyStatus.RECRUITING
         )
         assert study.registry_id == "ACTRN12620000001p"
-        assert study.registry == RegistryType.ANZCTR
+        assert study.registry_type == RegistryType.ANZCTR
         assert study.title == "Test Study"
         assert study.status == StudyStatus.RECRUITING
 
@@ -91,7 +91,7 @@ class TestStandardizedStudy:
         """Test converting study to dictionary."""
         study = StandardizedStudy(
             registry_id="ACTRN12620000001p",
-            registry=RegistryType.ANZCTR,
+            registry_type=RegistryType.ANZCTR,
             title="Test Study",
             status=StudyStatus.RECRUITING
         )
@@ -105,7 +105,7 @@ class TestStandardizedStudy:
         """Test deduplication key generation."""
         study = StandardizedStudy(
             registry_id="ACTRN12620000001p",
-            registry=RegistryType.ANZCTR,
+            registry_type=RegistryType.ANZCTR,
             title="Test Study",
             status=StudyStatus.RECRUITING
         )
@@ -134,7 +134,7 @@ class TestSearchResult:
         """Test result with studies."""
         study = StandardizedStudy(
             registry_id="ACTRN12620000001p",
-            registry=RegistryType.ANZCTR,
+            registry_type=RegistryType.ANZCTR,
             title="Test Study",
             status=StudyStatus.RECRUITING
         )
@@ -180,13 +180,13 @@ class TestUnifiedSearchResult:
         """Test deduplication of studies."""
         study1 = StandardizedStudy(
             registry_id="ACTRN12620000001p",
-            registry=RegistryType.ANZCTR,
+            registry_type=RegistryType.ANZCTR,
             title="Test Study",
             status=StudyStatus.RECRUITING
         )
         study2 = StandardizedStudy(
             registry_id="ACTRN12620000001p",  # Same ID
-            registry=RegistryType.ANZCTR,
+            registry_type=RegistryType.ANZCTR,
             title="Test Study",
             status=StudyStatus.RECRUITING
         )
@@ -333,7 +333,7 @@ class TestDataclassDefaults:
         """Test StandardizedStudy default values."""
         study = StandardizedStudy(
             registry_id="TEST123",
-            registry=RegistryType.ANZCTR,
+            registry_type=RegistryType.ANZCTR,
             title="Test",
             status=StudyStatus.RECRUITING
         )
