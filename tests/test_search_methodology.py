@@ -235,7 +235,8 @@ class TestBooleanOptimizer:
 
         query = optimizer.optimize_query(concepts)
 
-        assert "diabetes" in query.lower()
+        # Optimizer truncates terms (diabetes -> diabete*); accept either form
+        assert "diabete" in query.lower()
         assert "metformin" in query.lower()
         assert " AND " in query
         assert " OR " in query
