@@ -98,7 +98,7 @@ class TestStandardizedStudy:
         d = study.to_dict()
         assert isinstance(d, dict)
         assert d["registry_id"] == "ACTRN12620000001p"
-        assert d["registry"] == "anzctr"
+        assert d["registry_type"] == "anzctr.org.au"
         assert d["title"] == "Test Study"
 
     def test_study_dedup_key(self):
@@ -174,7 +174,7 @@ class TestUnifiedSearchResult:
         d = result.to_dict()
         assert isinstance(d, dict)
         assert d["query"] == "diabetes"
-        assert "anzctr" in d["registries_searched"]
+        assert "anzctr.org.au" in d["registries_searched"]
 
     def test_get_dedup_studies(self):
         """Test deduplication of studies."""
@@ -216,8 +216,9 @@ class TestUnifiedRegistrySearch:
         # (depends on installed dependencies)
 
     def test_detect_anzctr_id(self, search):
-        """Test detecting ANZCTR ID format."""
-        reg = search.detect_registry("ACTRN12620000001p")
+        """Test detecting ANZCTR ID format (14 digits, optional letter suffix)."""
+        # Real ANZCTR IDs are ACTRN + 14 digits + optional letter (e.g. p, n)
+        reg = search.detect_registry("ACTRN12620000001234p")
         assert reg == RegistryType.ANZCTR
 
     def test_detect_chictr_id(self, search):
@@ -236,8 +237,8 @@ class TestUnifiedRegistrySearch:
         assert reg == RegistryType.CTRI
 
     def test_detect_jrct_id(self, search):
-        """Test detecting jRCT ID format."""
-        reg = search.detect_registry("jRCTs000000001")
+        """Test detecting jRCT ID format (10-12 digits after jRCT[s])."""
+        reg = search.detect_registry("jRCTs0000000001")
         assert reg == RegistryType.JRCT
 
     def test_detect_unknown_id(self, search):
