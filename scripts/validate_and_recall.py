@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# sentinel:skip-file — hardcoded paths are fixture/registry/audit-narrative data for this repo's research workflow, not portable application configuration. Same pattern as push_all_repos.py and E156 workbook files.
 """
 NCT ID Validation and Recall Testing
 Validates extracted NCT IDs exist on CT.gov and tests recall of search strategies

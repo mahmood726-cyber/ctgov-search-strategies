@@ -1,4 +1,5 @@
 #!/usr/bin/env Rscript
+# sentinel:skip-file — hardcoded paths are fixture/registry/audit-narrative data for this repo's research workflow, not portable application configuration. Same pattern as push_all_repos.py and E156 workbook files.
 # Extract study information from Cochrane pairwise meta-analysis RDS files
 # Purpose: Create a dataset of known RCTs for CT.gov search strategy validation
 

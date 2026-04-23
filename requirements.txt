@@ -1,11 +1,16 @@
-# CT.gov Trial Registry Integrity Suite v4.2
+# CT.gov Search Strategy Validation v5.0
 # Python dependencies
 
-# Core HTTP requests
+# =============================================================================
+# Core Dependencies
+# =============================================================================
+
+# HTTP requests
 requests>=2.28.0
 
 # Data handling
 pandas>=1.5.0
+numpy>=1.23.0
 
 # HTML parsing for multi-registry search
 beautifulsoup4>=4.12.0
@@ -14,9 +19,72 @@ lxml>=4.9.0
 # PostgreSQL for AACT database (optional)
 psycopg2-binary>=2.9.0
 
-# Statistical functions (optional, for Clopper-Pearson CI)
-# scipy>=1.10.0
+# =============================================================================
+# Async Support
+# =============================================================================
 
-# Development/testing
-# pytest>=7.0.0
-# black>=23.0.0
+# Async HTTP requests
+aiohttp>=3.8.0
+
+# =============================================================================
+# Scientific Computing
+# =============================================================================
+
+# Statistical functions (Wilson CI, Clopper-Pearson)
+scipy>=1.10.0
+
+# =============================================================================
+# CLI and User Interface
+# =============================================================================
+
+# Command-line interface
+click>=8.1.0
+
+# Rich terminal output
+rich>=13.0.0
+
+# Progress bars
+tqdm>=4.64.0
+
+# =============================================================================
+# Configuration
+# =============================================================================
+
+# Environment variables
+python-dotenv>=0.21.0
+
+# YAML config files
+pyyaml>=6.0
+
+# =============================================================================
+# Logging
+# =============================================================================
+
+# Structured logging (optional)
+# structlog>=22.0.0
+
+# =============================================================================
+# Development Dependencies
+# =============================================================================
+
+# Testing
+pytest>=7.2.0
+pytest-asyncio>=0.20.0
+pytest-cov>=4.0.0
+
+# Type checking
+mypy>=0.990
+
+# Code formatting
+black>=23.0.0
+isort>=5.11.0
+
+# Linting
+flake8>=6.0.0
+
+# =============================================================================
+# Documentation (optional)
+# =============================================================================
+
+# mkdocs>=1.4.0
+# mkdocs-material>=8.0.0

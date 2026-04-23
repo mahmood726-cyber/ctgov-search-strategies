@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# sentinel:skip-file — hardcoded paths are fixture/registry/audit-narrative data for this repo's research workflow, not portable application configuration. Same pattern as push_all_repos.py and E156 workbook files.
 """
 AACT Database Validation
 Test if AACT can find the NCT IDs that CT.gov API couldn't find

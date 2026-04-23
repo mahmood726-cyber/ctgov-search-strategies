@@ -679,12 +679,20 @@ class MLStrategyOptimizer:
 
         self.training_examples.append(example)
 
-    def train_models(self):
-        """Train ML models from collected examples."""
+    def train_models(self, n_folds: int = 5) -> Dict[str, Any]:
+        """
+        Train ML models from collected examples with k-fold cross-validation.
+
+        Args:
+            n_folds: Number of cross-validation folds (default: 5)
+
+        Returns:
+            Dictionary with training results and cross-validation metrics
+        """
         if len(self.training_examples) < 20:
             print(f"Insufficient training data ({len(self.training_examples)} examples). "
                   f"Need at least 20.")
-            return False
+            return {'success': False, 'error': 'Insufficient training data'}
 
         # Prepare training data
         X = []
@@ -706,16 +714,31 @@ class MLStrategyOptimizer:
 
             y_recall.append(example.actual_recall)
 
-        # Train models
-        print("Training AREA syntax recommendation model...")
+        # Perform k-fold cross-validation
+        cv_results = self._cross_validate(X, y_area, y_expansion, y_recall, n_folds)
+
+        print(f"\n{'='*50}")
+        print("Cross-Validation Results")
+        print(f"{'='*50}")
+        print(f"AREA Syntax Model AUC: {cv_results['area_syntax_auc']:.3f} "
+              f"(±{cv_results['area_syntax_auc_std']:.3f})")
+        print(f"Expansion Model AUC: {cv_results['expansion_auc']:.3f} "
+              f"(±{cv_results['expansion_auc_std']:.3f})")
+        print(f"Recall Predictor MAE: {cv_results['recall_mae']:.3f} "
+              f"(±{cv_results['recall_mae_std']:.3f})")
+        print(f"Calibration Slope: {cv_results['calibration_slope']:.3f}")
+        print(f"{'='*50}\n")
+
+        # Train final models on all data
+        print("Training final AREA syntax recommendation model...")
         self.area_syntax_model = GradientBoostingClassifier(n_estimators=50)
         self.area_syntax_model.fit(X, y_area)
 
-        print("Training synonym expansion model...")
+        print("Training final synonym expansion model...")
         self.synonym_expansion_model = GradientBoostingClassifier(n_estimators=50)
         self.synonym_expansion_model.fit(X, y_expansion)
 
-        print("Training recall predictor...")
+        print("Training final recall predictor...")
         self.recall_predictor = GradientBoostingClassifier(n_estimators=100)
         self.recall_predictor.fit(X, y_recall)
 
@@ -724,8 +747,161 @@ class MLStrategyOptimizer:
         self.synonym_expansion_model.save(self.models_dir / "expansion_model.pkl")
         self.recall_predictor.save(self.models_dir / "recall_model.pkl")
 
+        # Save cross-validation metrics
+        cv_results_path = self.models_dir / "cv_metrics.json"
+        with open(cv_results_path, 'w') as f:
+            json.dump(cv_results, f, indent=2)
+
         print(f"Models trained on {len(self.training_examples)} examples and saved.")
-        return True
+        print(f"Cross-validation metrics saved to {cv_results_path}")
+
+        return {
+            'success': True,
+            'n_examples': len(self.training_examples),
+            'n_folds': n_folds,
+            'cv_metrics': cv_results
+        }
+
+    def _cross_validate(
+        self,
+        X: List[List[float]],
+        y_area: List[float],
+        y_expansion: List[float],
+        y_recall: List[float],
+        n_folds: int
+    ) -> Dict[str, float]:
+        """
+        Perform k-fold cross-validation.
+
+        Returns:
+            Dictionary with AUC, MAE, and calibration metrics
+        """
+        import random
+
+        n = len(X)
+        indices = list(range(n))
+        random.seed(42)  # Reproducibility
+        random.shuffle(indices)
+
+        fold_size = n // n_folds
+
+        area_aucs = []
+        expansion_aucs = []
+        recall_maes = []
+        all_predicted_recalls = []
+        all_actual_recalls = []
+
+        for fold in range(n_folds):
+            # Split data
+            val_start = fold * fold_size
+            val_end = val_start + fold_size if fold < n_folds - 1 else n
+            val_indices = indices[val_start:val_end]
+            train_indices = indices[:val_start] + indices[val_end:]
+
+            X_train = [X[i] for i in train_indices]
+            X_val = [X[i] for i in val_indices]
+
+            y_area_train = [y_area[i] for i in train_indices]
+            y_area_val = [y_area[i] for i in val_indices]
+
+            y_expansion_train = [y_expansion[i] for i in train_indices]
+            y_expansion_val = [y_expansion[i] for i in val_indices]
+
+            y_recall_train = [y_recall[i] for i in train_indices]
+            y_recall_val = [y_recall[i] for i in val_indices]
+
+            # Train fold models
+            area_model = GradientBoostingClassifier(n_estimators=50)
+            area_model.fit(X_train, y_area_train)
+
+            expansion_model = GradientBoostingClassifier(n_estimators=50)
+            expansion_model.fit(X_train, y_expansion_train)
+
+            recall_model = GradientBoostingClassifier(n_estimators=100)
+            recall_model.fit(X_train, y_recall_train)
+
+            # Evaluate
+            area_preds = [area_model.predict_proba(x) for x in X_val]
+            expansion_preds = [expansion_model.predict_proba(x) for x in X_val]
+            recall_preds = [recall_model.predict_proba(x) for x in X_val]
+
+            # Calculate AUC (simplified ROC-AUC)
+            area_aucs.append(self._calculate_auc(y_area_val, area_preds))
+            expansion_aucs.append(self._calculate_auc(y_expansion_val, expansion_preds))
+
+            # Calculate MAE for recall
+            mae = sum(abs(p - a) for p, a in zip(recall_preds, y_recall_val)) / len(y_recall_val)
+            recall_maes.append(mae)
+
+            all_predicted_recalls.extend(recall_preds)
+            all_actual_recalls.extend(y_recall_val)
+
+        # Calculate calibration slope
+        calibration_slope = self._calculate_calibration_slope(
+            all_predicted_recalls, all_actual_recalls
+        )
+
+        return {
+            'area_syntax_auc': sum(area_aucs) / len(area_aucs),
+            'area_syntax_auc_std': self._std(area_aucs),
+            'expansion_auc': sum(expansion_aucs) / len(expansion_aucs),
+            'expansion_auc_std': self._std(expansion_aucs),
+            'recall_mae': sum(recall_maes) / len(recall_maes),
+            'recall_mae_std': self._std(recall_maes),
+            'calibration_slope': calibration_slope,
+            'n_folds': n_folds,
+        }
+
+    def _calculate_auc(self, y_true: List[float], y_pred: List[float]) -> float:
+        """Calculate ROC-AUC using Mann-Whitney U statistic."""
+        positives = [(p, i) for i, (t, p) in enumerate(zip(y_true, y_pred)) if t > 0.5]
+        negatives = [(p, i) for i, (t, p) in enumerate(zip(y_true, y_pred)) if t <= 0.5]
+
+        if not positives or not negatives:
+            return 0.5
+
+        # Count concordant pairs
+        concordant = 0
+        for p_pos, _ in positives:
+            for p_neg, _ in negatives:
+                if p_pos > p_neg:
+                    concordant += 1
+                elif p_pos == p_neg:
+                    concordant += 0.5
+
+        auc = concordant / (len(positives) * len(negatives))
+        return auc
+
+    def _calculate_calibration_slope(
+        self,
+        predicted: List[float],
+        actual: List[float]
+    ) -> float:
+        """Calculate calibration slope using linear regression."""
+        if not predicted or not actual:
+            return 1.0
+
+        n = len(predicted)
+        mean_pred = sum(predicted) / n
+        mean_actual = sum(actual) / n
+
+        # Calculate slope: Cov(pred, actual) / Var(pred)
+        cov = sum((p - mean_pred) * (a - mean_actual) for p, a in zip(predicted, actual)) / n
+        var_pred = sum((p - mean_pred) ** 2 for p in predicted) / n
+
+        if var_pred < 1e-10:
+            return 1.0
+
+        slope = cov / var_pred
+        return slope
+
+    def _std(self, values: List[float]) -> float:
+        """Calculate standard deviation."""
+        if len(values) < 2:
+            return 0.0
+        mean = sum(values) / len(values)
+        variance = sum((x - mean) ** 2 for x in values) / (len(values) - 1)
+        return math.sqrt(variance)
 
     def load_models(self) -> bool:
         """Load pre-trained models."""
