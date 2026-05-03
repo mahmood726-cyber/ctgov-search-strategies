@@ -193,7 +193,7 @@ class PubMedScanner:
             List of {nct_id, pubmed_id, title, date} dicts
         """
         import requests
-        import xml.etree.ElementTree as ET
+        from defusedxml import ElementTree as ET
         import time
 
         results = []

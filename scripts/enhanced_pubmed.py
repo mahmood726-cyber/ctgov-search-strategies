@@ -22,9 +22,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Set, Optional, Tuple
 from dataclasses import dataclass, field
 from pathlib import Path
-import xml.etree.ElementTree as ET
-
-
+from defusedxml import ElementTree as ET
 @dataclass
 class PubMedTrial:
     """A trial identified from PubMed"""

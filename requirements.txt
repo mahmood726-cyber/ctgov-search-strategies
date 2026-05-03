@@ -16,6 +16,11 @@ numpy>=1.23.0
 beautifulsoup4>=4.12.0
 lxml>=4.9.0
 
+# Defused XML parsing (replaces stdlib xml.etree / xml.dom for safety against
+# XXE, billion-laughs, and other XML-bomb attacks; semgrep p/python flags
+# the stdlib parsers as ERROR-severity).
+defusedxml>=0.7.1
+
 # PostgreSQL for AACT database (optional)
 psycopg2-binary>=2.9.0
 

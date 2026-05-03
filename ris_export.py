@@ -38,12 +38,10 @@ import argparse
 import csv
 import re
 import sys
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
 from datetime import datetime
 from typing import Any, Dict, List, Optional, Tuple
-from xml.dom import minidom
-
-
+from defusedxml import minidom
 def extract_year(study: Dict[str, Any]) -> str:
     """
     Extract the study start year from a CT.gov study record.

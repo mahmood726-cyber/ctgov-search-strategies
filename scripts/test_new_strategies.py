@@ -10,7 +10,7 @@ Version: 1.0
 import json
 import time
 import re
-import xml.etree.ElementTree as ET
+from defusedxml import ElementTree as ET
 from typing import Set, Dict, List, Tuple
 from urllib.parse import quote
 import requests

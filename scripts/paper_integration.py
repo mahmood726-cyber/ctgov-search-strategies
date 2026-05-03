@@ -23,9 +23,7 @@ from datetime import datetime, timezone
 from typing import List, Dict, Optional, Tuple
 from dataclasses import dataclass, field, asdict
 from pathlib import Path
-import xml.etree.ElementTree as ET
-
-
+from defusedxml import ElementTree as ET
 # =============================================================================
 # DATA CLASSES
 # =============================================================================
