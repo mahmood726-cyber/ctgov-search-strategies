@@ -247,6 +247,7 @@ class PRESSValidator:
             passed=True,
             score=1.0
         )
+        hard_failure = False
 
         # Check for Boolean operators
         has_and = bool(re.search(r'\bAND\b', query, re.IGNORECASE))
@@ -268,7 +269,7 @@ class PRESSValidator:
 
         # Check for balanced parentheses
         if query.count('(') != query.count(')'):
-            result.passed = False
+            hard_failure = True
             result.score -= 0.3
             result.issues.append("Unbalanced parentheses in query")
 
@@ -299,7 +300,7 @@ class PRESSValidator:
             )
 
         result.score = max(0.0, result.score)
-        result.passed = result.score >= 0.7
+        result.passed = not hard_failure and result.score >= 0.7
 
         return result
 
