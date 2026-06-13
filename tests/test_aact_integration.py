@@ -23,6 +23,22 @@ from pathlib import Path
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+# psycopg2 is an optional dependency (only needed for live AACT access). Tests
+# that mock 'psycopg2.connect' cannot run when psycopg2 is not installed, since
+# unittest.mock.patch imports the target before patching. Detect availability so
+# those tests skip gracefully in CI environments without the driver.
+try:
+    import psycopg2  # noqa: F401
+
+    PSYCOPG2_AVAILABLE = True
+except ImportError:
+    PSYCOPG2_AVAILABLE = False
+
+requires_psycopg2 = pytest.mark.skipif(
+    not PSYCOPG2_AVAILABLE,
+    reason="psycopg2 not installed (optional AACT dependency)",
+)
+
 # Load .env file if present (same as aact_validation.py)
 env_file = Path(__file__).parent.parent / ".env"
 if env_file.exists():
@@ -233,6 +249,7 @@ class TestAACTConnection:
         """Test AACT database name configuration."""
         assert AACT_CONFIG['database'] == 'aact'
 
+    @requires_psycopg2
     @patch('psycopg2.connect')
     def test_connection_success_with_mock(self, mock_connect):
         """Test successful connection with mocked psycopg2."""
@@ -246,6 +263,7 @@ class TestAACTConnection:
                 # If credentials were available, connection should work
                 assert mock_connect.called or conn is None
 
+    @requires_psycopg2
     @patch('psycopg2.connect')
     def test_connection_failure_handling(self, mock_connect):
         """Test that connection failures are handled gracefully."""
@@ -484,6 +502,7 @@ class TestRecallCalculation:
 class TestConnectionFailures:
     """Tests for handling connection failures and edge cases."""
 
+    @requires_psycopg2
     @patch('psycopg2.connect')
     def test_connection_timeout(self, mock_connect):
         """Test handling of connection timeout."""
@@ -494,6 +513,7 @@ class TestConnectionFailures:
                 conn = connect_aact()
                 assert conn is None
 
+    @requires_psycopg2
     @patch('psycopg2.connect')
     def test_authentication_failure(self, mock_connect):
         """Test handling of authentication failure."""
@@ -504,6 +524,7 @@ class TestConnectionFailures:
                 conn = connect_aact()
                 assert conn is None
 
+    @requires_psycopg2
     @patch('psycopg2.connect')
     def test_network_error(self, mock_connect):
         """Test handling of network errors."""
