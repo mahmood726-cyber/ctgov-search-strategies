@@ -1238,6 +1238,22 @@ class MLScreeningAssistant:
         Returns:
             Dictionary with workload estimates (treat as rough approximations)
         """
+        # Guard against an empty corpus: with no records there is no workload to
+        # reduce. Return an all-zero estimate instead of dividing by zero.
+        if total_records <= 0:
+            return {
+                "total_records": total_records,
+                "estimated_relevant": estimated_relevant,
+                "ml_flagged_for_review": 0,
+                "ml_excluded": 0,
+                "manual_screening_needed": 0,
+                "workload_reduction_percent": 0.0,
+                "estimated_missed_at_recall": 0.0,
+                "recommendation": self._get_ml_recommendation(total_records, estimated_relevant),
+                "caveat": "No records to screen; workload estimates are zero.",
+                "source": "O'Mara-Eves A, et al. Syst Rev. 2015;4:5",
+            }
+
         # Estimate based on literature review by O'Mara-Eves et al. 2015
         # Precision at 95% recall varies widely (30-70%), using conservative 50%
         estimated_precision = 0.5  # Conservative estimate; actual varies 0.3-0.7

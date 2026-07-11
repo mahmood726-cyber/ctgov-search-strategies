@@ -20,6 +20,7 @@ Date: 2026-01-26
 
 import json
 import math
+from scipy import stats
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple, Any, Set
@@ -333,14 +334,11 @@ class RelativeRecallCalculator:
             p_value = 1.0
         else:
             chi_squared = (abs(b - c) - 1)**2 / (b + c)
-            # Approximate p-value (chi-squared distribution, df=1)
-            # Using simple approximation
-            if chi_squared < 3.841:  # Critical value at 0.05
-                p_value = 0.1  # Approximate
-            elif chi_squared < 6.635:  # Critical value at 0.01
-                p_value = 0.05
-            else:
-                p_value = 0.01
+            # Exact upper-tail p-value from the chi-squared distribution (df=1).
+            # A previous hardcoded critical-value ladder under-reported
+            # significance (e.g. chi2=6.125 -> p pinned to 0.05, reported as
+            # non-significant, when the true p is 0.0133).
+            p_value = float(stats.chi2.sf(chi_squared, 1))
 
         return {
             'search1_id': search1_id,

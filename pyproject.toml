@@ -86,7 +86,10 @@ ctgov-workflow = "ctgov_workflow:main"
 ctgov-validate = "aact_validation:main"
 
 [tool.setuptools]
-packages = ["ctgov_search", "scripts", "tests"]
+# This project is a flat collection of top-level modules, not a package tree.
+# Declaring py-modules disables setuptools auto-discovery; no importable
+# packages are shipped (the console entry points reference top-level modules).
+packages = []
 py-modules = [
     "ctgov_search",
     "ctgov_config",
@@ -110,9 +113,6 @@ py-modules = [
     "multi_source_search",
     "scenario_optimizer",
     "challenging_conditions",
-    "euctr_search",
-    "anzctr_search",
-    "relative_recall",
 ]
 
 [tool.setuptools.package-data]
