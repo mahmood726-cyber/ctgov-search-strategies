@@ -110,8 +110,21 @@ for (const dir of COPIES) {
     assert.equal(c.Errors, '1'); assert.equal(c.Refused, '1'); assert.equal(c['Validation Rate'], '66.7%');
   });
 
-  test(`${C}: check recall uses all 10 strategies and every ID`, async () => {
-    const seen = []; const { ctx, document } = load(C, async (u) => { seen.push(u); return registry(u); });
+  // The API returns a study for query.id=<NCT> whatever the other query/filter parameters say (checked live on
+  // 2 Nov 2026: query.cond=asthma&query.id=NCT03315143 returns that diabetes trial), so '<strategy>&query.id=<NCT>'
+  // cannot tell whether the strategy retrieves the trial. This stub behaves the same way.
+  function strategyRegistry(u) {
+    const url = decodeURIComponent(u);
+    const inStrategy = new Set(url.includes('asthma') ? ['NCT00000010'] : []);
+    const qid = (url.match(/query\.id=(NCT\d+)/) || [])[1];
+    if (qid) return ok({ studies: [study(qid)], totalCount: 1 });
+    const ids = ((url.match(/filter\.ids=([^&]+)/) || [])[1] || '').split(',').filter(Boolean);
+    const hit = ids.filter((i) => inStrategy.has(i));
+    return ok({ studies: hit.map((i) => study(i)), totalCount: hit.length });
+  }
+
+  test(`${C}: check recall uses all 10 strategies and every ID, and counts only trials the strategy retrieves`, async () => {
+    const seen = []; const { ctx, document } = load(C, async (u) => { seen.push(u); return strategyRegistry(u); });
     document.getElementById('condition').value = 'asthma';
     document.getElementById('nct-input').value = ['NCT00000010', ...Array.from({ length: 11 }, (_, i) => 'NCT' + (60000000 + i))].join('\n');
     await ctx.checkRecall();
@@ -119,6 +132,16 @@ for (const dir of COPIES) {
     const rows = [...h.matchAll(/<tr><td>(S\d+):[^<]*<\/td><td>([^<]*)<\/td>/g)];
     assert.equal(rows.length, 10);
     for (const r of rows) assert.equal(r[2], '1/12');
-    assert.equal(seen.length, 120);
+  });
+
+  test(`${C}: a trial the strategy does not retrieve is not counted as found`, async () => {
+    const { ctx, document } = load(C, async (u) => strategyRegistry(u));
+    document.getElementById('condition').value = 'type 2 diabetes';
+    document.getElementById('nct-input').value = 'NCT00000010\nNCT00000011';
+    await ctx.checkRecall();
+    const h = document.getElementById('recall-results').innerHTML;
+    const rows = [...h.matchAll(/<tr><td>(S\d+):[^<]*<\/td><td>([^<]*)<\/td>/g)];
+    assert.equal(rows.length, 10);
+    for (const r of rows) assert.equal(r[2], '0/2');
   });
 }
