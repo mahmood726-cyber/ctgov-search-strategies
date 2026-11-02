@@ -1025,21 +1025,28 @@
             for (const strategy of STRATEGIES) {
                 const queryString = strategy.build(condition);
                 let found = 0, answered = 0, errors = 0;
-
-                for (const nctId of nctIds) {
-                    const checkUrl = `${CTGOV_API}?${queryString}&query.id=${nctId}`;
-                    try {
+                // The API returns a study for query.id=<NCT> whatever the strategy's other parameters say, so
+                // '<strategy>&query.id=<NCT>' cannot measure recall. filter.ids restricts the strategy's own result set.
+                const ids = nctIds.map(id => id.toUpperCase());
+                try {
+                    const matched = new Set();
+                    let token = null;
+                    do {
+                        const checkUrl = `${CTGOV_API}?${queryString}&filter.ids=${ids.join(',')}&fields=NCTId,NCTIdAlias` +
+                            (token ? `&pageToken=${encodeURIComponent(token)}` : '');
                         const response = await fetch(checkUrl);
                         if (!response.ok) throw new Error(`HTTP ${response.status}`);
                         const data = await response.json();
-                        answered++;
-                        const id = nctId.toUpperCase();
-                        if ((data.studies || []).some(s => {
+                        for (const s of data.studies || []) {
                             const m = s.protocolSection?.identificationModule || {};
-                            return m.nctId === id || (m.nctIdAliases || []).includes(id);
-                        })) found++;
-                    } catch (e) { errors++; }
-                }
+                            matched.add(m.nctId);
+                            (m.nctIdAliases || []).forEach(a => matched.add(a));
+                        }
+                        token = data.nextPageToken;
+                    } while (token);
+                    answered = ids.length;
+                    found = ids.filter(id => matched.has(id)).length;
+                } catch (e) { errors = ids.length; }
 
                 const recall = answered > 0 ? ((found / answered) * 100).toFixed(1) : 'N/A';
                 const recallClass = recall >= 90 ? 'tag-success' : recall >= 70 ? 'tag-warning' : 'tag-danger';
