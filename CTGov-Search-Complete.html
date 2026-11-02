@@ -1552,41 +1552,52 @@ print("Python metrics module loaded!")
                 return;
             }
 
-            const nctIds = input.split(/[\n,\s]+/)
+            const tokens = input.split(/[\n,\s]+/)
                 .map(id => id.trim().toUpperCase())
-                .filter(id => /^NCT\d{8}$/.test(id));
+                .filter(id => id.length > 0);
+            const nctIds = tokens.filter(id => /^NCT\d{8}$/.test(id));
+            const refused = tokens.filter(id => !/^NCT\d{8}$/.test(id));
 
             if (nctIds.length === 0) {
                 alert('No valid NCT IDs found');
                 return;
             }
 
-            log('validateLog', `Validating ${nctIds.length} NCT IDs...`);
+            log('validateLog', `Validating ${nctIds.length} NCT IDs...` + (refused.length ? ` (${refused.length} not in NCT######## format: ${refused.join(', ')})` : ''));
 
             const results = [];
             for (const nctId of nctIds) {
                 try {
                     const url = `${CTGOV_API}?query.id=${nctId}&pageSize=1`;
                     const data = await fetchAPI(url, 'validateLog');
+                    // query.id also matches other studies' org-study and secondary IDs: require this NCT number or its alias
+                    const study = (data.studies || []).find(s => {
+                        const m = s.protocolSection?.identificationModule || {};
+                        return m.nctId === nctId || (m.nctIdAliases || []).includes(nctId);
+                    });
                     results.push({
                         nctId,
-                        valid: (data.studies?.length || 0) > 0,
-                        title: data.studies?.[0]?.protocolSection?.identificationModule?.briefTitle || ''
+                        valid: !!study,
+                        error: null,
+                        title: study?.protocolSection?.identificationModule?.briefTitle || ''
                     });
                     await new Promise(r => setTimeout(r, 200));
                 } catch (error) {
-                    results.push({ nctId, valid: false, title: 'Error' });
+                    results.push({ nctId, valid: false, error: error.message, title: '' });
                 }
             }
 
-            displayValidationResults(results);
+            displayValidationResults(results, refused);
         }
 
-        function displayValidationResults(results) {
+        function displayValidationResults(results, refused = []) {
             document.getElementById('validationResults').classList.remove('hidden');
 
+            // a lookup that failed (network/HTTP error) is neither valid nor "not found": it is left out of the rate
+            const errors = results.filter(r => r.error).length;
             const valid = results.filter(r => r.valid).length;
-            const invalid = results.length - valid;
+            const invalid = results.length - valid - errors;
+            const answered = valid + invalid;
 
             document.getElementById('validationSummary').innerHTML = `
                 <div class="results-summary">
@@ -1603,9 +1614,11 @@ print("Python metrics module loaded!")
                         <div class="label">Not Found</div>
                     </div>
                     <div class="stat-card">
-                        <div class="value">${(valid/results.length*100).toFixed(1)}%</div>
+                        <div class="value">${answered > 0 ? (valid/answered*100).toFixed(1) + '%' : 'N/A'}</div>
                         <div class="label">Validation Rate</div>
                     </div>
+                    ${errors ? `<div class="stat-card"><div class="value" style="color: var(--danger);">${errors}</div><div class="label">Errors</div></div>` : ''}
+                    ${refused.length ? `<div class="stat-card"><div class="value">${refused.length}</div><div class="label">Refused</div></div>` : ''}
                 </div>
             `;
 
@@ -1620,7 +1633,7 @@ print("Python metrics module loaded!")
                     <tr>
                         <td><a href="https://clinicaltrials.gov/study/${r.nctId}" target="_blank">${r.nctId}</a></td>
                         <td style="color: ${r.valid ? 'var(--success)' : 'var(--danger)'};">
-                            <i class="fas fa-${r.valid ? 'check' : 'times'}"></i> ${r.valid ? 'Valid' : 'Not Found'}
+                            <i class="fas fa-${r.valid ? 'check' : 'times'}"></i> ${r.error ? `Error (${r.error})` : r.valid ? 'Valid' : 'Not Found'}
                         </td>
                         <td>${r.title.substring(0, 60)}${r.title.length > 60 ? '...' : ''}</td>
                     </tr>
