@@ -1215,6 +1215,12 @@
                     <i class="fas fa-calculator"></i> Calculate 95% CI
                 </button>
                 <div id="ciResult" style="margin-top: 20px;"></div>
+                <div style="margin-top: 12px;">
+                    <button class="btn btn-secondary" id="ciRdl" onclick="rpathDownload('ci')">Download R script</button>
+                    <button class="btn btn-secondary" id="ciRweb" onclick="rpathWebR('ci')">Verify in R</button>
+                    <span id="ciRstatus" style="margin-left: 10px; font-family: monospace;"></span>
+                    <pre id="ciRout" style="display: none; white-space: pre-wrap; font-size: 12px;"></pre>
+                </div>
             </div>
 
             <div class="validation-panel" style="margin-top: 20px;">
@@ -1237,6 +1243,12 @@
                     <i class="fas fa-calculator"></i> Calculate All Metrics
                 </button>
                 <div id="metricsResult" style="margin-top: 20px;"></div>
+                <div style="margin-top: 12px;">
+                    <button class="btn btn-secondary" id="metricsRdl" onclick="rpathDownload('metrics')">Download R script</button>
+                    <button class="btn btn-secondary" id="metricsRweb" onclick="rpathWebR('metrics')">Verify in R</button>
+                    <span id="metricsRstatus" style="margin-left: 10px; font-family: monospace;"></span>
+                    <pre id="metricsRout" style="display: none; white-space: pre-wrap; font-size: 12px;"></pre>
+                </div>
             </div>
         </div>
 
@@ -1421,7 +1433,7 @@ function log(logId, message, type = 'info') {
 function wilsonCI(successes, total) {
     if (total === 0) return [0, 0];
     const p = successes / total;
-    const z = 1.96;
+    const z = 1.959963984540054; // qnorm(0.975)
     const denominator = 1 + z * z / total;
     const center = (p + z * z / (2 * total)) / denominator;
     const margin = z * Math.sqrt((p * (1 - p) + z * z / (4 * total)) / total) / denominator;
@@ -1470,19 +1482,23 @@ async function searchCTGov() {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Searching...';
 
     try {
-        let url = `${APIS.ctgov}?query.cond=${encodeURIComponent(condition)}&pageSize=100`;
-
         const studyType = document.getElementById('ctStudyType').value;
         const status = document.getElementById('ctStatus').value;
         const phase = document.getElementById('ctPhase').value;
 
-        if (studyType) url += `&filter.overallStatus=${status}`;
+        // API v2 has no study-type or phase filter parameter: both are Essie AREA[] restrictions in query.term
+        let url = `${APIS.ctgov}?query.cond=${encodeURIComponent(condition)}`;
+        const terms = [];
+        if (studyType) terms.push(`AREA[StudyType]${studyType}`);
+        if (phase) terms.push(`AREA[Phase](${phase.split(',').join(' OR ')})`);
+        if (terms.length) url += `&query.term=${encodeURIComponent(terms.join(' AND '))}`;
         if (status) url += `&filter.overallStatus=${status}`;
-        if (phase) url += `&filter.phase=${phase}`;
+        url += '&pageSize=100&countTotal=true';
 
         log('ctLog', `Searching CT.gov for: ${condition}`);
 
         const response = await fetch(url);
+        if (!response.ok) throw new Error(`HTTP ${response.status}: ${(await response.text()).substring(0, 120)}`);
         const data = await response.json();
         currentStudies = data.studies || [];
 
@@ -2065,48 +2081,67 @@ function loadPRESSExample() {
 // =============================================================================
 // VALIDATE NCT IDs
 // =============================================================================
+// A study answers the lookup only if it IS this NCT number or lists it as an alias (query.id also matches
+// org-study and secondary IDs of other studies).
+function studyMatchesNct(study, nctId) {
+    const m = study?.protocolSection?.identificationModule || {};
+    return m.nctId === nctId || (m.nctIdAliases || []).includes(nctId);
+}
+
 async function validateNCTs() {
     const input = document.getElementById('nctInput').value.trim();
     if (!input) { alert('Please enter NCT IDs'); return; }
 
-    const nctIds = input.split(/[\n,\s]+/).map(id => id.trim().toUpperCase()).filter(id => /^NCT\d{8}$/.test(id));
+    const tokens = input.split(/[\n,\s]+/).map(id => id.trim().toUpperCase()).filter(id => id.length > 0);
+    const nctIds = tokens.filter(id => /^NCT\d{8}$/.test(id));
+    const refused = tokens.filter(id => !/^NCT\d{8}$/.test(id));
     if (nctIds.length === 0) { alert('No valid NCT IDs found'); return; }
 
-    log('validateLog', `Validating ${nctIds.length} NCT IDs...`);
+    log('validateLog', `Validating ${nctIds.length} NCT IDs...` + (refused.length ? ` (${refused.length} not in NCT######## format: ${refused.join(', ')})` : ''));
     const results = [];
 
-    for (const nctId of nctIds.slice(0, 20)) {
+    for (const nctId of nctIds) {
         try {
             const url = `${APIS.ctgov}?query.id=${nctId}&pageSize=1`;
             const response = await fetch(url);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const data = await response.json();
-            const found = (data.studies?.length || 0) > 0;
-            results.push({ nctId, valid: found, title: data.studies?.[0]?.protocolSection?.identificationModule?.briefTitle || '' });
+            const study = (data.studies || []).find(s => studyMatchesNct(s, nctId));
+            const found = !!study;
+            results.push({ nctId, valid: found, error: null, title: study?.protocolSection?.identificationModule?.briefTitle || '' });
             log('validateLog', `${nctId}: ${found ? 'Found' : 'Not Found'}`, found ? 'success' : 'error');
             await new Promise(r => setTimeout(r, 200));
         } catch (e) {
-            results.push({ nctId, valid: false, title: 'Error' });
+            results.push({ nctId, valid: false, error: e.message, title: '' });
+            log('validateLog', `${nctId}: Error (${e.message}) - not counted`, 'error');
         }
     }
 
-    displayValidateResults(results);
+    displayValidateResults(results, refused);
 }
 
-function displayValidateResults(results) {
+function displayValidateResults(results, refused = []) {
     document.getElementById('validateResults').classList.remove('hidden');
-    const valid = results.filter(r => r.valid).length;
-    const [ciLow, ciHigh] = wilsonCI(valid, results.length);
+    const answered = results.filter(r => !r.error);
+    const errors = results.length - answered.length;
+    const valid = answered.filter(r => r.valid).length;
+    const n = answered.length;
+    const ci = n > 0 ? wilsonCI(valid, n) : null;
 
     document.getElementById('validateSummary').innerHTML = `
         <div class="stat-card"><div class="value">${results.length}</div><div class="label">Total</div></div>
         <div class="stat-card"><div class="value" style="color: var(--success);">${valid}</div><div class="label">Found</div></div>
-        <div class="stat-card"><div class="value">${(valid/results.length*100).toFixed(1)}%</div><div class="label">API Recall</div></div>
-        <div class="stat-card"><div class="value">${(ciLow*100).toFixed(1)}-${(ciHigh*100).toFixed(1)}%</div><div class="label">95% CI</div></div>
+        <div class="stat-card"><div class="value">${n > 0 ? (valid/n*100).toFixed(1) + '%' : 'N/A'}</div><div class="label">API Recall</div></div>
+        <div class="stat-card"><div class="value">${ci ? (ci[0]*100).toFixed(1) + '-' + (ci[1]*100).toFixed(1) + '%' : 'N/A'}</div><div class="label">95% CI</div></div>
+        ${errors ? `<div class="stat-card"><div class="value" style="color: var(--danger);">${errors}</div><div class="label">Errors</div></div>` : ''}
+        ${refused.length ? `<div class="stat-card"><div class="value">${refused.length}</div><div class="label">Refused</div></div>` : ''}
     `;
 
     let html = '<table class="results-table"><thead><tr><th>NCT ID</th><th>Status</th><th>Title</th></tr></thead><tbody>';
     results.forEach(r => {
-        html += `<tr><td>${r.nctId}</td><td>${r.valid ? '<span style="color:var(--success);">Found</span>' : '<span style="color:var(--danger);">Not Found</span>'}</td><td>${r.title.substring(0,50)}...</td></tr>`;
+        const st = r.error ? `<span style="color:var(--warning);">Error (${r.error})</span>`
+            : r.valid ? '<span style="color:var(--success);">Found</span>' : '<span style="color:var(--danger);">Not Found</span>';
+        html += `<tr><td>${r.nctId}</td><td>${st}</td><td>${r.title.substring(0,50)}...</td></tr>`;
     });
     html += '</tbody></table>';
     document.getElementById('validateTable').innerHTML = html;
@@ -2119,11 +2154,13 @@ function loadSampleNCTs() {
 // =============================================================================
 // METRICS
 // =============================================================================
+const lastCalc = {};   // full-precision numbers behind the last calculator display (R path)
 function calculateCI() {
     const s = parseInt(document.getElementById('ciSuccesses').value) || 0;
     const t = parseInt(document.getElementById('ciTotal').value) || 1;
     const [lo, hi] = wilsonCI(s, t);
     const p = s / t;
+    lastCalc.ci = { s, t, p, lo, hi };
     document.getElementById('ciResult').innerHTML = `
         <div class="results-summary">
             <div class="stat-card"><div class="value">${(p*100).toFixed(1)}%</div><div class="label">Point Estimate</div></div>
@@ -2138,17 +2175,20 @@ function calculateMetrics() {
     const fp = parseInt(document.getElementById('metricFP').value) || 0;
     const fn = parseInt(document.getElementById('metricFN').value) || 0;
 
-    const precision = tp + fp > 0 ? tp / (tp + fp) : 0;
-    const recall = tp + fn > 0 ? tp / (tp + fn) : 0;
-    const f1 = precision + recall > 0 ? 2 * precision * recall / (precision + recall) : 0;
-    const nns = tp > 0 ? (tp + fp) / tp : Infinity;
+    // An empty denominator makes the metric undefined (shown N/A), not zero
+    const precision = tp + fp > 0 ? tp / (tp + fp) : null;
+    const recall = tp + fn > 0 ? tp / (tp + fn) : null;
+    const f1 = (precision !== null && recall !== null && precision + recall > 0) ? 2 * precision * recall / (precision + recall) : null;
+    const nns = tp > 0 ? (tp + fp) / tp : null;
+    const pct = v => v === null ? 'N/A' : (v*100).toFixed(1) + '%';
+    lastCalc.metrics = { tp, fp, fn, recall, precision, f1, nns };
 
     document.getElementById('metricsResult').innerHTML = `
         <div class="results-summary">
-            <div class="stat-card"><div class="value">${(recall*100).toFixed(1)}%</div><div class="label">Recall</div></div>
-            <div class="stat-card"><div class="value">${(precision*100).toFixed(1)}%</div><div class="label">Precision</div></div>
-            <div class="stat-card"><div class="value">${f1.toFixed(3)}</div><div class="label">F1</div></div>
-            <div class="stat-card"><div class="value">${nns === Infinity ? 'N/A' : nns.toFixed(1)}</div><div class="label">NNS</div></div>
+            <div class="stat-card"><div class="value">${pct(recall)}</div><div class="label">Recall</div></div>
+            <div class="stat-card"><div class="value">${pct(precision)}</div><div class="label">Precision</div></div>
+            <div class="stat-card"><div class="value">${f1 === null ? 'N/A' : f1.toFixed(3)}</div><div class="label">F1</div></div>
+            <div class="stat-card"><div class="value">${nns === null ? 'N/A' : nns.toFixed(1)}</div><div class="label">NNS</div></div>
         </div>
     `;
 }
@@ -4146,6 +4186,102 @@ initAACTDatabase().then(() => {
 });
 
 console.log('Systematic Review Search Tool loaded - Multi-Registry Edition with AACT, MeSH & Comprehensive RCT Search');
+    </script>
+    <script>
+// ---- R path: "Download R script" + "Verify in R" (WebR) for the two calculators ----
+// One script per calculator, generated from the inputs just used (the button first re-runs the
+// calculator on the current inputs). It prints page value, R value, difference and an honest
+// final "MATCH n/n" / "MISMATCH". Reference: base R prop.test(x, n, correct = FALSE)$conf.int
+// (Wilson score interval), and the TP/FP/FN definitions in base R. Tolerance as the validation
+// archive (PREREG): |page - R| <= 1e-9 * max(1, |R|).
+const RPATH_WEBR = 'https://webr.r-wasm.org/v0.5.4/';
+function rpathNum(x) { return (x === null || x === undefined || Number.isNaN(x)) ? 'NA' : String(x); }
+function rpathCompare() {
+    return [
+        "tol <- 1e-9",
+        "ok <- logical(0)",
+        "cat(sprintf('%-10s %22s %22s %11s  %s\\n', 'number', 'page', 'R', 'diff', 'result'))",
+        "for (q in names(R)) {",
+        "  a <- page[[q]]; r <- R[[q]]",
+        "  if (is.na(a) && is.na(r)) { good <- TRUE; d <- NA }      # undefined on both (shown N/A)",
+        "  else if (is.na(a) || is.na(r)) { good <- FALSE; d <- NA }",
+        "  else { d <- a - r; good <- abs(d) <= tol * max(1, abs(r)) }",
+        "  ok[q] <- good",
+        "  cat(sprintf('%-10s %22.15g %22.15g %11.3g  %s\\n', q, a, r, d, if (good) 'ok' else 'DIFF'))",
+        "}",
+        "cat(R.version.string, '\\n')",
+        "if (all(ok)) cat(sprintf('MATCH %d/%d\\n', sum(ok), length(ok))) else",
+        "  cat(sprintf('MISMATCH %d/%d differ: %s\\n', sum(!ok), length(ok), paste(names(ok)[!ok], collapse = ', ')))"
+    ];
+}
+// Returns {ok:true, script} or {ok:false, reason} (NOT CHECKED: nothing R can be asked).
+function rpathScript(which) {
+    if (which === 'ci') {
+        calculateCI();
+        const c = lastCalc.ci;
+        if (!(c.t >= 1 && c.s >= 0 && c.s <= c.t))
+            return { ok: false, reason: 'successes must lie between 0 and total (prop.test refuses x=' + c.s + ', n=' + c.t + ')' };
+        return { ok: true, script: [
+            "# CTGov Search - R check of the Wilson score 95% CI shown by the page",
+            "# Reference: prop.test(x, n, correct = FALSE)$conf.int (Wilson score interval, base R).",
+            "x <- " + c.s + "; n <- " + c.t + "   # successes and total the page used",
+            "page <- c(estimate = " + rpathNum(c.p) + ", lower = " + rpathNum(c.lo) + ", upper = " + rpathNum(c.hi) + ")",
+            "pt <- suppressWarnings(prop.test(x, n, correct = FALSE))",
+            "R <- c(estimate = unname(pt$estimate), lower = pt$conf.int[1], upper = pt$conf.int[2])"
+        ].concat(rpathCompare()).join('\n') + '\n' };
+    }
+    calculateMetrics();
+    const m = lastCalc.metrics;
+    if (!(m.tp >= 0 && m.fp >= 0 && m.fn >= 0))
+        return { ok: false, reason: 'counts must be non-negative (TP=' + m.tp + ', FP=' + m.fp + ', FN=' + m.fn + ')' };
+    return { ok: true, script: [
+        "# CTGov Search - R check of the metrics calculator shown by the page",
+        "# recall = TP/(TP+FN); precision = TP/(TP+FP); F1 = 2PR/(P+R); NNS = (TP+FP)/TP; empty denominator -> NA (page: N/A)",
+        "TP <- " + m.tp + "; FP <- " + m.fp + "; FN <- " + m.fn + "   # counts the page used",
+        "page <- c(recall = " + rpathNum(m.recall) + ", precision = " + rpathNum(m.precision) + ", F1 = " + rpathNum(m.f1) + ", NNS = " + rpathNum(m.nns) + ")",
+        "rec <- if (TP + FN > 0) TP / (TP + FN) else NA",
+        "pre <- if (TP + FP > 0) TP / (TP + FP) else NA",
+        "f1  <- if (!is.na(rec) && !is.na(pre) && rec + pre > 0) 2 * pre * rec / (pre + rec) else NA",
+        "nns <- if (TP > 0) (TP + FP) / TP else NA",
+        "R <- c(recall = rec, precision = pre, F1 = f1, NNS = nns)"
+    ].concat(rpathCompare()).join('\n') + '\n' };
+}
+function rpathDownload(which) {
+    const st = document.getElementById(which + 'Rstatus');
+    const b = rpathScript(which);
+    if (!b.ok) { st.textContent = 'NOT CHECKED: ' + b.reason; st.setAttribute('data-status', 'NOT CHECKED'); return; }
+    const name = which === 'ci' ? 'ctgov_wilson_verify.R' : 'ctgov_metrics_verify.R';
+    const url = URL.createObjectURL(new Blob([b.script], { type: 'text/x-r;charset=utf-8' }));
+    const a = document.createElement('a'); a.href = url; a.download = name;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+    st.textContent = 'Downloaded ' + name + ' - run: Rscript ' + name;
+}
+let rpathBoot = null;
+async function rpathWebR(which) {
+    const st = document.getElementById(which + 'Rstatus'), pre = document.getElementById(which + 'Rout');
+    const done = (status, line, out) => { st.textContent = line; st.setAttribute('data-status', status);
+        if (out) { pre.style.display = ''; pre.textContent = out; } };
+    st.removeAttribute('data-status');
+    const b = rpathScript(which);
+    if (!b.ok) return done('NOT CHECKED', 'NOT CHECKED: ' + b.reason);
+    try {
+        st.textContent = 'Loading WebR ' + RPATH_WEBR + ' (one-time, ~30 MB)...';
+        if (!rpathBoot) rpathBoot = import(RPATH_WEBR + 'webr.mjs').then(async (mod) => {
+            const w = new mod.WebR({ baseUrl: RPATH_WEBR, interactive: false }); await w.init(); return w; });
+        const w = await rpathBoot.catch((e) => { rpathBoot = null; throw e; });
+        st.textContent = 'Running the R script in WebR...';
+        const sh = await new w.Shelter();
+        try {
+            const cap = await sh.captureR(b.script, { captureStreams: true, withAutoprint: false });
+            const out = (cap.output || []).map((c) => (c.type === 'stderr' ? '! ' : '') + c.data).join('\n');
+            const lines = out.split('\n').filter((l) => /^(MATCH|MISMATCH) /.test(l));
+            const line = lines.length ? lines[lines.length - 1] : '';
+            if (!line) return done('NOT CHECKED', 'NOT CHECKED: the R script printed no MATCH/MISMATCH line', out);
+            done(line.startsWith('MATCH') ? 'MATCH' : 'MISMATCH', line, out);
+        } finally { sh.purge(); }
+    } catch (e) { done('NOT CHECKED', 'NOT CHECKED: ' + ((e && e.message) || e)); }
+}
     </script>
 </body>
 </html>

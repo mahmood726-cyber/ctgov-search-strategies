@@ -1021,23 +1021,37 @@
 
             let html = '<table class="results-table"><thead><tr><th>Strategy</th><th>Found</th><th>Recall</th></tr></thead><tbody>';
 
-            for (const strategy of STRATEGIES.slice(0, 5)) { // Test first 5 strategies
+            // every strategy, every ID; a lookup error is reported and left out of the denominator
+            for (const strategy of STRATEGIES) {
                 const queryString = strategy.build(condition);
-                let found = 0;
-
-                for (const nctId of nctIds.slice(0, 10)) {
-                    const checkUrl = `${CTGOV_API}?${queryString}&query.id=${nctId}`;
-                    try {
+                let found = 0, answered = 0, errors = 0;
+                // The API returns a study for query.id=<NCT> whatever the strategy's other parameters say, so
+                // '<strategy>&query.id=<NCT>' cannot measure recall. filter.ids restricts the strategy's own result set.
+                const ids = nctIds.map(id => id.toUpperCase());
+                try {
+                    const matched = new Set();
+                    let token = null;
+                    do {
+                        const checkUrl = `${CTGOV_API}?${queryString}&filter.ids=${ids.join(',')}&fields=NCTId,NCTIdAlias` +
+                            (token ? `&pageToken=${encodeURIComponent(token)}` : '');
                         const response = await fetch(checkUrl);
+                        if (!response.ok) throw new Error(`HTTP ${response.status}`);
                         const data = await response.json();
-                        if (data.totalCount > 0) found++;
-                    } catch (e) {}
-                }
+                        for (const s of data.studies || []) {
+                            const m = s.protocolSection?.identificationModule || {};
+                            matched.add(m.nctId);
+                            (m.nctIdAliases || []).forEach(a => matched.add(a));
+                        }
+                        token = data.nextPageToken;
+                    } while (token);
+                    answered = ids.length;
+                    found = ids.filter(id => matched.has(id)).length;
+                } catch (e) { errors = ids.length; }
 
-                const recall = ((found / Math.min(nctIds.length, 10)) * 100).toFixed(1);
+                const recall = answered > 0 ? ((found / answered) * 100).toFixed(1) : 'N/A';
                 const recallClass = recall >= 90 ? 'tag-success' : recall >= 70 ? 'tag-warning' : 'tag-danger';
 
-                html += `<tr><td>${strategy.id}: ${strategy.name}</td><td>${found}/${Math.min(nctIds.length, 10)}</td><td><span class="tag ${recallClass}">${recall}%</span></td></tr>`;
+                html += `<tr><td>${strategy.id}: ${strategy.name}</td><td>${found}/${answered}${errors ? ` (${errors} errors)` : ''}</td><td><span class="tag ${recallClass}">${recall}${answered > 0 ? '%' : ''}</span></td></tr>`;
             }
 
             html += '</tbody></table>';
